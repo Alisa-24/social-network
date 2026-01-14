@@ -1,0 +1,168 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { login, getCurrentUser } from '@/lib/auth';
+import { Mail, Lock, Sparkles, Eye, EyeOff } from 'lucide-react';
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const currentUser = await getCurrentUser();
+      if (currentUser) {
+        router.push('/feed');
+        return;
+      }
+      setCheckingAuth(false);
+    }
+    checkAuth();
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await login(formData);
+      router.push('/feed');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed');
+    } finally {
+        setFormData({
+      ...formData,
+      password: '',
+    });
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <p className="text-white">Loading...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-zinc-800 rounded-lg bg-black p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <Sparkles className="w-6 h-6 text-blue-500" />
+          <h2 className="text-2xl font-semibold text-white animate-in fade-in slide-in-from-left-2 duration-700">
+            Sign In
+          </h2>
+        </div>
+        <p className="mt-2 text-sm text-zinc-400 animate-in fade-in slide-in-from-left-2 duration-700 delay-100">
+          Welcome back
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-zinc-300 mb-2"
+          >
+            Email
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full pl-10 pr-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder:text-zinc-500 transition-all duration-200 hover:border-zinc-700"
+              placeholder="example@email.com"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-zinc-300 mb-2"
+          >
+            Password
+          </label>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full pl-10 pr-10 py-2 bg-zinc-950 border border-zinc-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder:text-zinc-500 transition-all duration-200 hover:border-zinc-700"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-2.5 px-4 bg-white text-black rounded-md font-medium hover:bg-zinc-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Signing in...
+            </span>
+          ) : 'Sign In'}
+        </button>
+
+        <div className="text-center mt-4">
+          <p className="text-sm text-zinc-400">
+            Don't have an account?{' '}
+            <Link
+              href="/register"
+              className="text-white hover:text-zinc-300 underline underline-offset-4"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
+      </form>
+    </div>
+  );
+}
