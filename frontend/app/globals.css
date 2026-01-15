@@ -1,24 +1,39 @@
 @import "tailwindcss";
 
+/* =========================
+   LIGHT MODE (default)
+========================= */
 :root {
+  --background: #ffffff;
+  --foreground: #09090b;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #3b82f6;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+/* =========================
+   DARK MODE
+========================= */
+.dark {
   --background: #000000;
   --foreground: #fafafa;
   --border: #27272a;
   --input: #27272a;
   --ring: #3b82f6;
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-
+/* =========================
+   GLOBAL STYLES
+========================= */
 body {
-  background: #000000;
-  color: #fafafa;
+  background: var(--background);
+  color: var(--foreground);
   font-family: system-ui, -apple-system, sans-serif;
 }
 
 * {
-  border-color: #27272a;
+  border-color: var(--border);
 }

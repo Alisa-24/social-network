@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { getCurrentUser, logout } from '@/lib/auth';
-import { User } from '@/lib/interfaces';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
+import { User } from "@/lib/interfaces";
 
 export default function FeedPage() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function FeedPage() {
     async function checkAuth() {
       const currentUser = await getCurrentUser();
       if (!currentUser) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
       setUser(currentUser);
@@ -23,19 +23,10 @@ export default function FeedPage() {
     checkAuth();
   }, [router]);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <p className="text-white">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground">Loading...</p>
       </div>
     );
   }
@@ -43,34 +34,13 @@ export default function FeedPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-black">
-      <nav className="border-b border-zinc-800 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold text-white">Social Network</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-zinc-400">
-                {user.firstName} {user.lastName}
-              </span>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm border border-zinc-800 text-white rounded-md hover:bg-zinc-900 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="border border-zinc-800 rounded-lg bg-black p-8 text-center">
-          <h2 className="text-2xl font-semibold text-white mb-4">
-            Welcome, {user.firstName}!
-          </h2>
-          <p className="text-zinc-400">Your feed will appear here.</p>
-        </div>
-      </main>
+    <div className="max-w-7xl mx-auto">
+      <div className="border border-border rounded-lg bg-background p-8 text-center">
+        <h2 className="text-2xl font-semibold text-foreground mb-4">
+          Welcome, {user.firstName}!
+        </h2>
+        <p className="text-foreground/60">Your feed will appear here.</p>
+      </div>
     </div>
   );
 }

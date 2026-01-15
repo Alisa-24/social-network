@@ -41,7 +41,7 @@ export default function LoginPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
-      toast('Login successful', 'success');
+      toast("Login successful", "success");
       setFormData({
         ...formData,
         password: "",
@@ -60,19 +60,19 @@ export default function LoginPage() {
   if (checkingAuth) {
     return (
       <div className="flex items-center justify-center py-32">
-        <p className="text-white">Loading...</p>
+        <p className="text-foreground">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="border border-zinc-800 rounded-lg bg-black p-8">
+    <div className="border border-border rounded-lg bg-background p-8">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-6 h-6 text-blue-500" />
-          <h2 className="text-2xl font-semibold text-white">Sign In</h2>
+          <h2 className="text-2xl font-semibold text-foreground">Sign In</h2>
         </div>
-        <p className="mt-2 text-sm text-zinc-400">Welcome back</p>
+        <p className="mt-2 text-sm text-foreground/60">Welcome back</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -85,12 +85,12 @@ export default function LoginPage() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-zinc-300 mb-2"
+            className="block text-sm font-medium text-foreground/80 mb-2"
           >
             Email
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
             <input
               id="email"
               name="email"
@@ -98,7 +98,7 @@ export default function LoginPage() {
               required
               value={formData.email}
               onChange={handleChange}
-              className="w-full pl-10 pr-3 py-2 bg-zinc-950 border border-zinc-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder:text-zinc-500 transition-all duration-200 hover:border-zinc-700"
+              className="w-full pl-10 pr-3 py-2 bg-input border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground placeholder:text-foreground/40 transition-all duration-200 hover:border-foreground/20"
               placeholder="example@email.com"
             />
           </div>
@@ -107,12 +107,12 @@ export default function LoginPage() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-zinc-300 mb-2"
+            className="block text-sm font-medium text-foreground/80 mb-2"
           >
             Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
             <input
               id="password"
               name="password"
@@ -120,13 +120,13 @@ export default function LoginPage() {
               required
               value={formData.password}
               onChange={handleChange}
-              className="w-full pl-10 pr-10 py-2 bg-zinc-950 border border-zinc-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder:text-zinc-500 transition-all duration-200 hover:border-zinc-700"
+              className="w-full pl-10 pr-10 py-2 bg-input border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground placeholder:text-foreground/40 transition-all duration-200 hover:border-foreground/20"
               placeholder="••••••••"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground/80 transition-colors"
             >
               {showPassword ? (
                 <EyeOff className="w-4 h-4" />
@@ -140,7 +140,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 px-4 bg-white text-black rounded-md font-medium hover:bg-zinc-200 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+          className="w-full py-2.5 px-4 bg-foreground text-background rounded-md font-medium hover:opacity-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -172,11 +172,11 @@ export default function LoginPage() {
         </button>
 
         <div className="text-center mt-4">
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-foreground/60">
             Don't have an account?{" "}
             <Link
               href="/register"
-              className="text-white hover:text-zinc-300 underline underline-offset-4"
+              className="text-foreground hover:text-foreground/80 underline underline-offset-4"
             >
               Sign up
             </Link>
