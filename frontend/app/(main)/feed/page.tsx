@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser, logout, type User } from '@/lib/auth';
+import { getCurrentUser, logout } from '@/lib/auth';
+import { User } from '@/lib/interfaces';
 
 export default function FeedPage() {
   const router = useRouter();

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ToastContainer from "@/components/ui/toast-container";
 
 export const metadata: Metadata = {
   title: "Social Network",
@@ -13,8 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="antialiased">
+      <body className="antialiased bg-slate-950 text-white">
         {children}
+
+        <ToastContainer />
       </body>
     </html>
   );

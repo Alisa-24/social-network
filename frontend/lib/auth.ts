@@ -1,38 +1,5 @@
-const API_URL = 'http://localhost:8080';
-
-export interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  nickname?: string;
-  avatar?: string;
-  aboutMe?: string;
-  createdAt: string;
-}
-
-export interface AuthResponse {
-  success: boolean;
-  message: string;
-  user?: User;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  nickname?: string;
-  aboutMe?: string;
-  avatar?: File;
-}
-
-export interface LoginData {
-  email: string;
-  password: string;
-}
+import { User, AuthResponse, RegisterData, LoginData } from "./interfaces";
+import { API_URL } from "./config";
 
 export async function register(data: RegisterData): Promise<AuthResponse> {
   const formData = new FormData();

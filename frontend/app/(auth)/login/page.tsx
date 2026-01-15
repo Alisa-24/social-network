@@ -1,18 +1,19 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { login, getCurrentUser } from '@/lib/auth';
-import { Mail, Lock, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { login, getCurrentUser } from "@/lib/auth";
+import { toast } from "@/lib/utils";
+import { Mail, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -21,7 +22,7 @@ export default function LoginPage() {
     async function checkAuth() {
       const currentUser = await getCurrentUser();
       if (currentUser) {
-        router.push('/feed');
+        router.push("/feed");
         return;
       }
       setCheckingAuth(false);
@@ -31,19 +32,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await login(formData);
-      router.push('/feed');
+      router.push("/feed");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(err instanceof Error ? err.message : "Login failed");
     } finally {
-        setFormData({
-      ...formData,
-      password: '',
-    });
+      toast('Login successful', 'success');
+      setFormData({
+        ...formData,
+        password: "",
+      });
       setLoading(false);
     }
   };
@@ -57,24 +59,20 @@ export default function LoginPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="flex items-center justify-center py-32">
         <p className="text-white">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="border border-zinc-800 rounded-lg bg-black p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="border border-zinc-800 rounded-lg bg-black p-8">
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">
           <Sparkles className="w-6 h-6 text-blue-500" />
-          <h2 className="text-2xl font-semibold text-white animate-in fade-in slide-in-from-left-2 duration-700">
-            Sign In
-          </h2>
+          <h2 className="text-2xl font-semibold text-white">Sign In</h2>
         </div>
-        <p className="mt-2 text-sm text-zinc-400 animate-in fade-in slide-in-from-left-2 duration-700 delay-100">
-          Welcome back
-        </p>
+        <p className="mt-2 text-sm text-zinc-400">Welcome back</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -118,7 +116,7 @@ export default function LoginPage() {
             <input
               id="password"
               name="password"
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               required
               value={formData.password}
               onChange={handleChange}
@@ -130,7 +128,11 @@ export default function LoginPage() {
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
             >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>
@@ -142,18 +144,36 @@ export default function LoginPage() {
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Signing in...
             </span>
-          ) : 'Sign In'}
+          ) : (
+            "Sign In"
+          )}
         </button>
 
         <div className="text-center mt-4">
           <p className="text-sm text-zinc-400">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <Link
               href="/register"
               className="text-white hover:text-zinc-300 underline underline-offset-4"

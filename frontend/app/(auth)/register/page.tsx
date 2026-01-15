@@ -1,26 +1,37 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { register, getCurrentUser } from '@/lib/auth';
-import { User, Mail, Lock, Calendar, MessageSquare, Image as ImageIcon, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { register, getCurrentUser } from "@/lib/auth";
+import { toast } from "@/lib/utils";
+import {
+  User,
+  Mail,
+  Lock,
+  Calendar,
+  MessageSquare,
+  Image as ImageIcon,
+  Sparkles,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
-    dateOfBirth: '',
-    nickname: '',
-    aboutMe: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    nickname: "",
+    aboutMe: "",
   });
   const [avatar, setAvatar] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string>('');
-  const [error, setError] = useState('');
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -30,7 +41,7 @@ export default function RegisterPage() {
     async function checkAuth() {
       const currentUser = await getCurrentUser();
       if (currentUser) {
-        router.push('/feed');
+        router.push("/feed");
         return;
       }
       setCheckingAuth(false);
@@ -40,16 +51,16 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -66,19 +77,32 @@ export default function RegisterPage() {
         aboutMe: formData.aboutMe || undefined,
         avatar: avatar || undefined,
       });
-      
-      router.push('/feed');
+
+      router.push("/feed");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
+      toast("Account created successfully! Redirecting to feed...", "success");
+      setFormData({
+        email: "",
+        password: "",
+        confirmPassword: "",
+        firstName: "",
+        lastName: "",
+        dateOfBirth: "",
+        nickname: "",
+        aboutMe: "",
+      });
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value ?? '',
+      [e.target.name]: e.target.value ?? "",
     });
   };
 
@@ -96,24 +120,20 @@ export default function RegisterPage() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="flex items-center justify-center py-32">
         <p className="text-white">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="border border-zinc-800 rounded-lg bg-black p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="border border-zinc-800 rounded-lg bg-black p-8">
       <div className="mb-5">
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="w-6 h-6 text-blue-500" />
-          <h2 className="text-2xl font-semibold text-white animate-in fade-in slide-in-from-left-2 duration-700">
-            Create Account
-          </h2>
+          <h2 className="text-2xl font-semibold text-white">Create Account</h2>
         </div>
-        <p className="mt-1 text-sm text-zinc-400 animate-in fade-in slide-in-from-left-2 duration-700 delay-100">
-          Join our social network
-        </p>
+        <p className="mt-1 text-sm text-zinc-400">Join our social network</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -125,7 +145,10 @@ export default function RegisterPage() {
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label htmlFor="firstName" className="block text-sm text-zinc-300 mb-1.5">
+            <label
+              htmlFor="firstName"
+              className="block text-sm text-zinc-300 mb-1.5"
+            >
               First Name
             </label>
             <div className="relative">
@@ -144,7 +167,10 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="lastName" className="block text-sm text-zinc-300 mb-1.5">
+            <label
+              htmlFor="lastName"
+              className="block text-sm text-zinc-300 mb-1.5"
+            >
               Last Name
             </label>
             <div className="relative">
@@ -163,7 +189,10 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="nickname" className="block text-sm text-zinc-300 mb-1.5">
+            <label
+              htmlFor="nickname"
+              className="block text-sm text-zinc-300 mb-1.5"
+            >
               Nickname <span className="text-zinc-500">(optional)</span>
             </label>
             <div className="relative">
@@ -183,7 +212,10 @@ export default function RegisterPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="email" className="block text-sm text-zinc-300 mb-1.5">
+            <label
+              htmlFor="email"
+              className="block text-sm text-zinc-300 mb-1.5"
+            >
               Email
             </label>
             <div className="relative">
@@ -202,7 +234,10 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="dateOfBirth" className="block text-sm text-zinc-300 mb-1.5">
+            <label
+              htmlFor="dateOfBirth"
+              className="block text-sm text-zinc-300 mb-1.5"
+            >
               Date of Birth
             </label>
             <div className="relative">
@@ -222,7 +257,10 @@ export default function RegisterPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="password" className="block text-sm text-zinc-300 mb-1.5">
+            <label
+              htmlFor="password"
+              className="block text-sm text-zinc-300 mb-1.5"
+            >
               Password
             </label>
             <div className="relative">
@@ -230,7 +268,7 @@ export default function RegisterPage() {
               <input
                 id="password"
                 name="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
                 onChange={handleChange}
@@ -242,13 +280,20 @@ export default function RegisterPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm text-zinc-300 mb-1.5">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm text-zinc-300 mb-1.5"
+            >
               Confirm Password
             </label>
             <div className="relative">
@@ -256,7 +301,7 @@ export default function RegisterPage() {
               <input
                 id="confirmPassword"
                 name="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -268,7 +313,11 @@ export default function RegisterPage() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
               >
-                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
               </button>
             </div>
           </div>
@@ -276,7 +325,10 @@ export default function RegisterPage() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label htmlFor="avatar" className="block text-sm text-zinc-300 mb-1.5 flex items-center gap-1.5">
+            <label
+              htmlFor="avatar"
+              className="flex text-sm text-zinc-300 mb-1.5 items-center gap-1.5"
+            >
               <ImageIcon className="w-3.5 h-3.5 text-zinc-500" />
               Avatar <span className="text-zinc-500">(optional)</span>
             </label>
@@ -298,7 +350,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => {
-                    setAvatarPreview('');
+                    setAvatarPreview("");
                     setAvatar(null);
                   }}
                   className="absolute -top-0.5 -right-0.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs hover:bg-red-600 transition-colors"
@@ -310,7 +362,10 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="aboutMe" className="block text-sm text-zinc-300 mb-1.5 flex items-center gap-1.5">
+            <label
+              htmlFor="aboutMe"
+              className="flex text-sm text-zinc-300 mb-1.5 items-center gap-1.5"
+            >
               <MessageSquare className="w-3.5 h-3.5 text-zinc-500" />
               About Me <span className="text-zinc-500">(optional)</span>
             </label>
@@ -333,18 +388,36 @@ export default function RegisterPage() {
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              <svg
+                className="animate-spin h-4 w-4"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
               Creating account...
             </span>
-          ) : 'Create Account'}
+          ) : (
+            "Create Account"
+          )}
         </button>
 
         <div className="text-center mt-4">
           <p className="text-sm text-zinc-400">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link
               href="/login"
               className="text-white hover:text-zinc-300 underline underline-offset-4"
