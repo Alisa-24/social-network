@@ -25,47 +25,38 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse multipart form
-	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10 MB max
+	if err := r.ParseMultipartForm(5 << 20); err != nil { // 5 MB max
 		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
 			Success: false,
-			Message: "Invalid form data",
+			Message: "Avatar file too large",
 		})
 		return
 	}
 
 	// Extract form values
-	req := models.RegisterRequest{
-		Email:       strings.TrimSpace(r.FormValue("email")),
-		Password:    r.FormValue("password"),
-		FirstName:   strings.TrimSpace(r.FormValue("firstName")),
-		LastName:    strings.TrimSpace(r.FormValue("lastName")),
-		DateOfBirth: r.FormValue("dateOfBirth"),
-		Nickname:    strings.TrimSpace(r.FormValue("nickname")),
-		AboutMe:     strings.TrimSpace(r.FormValue("aboutMe")),
-	}
+	email := strings.TrimSpace(r.FormValue("email"))
+	password := r.FormValue("password")
+	firstName := strings.TrimSpace(r.FormValue("firstName"))
+	lastName := strings.TrimSpace(r.FormValue("lastName"))
+	dateOfBirth := r.FormValue("dateOfBirth")
+	nickname := strings.TrimSpace(r.FormValue("nickname"))
+	aboutMe := strings.TrimSpace(r.FormValue("aboutMe"))
 
-	// Validate required fields
-	if req.Email == "" || req.Password == "" ||
-		req.FirstName == "" || req.LastName == "" || req.DateOfBirth == "" {
+	// Validate all fields using the validation functions
+	validationResult := ValidateRegistrationRequest(
+		email, password, firstName, lastName, dateOfBirth, nickname, aboutMe,
+	)
 
+	if !validationResult.IsValid {
 		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
 			Success: false,
-			Message: "All required fields must be provided",
-		})
-		return
-	}
-
-	// Password policy
-	if len(req.Password) < 8 {
-		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
-			Success: false,
-			Message: "Password must be at least 8 characters long",
+			Message: validationResult.AllErrors(),
 		})
 		return
 	}
 
 	// Check email uniqueness
-	exists, err := queries.EmailExists(req.Email)
+	exists, err := queries.EmailExists(email)
 	if err != nil {
 		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
 			Success: false,
@@ -80,9 +71,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	// Check nickname uniqueness if provided
-	if req.Nickname != "" {
-		exists, err := queries.NicknameExists(req.Nickname)
+	if nickname != "" {
+		exists, err := queries.NicknameExists(nickname)
 		if err != nil {
 			utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
 				Success: false,
@@ -101,7 +93,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword(
-		[]byte(req.Password),
+		[]byte(password),
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
@@ -114,13 +106,13 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create user
 	err = queries.CreateUser(models.CreateUserParams{
-		Email:        req.Email,
+		Email:        email,
 		PasswordHash: string(hashedPassword),
-		FirstName:    req.FirstName,
-		LastName:     req.LastName,
-		DateOfBirth:  req.DateOfBirth,
-		Nickname:     req.Nickname,
-		AboutMe:      req.AboutMe,
+		FirstName:    firstName,
+		LastName:     lastName,
+		DateOfBirth:  dateOfBirth,
+		Nickname:     nickname,
+		AboutMe:      aboutMe,
 	})
 	if err != nil {
 		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
@@ -131,7 +123,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the newly created user
-	dbUser, err := queries.GetUserByEmail(req.Email)
+	dbUser, err := queries.GetUserByEmail(email)
 	if err != nil {
 		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
 			Success: false,
@@ -175,5 +167,4 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 			Avatar:    dbUser.Avatar,
 		},
 	})
-	return
 }

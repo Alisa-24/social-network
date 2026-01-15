@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { login, getCurrentUser } from "@/lib/auth";
+import { login, getCurrentUser } from "@/lib/auth/auth";
+import { ServerError } from "@/lib/errors";
 import { toast } from "@/lib/utils";
 import { Mail, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
 
@@ -20,12 +21,20 @@ export default function LoginPage() {
 
   useEffect(() => {
     async function checkAuth() {
-      const currentUser = await getCurrentUser();
-      if (currentUser) {
-        router.push("/feed");
-        return;
+      try {
+        const currentUser = await getCurrentUser();
+        if (currentUser) {
+          router.push("/feed");
+          return;
+        }
+        setCheckingAuth(false);
+      } catch (error) {
+        if (error instanceof ServerError) {
+          router.push("/error/500");
+          return;
+        }
+        setCheckingAuth(false);
       }
-      setCheckingAuth(false);
     }
     checkAuth();
   }, [router]);
@@ -37,15 +46,19 @@ export default function LoginPage() {
 
     try {
       await login(formData);
+      toast("Login successful", "success");
       router.push("/feed");
     } catch (err) {
+      if (err instanceof ServerError) {
+        router.push("/error/500");
+        return;
+      }
       setError(err instanceof Error ? err.message : "Login failed");
-    } finally {
-      toast("Login successful", "success");
       setFormData({
         ...formData,
         password: "",
       });
+    } finally {
       setLoading(false);
     }
   };

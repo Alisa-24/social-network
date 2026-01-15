@@ -1,7 +1,7 @@
 "use client";
 
 import Navbar from "@/components/layout/Navbar";
-import { logout } from "@/lib/auth";
+import { logout } from "@/lib/auth/auth";
 import { useRouter } from "next/navigation";
 
 export default function MainLayout({
@@ -20,9 +20,5 @@ export default function MainLayout({
     }
   };
 
-  return (
-    <Navbar onLogout={handleLogout}>
-      {children}
-    </Navbar>
-  );
+  return <Navbar onLogout={handleLogout}>{children}</Navbar>;
 }

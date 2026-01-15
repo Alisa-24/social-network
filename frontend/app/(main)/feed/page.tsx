@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth/auth";
+import { ServerError } from "@/lib/errors";
 import { User } from "@/lib/interfaces";
 
 export default function FeedPage() {
@@ -12,13 +13,21 @@ export default function FeedPage() {
 
   useEffect(() => {
     async function checkAuth() {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) {
+      try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
+          router.push("/login");
+          return;
+        }
+        setUser(currentUser);
+        setLoading(false);
+      } catch (error) {
+        if (error instanceof ServerError) {
+          router.push("/error/500");
+          return;
+        }
         router.push("/login");
-        return;
       }
-      setUser(currentUser);
-      setLoading(false);
     }
     checkAuth();
   }, [router]);
