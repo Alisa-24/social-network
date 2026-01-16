@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -22,6 +20,14 @@ type NavItem = {
   icon: React.ComponentType<{ className?: string }>;
 };
 
+type CurrentUser = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  createdAt: string;
+};
+
 export default function Navbar({
   children,
   onLogout,
@@ -30,27 +36,38 @@ export default function Navbar({
   onLogout?: () => void;
 }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(true); // desktop default open
+  const [open, setOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(true);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    const storedTheme = localStorage.getItem("theme");
+
+    // Get theme from memory state on mount
     const prefersDark = window.matchMedia(
       "(prefers-color-scheme: dark)"
     ).matches;
-    const dark = storedTheme === "dark" || (!storedTheme && prefersDark);
-    setIsDark(dark);
-    document.documentElement.classList.toggle("dark", dark);
+    setIsDark(prefersDark);
+    document.documentElement.classList.toggle("dark", prefersDark);
+
+    // Get user data from localStorage
+    try {
+      const userStr = localStorage.getItem("currentUser");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setCurrentUser(user);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
   }, []);
 
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
   };
 
   const items: NavItem[] = useMemo(
@@ -68,6 +85,45 @@ export default function Navbar({
     setMobileOpen(false);
   }, [pathname]);
 
+  const getInitials = () => {
+    if (!currentUser) return "U";
+    const first = currentUser.firstName?.charAt(0)?.toUpperCase() || "";
+    const last = currentUser.lastName?.charAt(0)?.toUpperCase() || "";
+    return `${first}${last}` || "U";
+  };
+
+  const getFullName = () => {
+    if (!currentUser) return "User";
+    return (
+      `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() ||
+      "User"
+    );
+  };
+
+  const AvatarComponent = () => {
+    const avatar = (currentUser as any)?.avatar;
+
+    if (avatar) {
+      return (
+        <img
+          src={`http://localhost:8080${avatar}`}
+          alt={getFullName()}
+          className="h-9 w-9 rounded-full object-cover"
+          onError={(e) => {
+            console.error("Failed to load avatar:", avatar);
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      );
+    }
+
+    return (
+      <div className="h-9 w-9 rounded-full bg-foreground/10 flex items-center justify-center border border-border">
+        <User className="h-5 w-5 text-foreground/60" />
+      </div>
+    );
+  };
+
   const SidebarContent = (
     <aside
       className={[
@@ -77,30 +133,42 @@ export default function Navbar({
         "transition-[width] duration-200 ease-out",
       ].join(" ")}
     >
-      <div className="flex items-center justify-between gap-2 px-3 py-3 border-b border-border">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-xl bg-foreground/5 flex items-center justify-center">
-            <Users className="h-5 w-5" />
-          </div>
+      <div
+        className={`flex items-center gap-2 px-3 py-3 border-b border-border ${
+          open ? "justify-between" : "justify-center flex-col"
+        }`}
+      >
+        <div className={`flex items-center gap-2 ${!open ? "flex-col" : ""}`}>
+          <AvatarComponent />
           {open && (
             <div className="leading-tight">
-              <div className="text-sm font-semibold">Social</div>
-              <div className="text-xs text-foreground/60">Dashboard</div>
+              <div className="text-sm font-semibold">{getFullName()}</div>
             </div>
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-foreground/5"
-          aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        {open && (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-foreground/5"
+            aria-label="Collapse sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+        {!open && (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-foreground/5 mt-2"
+            aria-label="Expand sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 p-2">
         <div className="space-y-1">
           {items.map((it) => {
@@ -204,9 +272,8 @@ export default function Navbar({
 
         {mobileOpen && (
           <div className="md:hidden fixed inset-0 z-50">
-            <button
-              type="button"
-              className="absolute inset-0 bg-background/60"
+            <div
+              className="absolute inset-0 bg-background/60 backdrop-blur-sm"
               onClick={() => setMobileOpen(false)}
               aria-label="Close sidebar overlay"
             />
@@ -215,13 +282,10 @@ export default function Navbar({
                 <aside className="h-full border-r border-border bg-background text-foreground flex flex-col w-full">
                   <div className="flex items-center justify-between gap-2 px-3 py-3 border-b border-border">
                     <div className="flex items-center gap-2">
-                      <div className="h-9 w-9 rounded-xl bg-foreground/5 flex items-center justify-center">
-                        <Users className="h-5 w-5" />
-                      </div>
+                      <AvatarComponent />
                       <div className="leading-tight">
-                        <div className="text-sm font-semibold">Social</div>
-                        <div className="text-xs text-foreground/60">
-                          Dashboard
+                        <div className="text-sm font-semibold">
+                          {getFullName()}
                         </div>
                       </div>
                     </div>

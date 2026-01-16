@@ -38,6 +38,7 @@ type CreateUserParams struct {
 	LastName     string
 	DateOfBirth  string
 	Nickname     string
+	Avatar       string
 	AboutMe      string
 }
 

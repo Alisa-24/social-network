@@ -5,6 +5,9 @@ import (
 	"strings"
 	"time"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 
 	"backend/internal/models"
 	"backend/internal/db/queries"
@@ -42,6 +45,64 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	nickname := strings.TrimSpace(r.FormValue("nickname"))
 	aboutMe := strings.TrimSpace(r.FormValue("aboutMe"))
 
+	// Handle avatar file upload
+    var avatarPath string
+    file, handler, err := r.FormFile("avatar")
+    if err == nil {
+	defer file.Close()
+
+	// Validate file type (must be specific image types)
+	contentType := handler.Header.Get("Content-Type")
+	allowedTypes := map[string]bool{
+		"image/jpeg": true,
+		"image/jpg":  true,
+		"image/png":  true,
+		"image/webp": true,
+		"image/gif":  true,
+	}
+
+	if !allowedTypes[contentType] {
+		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
+			Success: false,
+			Message: "Avatar must be JPEG, PNG, WebP, or GIF",
+		})
+		return
+	}
+
+	// Generate unique filename
+	ext := filepath.Ext(handler.Filename)
+	filename := fmt.Sprintf("%d_%s%s", time.Now().Unix(), utils.GenerateSessionID(), ext)
+	avatarPath = "/uploads/avatars/" + filename
+
+	// Ensure uploads/avatars directory exists
+	if err := os.MkdirAll("uploads/avatars", 0755); err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+			Success: false,
+			Message: "Failed to create uploads directory",
+		})
+		return
+	}
+
+	// Save file to disk
+	dst, err := os.Create(filepath.Join("uploads", "avatars", filename))
+	if err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+			Success: false,
+			Message: "Failed to save avatar",
+		})
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+			Success: false,
+			Message: "Failed to save avatar",
+		})
+		return
+	}
+}
+// If no file uploaded or error reading file (other than missing), avatarPath remains empty
 	// Validate all fields using the validation functions
 	validationResult := ValidateRegistrationRequest(
 		email, password, firstName, lastName, dateOfBirth, nickname, aboutMe,
@@ -112,6 +173,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		LastName:     lastName,
 		DateOfBirth:  dateOfBirth,
 		Nickname:     nickname,
+		Avatar:       avatarPath,
 		AboutMe:      aboutMe,
 	})
 	if err != nil {

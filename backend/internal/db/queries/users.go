@@ -60,8 +60,8 @@ func CreateUser(p models.CreateUserParams) error {
 	_, err := DB.Exec(`
 		INSERT INTO users (
 			email, password_hash, first_name, last_name,
-			date_of_birth, nickname, about_me
-		) VALUES (?, ?, ?, ?, ?, ?, ?)
+			date_of_birth, nickname, avatar, about_me
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		p.Email,
 		p.PasswordHash,
@@ -69,6 +69,7 @@ func CreateUser(p models.CreateUserParams) error {
 		p.LastName,
 		p.DateOfBirth,
 		p.Nickname,
+		p.Avatar,
 		p.AboutMe,
 	)
 	return err
