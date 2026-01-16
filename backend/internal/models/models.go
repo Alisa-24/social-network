@@ -48,11 +48,14 @@ type AuthResponse struct {
 }
 
 type UserPublic struct {
-	Email     string `json:"email"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Nickname  string `json:"nickname,omitempty"`
-	Avatar    string `json:"avatar,omitempty"`
+	Email       string    `json:"email"`
+	FirstName   string    `json:"firstName"`
+	LastName    string    `json:"lastName"`
+	DateOfBirth string    `json:"dateOfBirth"`
+	Nickname    string    `json:"nickname,omitempty"`
+	Avatar      string    `json:"avatar,omitempty"`
+	AboutMe     string    `json:"aboutMe,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type Session struct {

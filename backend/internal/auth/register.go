@@ -160,11 +160,14 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Registration successful",
 		User: &models.UserPublic{
-			Email:     dbUser.Email,
-			FirstName: dbUser.FirstName,
-			LastName:  dbUser.LastName,
-			Nickname:  dbUser.Nickname,
-			Avatar:    dbUser.Avatar,
+			Email:       dbUser.Email,
+			FirstName:   dbUser.FirstName,
+			LastName:    dbUser.LastName,
+			DateOfBirth: dbUser.DateOfBirth,
+			Nickname:    dbUser.Nickname,
+			Avatar:      dbUser.Avatar,
+			AboutMe:     dbUser.AboutMe,
+			CreatedAt:   dbUser.CreatedAt,
 		},
 	})
 }

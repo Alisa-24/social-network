@@ -3,6 +3,12 @@ import { API_URL } from "../config";
 import { validateRegistrationData, validateLoginData } from "./validate";
 import { ServerError } from "../errors";
 
+// Cache for getCurrentUser to prevent multiple simultaneous requests
+let currentUserCache: User | null | undefined = undefined;
+let currentUserPromise: Promise<User | null> | null = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5000; // 5 seconds
+
 export async function register(data: RegisterData): Promise<AuthResponse> {
   // Validate data before creating FormData
   const result = validateRegistrationData(data);
@@ -54,6 +60,9 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
   const authResponse = await response.json();
   if (authResponse.user) {
     StoreUserInLocalStorage(authResponse.user);
+    // Update cache
+    currentUserCache = authResponse.user;
+    cacheTimestamp = Date.now();
   }
   return authResponse;
 }
@@ -90,6 +99,9 @@ export async function login(data: LoginData): Promise<AuthResponse> {
   const authResponse = await response.json();
   if (authResponse.user) {
     StoreUserInLocalStorage(authResponse.user);
+    // Update cache
+    currentUserCache = authResponse.user;
+    cacheTimestamp = Date.now();
   }
   return authResponse;
 }
@@ -117,33 +129,74 @@ export async function logout(): Promise<AuthResponse> {
   // Clear user from localStorage on logout
   localStorage.removeItem("currentUser");
 
+  // Clear the cache
+  currentUserCache = undefined;
+  currentUserPromise = null;
+
   return response.json();
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  try {
-    const response = await fetch(`${API_URL}/api/auth/me`, {
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data: AuthResponse = await response.json();
-    if (data.user) {
-      StoreUserInLocalStorage(data.user);
-    }
-    return data.user || null;
-  } catch (error) {
-    // Network error - server is down
-    if (error instanceof TypeError) {
-      throw new ServerError(
-        "Unable to connect to server. Please check if the server is running."
-      );
-    }
-    return null;
+  // Return cached value if still valid
+  const now = Date.now();
+  if (currentUserCache !== undefined && now - cacheTimestamp < CACHE_DURATION) {
+    return currentUserCache;
   }
+
+  // Return existing promise if one is in flight
+  if (currentUserPromise) {
+    return currentUserPromise;
+  }
+
+  // Create new promise
+  currentUserPromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+      const response = await fetch(`${API_URL}/api/auth/me`, {
+        credentials: "include",
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        currentUserCache = null;
+        cacheTimestamp = Date.now();
+        return null;
+      }
+
+      const data: AuthResponse = await response.json();
+      if (data.user) {
+        StoreUserInLocalStorage(data.user);
+        currentUserCache = data.user;
+        cacheTimestamp = Date.now();
+        return data.user;
+      }
+
+      currentUserCache = null;
+      cacheTimestamp = Date.now();
+      return null;
+    } catch (error) {
+      // Network error or timeout - server is down
+      if (
+        error instanceof TypeError ||
+        (error as Error).name === "AbortError"
+      ) {
+        throw new ServerError(
+          "Unable to connect to server. Please check if the server is running."
+        );
+      }
+      currentUserCache = null;
+      cacheTimestamp = Date.now();
+      return null;
+    } finally {
+      currentUserPromise = null;
+    }
+  })();
+
+  return currentUserPromise;
 }
 
 export async function isAuthenticated(): Promise<boolean> {

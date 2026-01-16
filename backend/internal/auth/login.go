@@ -73,28 +73,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for existing valid session
-	sessionID, err := queries.GetValidSessionByUserID(dbUser.ID)
-	if err == sql.ErrNoRows {
-		// No valid session exists, create a new one
-		sessionID, err = queries.CreateSession(dbUser.ID)
-		if err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
-				Success: false,
-				Message: "Failed to create session",
-			})
-			return
-		}
-		fmt.Printf("Created new session for user %d: %s\n", dbUser.ID, sessionID)
-	} else if err != nil {
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
-			Success: false,
-			Message: "Failed to check session",
-		})
-		return
-	} else {
-		fmt.Printf("Reusing existing session for user %d: %s\n", dbUser.ID, sessionID)
-	}
+	sessionID, err := queries.CreateSession(dbUser.ID)
+    if err != nil { utils.RespondJSON(
+        w,
+        http.StatusInternalServerError,
+        models.AuthResponse { Success: false,
+        Message: "Failed to create session",
+        }) 
+        return 
+    }
+
 
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -113,11 +101,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Login successful",
 		User: &models.UserPublic{
-			Email:     dbUser.Email,
-			FirstName: dbUser.FirstName,
-			LastName:  dbUser.LastName,
-			Nickname:  dbUser.Nickname,
-			Avatar:    dbUser.Avatar,
+			Email:       dbUser.Email,
+			FirstName:   dbUser.FirstName,
+			LastName:    dbUser.LastName,
+			DateOfBirth: dbUser.DateOfBirth,
+			Nickname:    dbUser.Nickname,
+			Avatar:      dbUser.Avatar,
+			AboutMe:     dbUser.AboutMe,
+			CreatedAt:   dbUser.CreatedAt,
 		},
 	})
 	return

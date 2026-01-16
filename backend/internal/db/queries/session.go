@@ -2,7 +2,8 @@ package queries
 
 import (
 	"backend/internal/models"
-	"github.com/google/uuid"
+	"backend/internal/utils"
+	"time"
 )
 
 func GetSessionByID(sessionID string) (models.Session, error) {
@@ -29,19 +30,17 @@ func GetValidSessionByUserID(userID int) (string, error) {
 }
 
 func CreateSession(userID int) (string, error) {
-	sessionID := uuid.New().String()
+	sessionID := utils.GenerateSessionID()
+	expiresAt := time.Now().Add(30 * 24 * time.Hour)
 
 	_, err := DB.Exec(`
 		INSERT INTO sessions (id, user_id, expires_at)
-		VALUES (?, ?, datetime('now', '+30 days'))
-	`, sessionID, userID)
+		VALUES (?, ?, ?)
+	`, sessionID, userID, expiresAt)
 
-	if err != nil {
-		return "", err
-	}
-
-	return sessionID, nil
+	return sessionID, err
 }
+
 
 func DeleteSession(sessionID string) error {
 	_, err := DB.Exec(`DELETE FROM sessions WHERE id = ?`, sessionID)

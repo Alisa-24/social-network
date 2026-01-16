@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	"unicode"
 )
 
 // ValidationError represents a single validation error

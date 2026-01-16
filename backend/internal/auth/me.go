@@ -59,12 +59,16 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, models.AuthResponse{
 		Success: true,
+		Message: "User retrieved successfully",
 		User: &models.UserPublic{
-			Email:     user.Email,
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-			Nickname:  user.Nickname,
-			Avatar:    user.Avatar,
+			Email:       user.Email,
+			FirstName:   user.FirstName,
+			LastName:    user.LastName,
+			DateOfBirth: user.DateOfBirth,
+			Nickname:    user.Nickname,
+			Avatar:      user.Avatar,
+			AboutMe:     user.AboutMe,
+			CreatedAt:   user.CreatedAt,
 		},
 	})
 }
