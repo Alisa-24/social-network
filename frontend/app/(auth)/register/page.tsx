@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { register, getCurrentUser } from "@/lib/auth/auth";
 import { ServerError } from "@/lib/errors";
-import { toast } from "@/lib/utils";
 import {
   User,
   Mail,
@@ -87,7 +86,6 @@ export default function RegisterPage() {
         avatar: avatar || undefined,
       });
 
-      toast("Account created successfully! Redirecting to feed...", "success");
       router.push("/feed");
     } catch (err) {
       if (err instanceof ServerError) {
@@ -111,7 +109,7 @@ export default function RegisterPage() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     setFormData({
       ...formData,

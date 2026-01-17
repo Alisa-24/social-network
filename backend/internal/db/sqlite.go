@@ -22,7 +22,7 @@ func InitDB(dbPath string) error {
 	}
 
 	// Set connection pool settings
-	DB.SetMaxOpenConns(1) 
+	DB.SetMaxOpenConns(1)
 	DB.SetMaxIdleConns(1)
 
 	if err := DB.Ping(); err != nil {
@@ -64,7 +64,6 @@ func RunMigrations(migrationsPath string) error {
 	return nil
 }
 
-
 // Close closes the database connection
 func Close() error {
 	if DB != nil {
@@ -73,4 +72,3 @@ func Close() error {
 	}
 	return nil
 }
-

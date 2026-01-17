@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"backend/internal/models"
-	"github.com/google/uuid"
 
+	"github.com/google/uuid"
 )
 
 func RespondJSON(w http.ResponseWriter, statusCode int, response models.AuthResponse) {

@@ -28,35 +28,31 @@ export default function ToastItem({
   }, [id, duration, onClose]);
 
   const Icon =
-    type === "success"
-      ? CheckCircle
-      : type === "error"
-      ? AlertCircle
-      : Info;
+    type === "success" ? CheckCircle : type === "error" ? AlertCircle : Info;
 
-  const color =
+  const styles =
     type === "success"
-      ? "border-green-500/40 text-green-400"
+      ? "border-green-500/40 bg-green-950/50 text-green-400"
       : type === "error"
-      ? "border-red-500/40 text-red-400"
-      : "border-blue-500/40 text-blue-400";
+        ? "border-red-500/40 bg-red-950/50 text-red-400"
+        : "border-blue-500/40 bg-blue-950/50 text-blue-400";
 
   return (
     <div
-      className={`relative flex gap-3 rounded-xl border bg-slate-950 px-4 py-3 shadow-lg backdrop-blur animate-in slide-in-from-right ${color}`}
+      className={`relative flex gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur animate-in slide-in-from-right ${styles}`}
     >
       <Icon className="h-5 w-5 mt-0.5" />
 
       <div className="flex-1">
         {title && <p className="text-sm font-semibold">{title}</p>}
-        <p className="text-sm text-slate-200">{message}</p>
+        <p className="text-sm opacity-90">{message}</p>
       </div>
 
       <button
         onClick={() => onClose(id)}
-        className="absolute right-2 top-2 rounded-md p-1 hover:bg-slate-800"
+        className="absolute right-2 top-2 rounded-md p-1 hover:bg-black/20"
       >
-        <X className="h-4 w-4 text-slate-400" />
+        <X className="h-4 w-4 opacity-70" />
       </button>
     </div>
   );

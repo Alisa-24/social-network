@@ -37,7 +37,7 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
     });
   } catch (error) {
     throw new ServerError(
-      "Unable to connect to server. Please check if the server is running."
+      "Unable to connect to server. Please check if the server is running.",
     );
   }
 
@@ -87,7 +87,7 @@ export async function login(data: LoginData): Promise<AuthResponse> {
     });
   } catch (error) {
     throw new ServerError(
-      "Unable to connect to server. Please check if the server is running."
+      "Unable to connect to server. Please check if the server is running.",
     );
   }
 
@@ -117,7 +117,7 @@ export async function logout(): Promise<AuthResponse> {
     // Clear user from localStorage even if server is down
     localStorage.removeItem("currentUser");
     throw new ServerError(
-      "Unable to connect to server. You have been logged out locally."
+      "Unable to connect to server. You have been logged out locally.",
     );
   }
 
@@ -185,7 +185,7 @@ export async function getCurrentUser(): Promise<User | null> {
         (error as Error).name === "AbortError"
       ) {
         throw new ServerError(
-          "Unable to connect to server. Please check if the server is running."
+          "Unable to connect to server. Please check if the server is running.",
         );
       }
       currentUserCache = null;

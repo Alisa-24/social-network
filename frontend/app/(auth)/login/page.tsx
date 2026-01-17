@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login, getCurrentUser } from "@/lib/auth/auth";
 import { ServerError } from "@/lib/errors";
-import { toast } from "@/lib/utils";
 import { Mail, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -46,7 +45,6 @@ export default function LoginPage() {
 
     try {
       await login(formData);
-      toast("Login successful", "success");
       router.push("/feed");
     } catch (err) {
       if (err instanceof ServerError) {

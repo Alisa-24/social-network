@@ -3,12 +3,12 @@ package auth
 import (
 	"database/sql"
 	"encoding/json"
-	"net/http"
 	"fmt"
+	"net/http"
 	"time"
 
-	"backend/internal/models"
 	"backend/internal/db/queries"
+	"backend/internal/models"
 	"backend/internal/utils"
 
 	"golang.org/x/crypto/bcrypt"
@@ -74,15 +74,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sessionID, err := queries.CreateSession(dbUser.ID)
-    if err != nil { utils.RespondJSON(
-        w,
-        http.StatusInternalServerError,
-        models.AuthResponse { Success: false,
-        Message: "Failed to create session",
-        }) 
-        return 
-    }
-
+	if err != nil {
+		utils.RespondJSON(
+			w,
+			http.StatusInternalServerError,
+			models.AuthResponse{Success: false,
+				Message: "Failed to create session",
+			})
+		return
+	}
 
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{
@@ -111,5 +111,4 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			CreatedAt:   dbUser.CreatedAt,
 		},
 	})
-	return
 }
