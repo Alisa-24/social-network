@@ -22,7 +22,7 @@ func GetUserByEmail(email string) (models.User, error) {
 			COALESCE(about_me, '') as about_me, 
 			is_public, 
 			created_at
-		FROM users WHERE email = ?`, email).Scan(
+		FROM users WHERE LOWER(email) = LOWER(?)`, email).Scan(
 		&user.ID,
 		&user.Email,
 		&user.Password,
@@ -41,7 +41,7 @@ func GetUserByEmail(email string) (models.User, error) {
 func EmailExists(email string) (bool, error) {
 	var exists bool
 	err := DB.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM users WHERE email = ?)",
+		"SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(email) = LOWER(?))",
 		email,
 	).Scan(&exists)
 	return exists, err
@@ -50,7 +50,7 @@ func EmailExists(email string) (bool, error) {
 func NicknameExists(nickname string) (bool, error) {
 	var exists bool
 	err := DB.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM users WHERE nickname = ?)",
+		"SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(nickname) = LOWER(?))",
 		nickname,
 	).Scan(&exists)
 	return exists, err
