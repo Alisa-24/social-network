@@ -45,7 +45,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Get user by email
 	dbUser, err := queries.GetUserByEmail(req.Email)
 	if err != nil {
-		fmt.Printf("GetUserByEmail error: %v (type: %T)\n", err, err)
 		if err == sql.ErrNoRows {
 			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
 				Success: false,
@@ -53,7 +52,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		fmt.Printf("Database error details: %v\n", err)
 		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
 			Success: false,
 			Message: fmt.Sprintf("Failed to retrieve user: %v", err),
