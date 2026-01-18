@@ -45,12 +45,21 @@ export default function Navbar({
   useEffect(() => {
     setMounted(true);
 
-    // Get theme from memory state on mount
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setIsDark(prefersDark);
-    document.documentElement.classList.toggle("dark", prefersDark);
+    // Get theme from localStorage
+    const storedTheme = localStorage.getItem("theme");
+    let dark: boolean;
+
+    if (storedTheme === "dark") {
+      dark = true;
+    } else if (storedTheme === "light") {
+      dark = false;
+    } else {
+      // No preference set, use system preference
+      dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", dark);
 
     // Get user data from localStorage
     try {
@@ -67,7 +76,9 @@ export default function Navbar({
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
+    const newTheme = next ? "dark" : "light";
     document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", newTheme);
   };
 
   const items: NavItem[] = useMemo(
@@ -78,7 +89,7 @@ export default function Navbar({
       { label: "Chat", href: "/chat", icon: MessageSquare },
       { label: "Notifications", href: "/notifications", icon: Bell },
     ],
-    []
+    [],
   );
 
   useEffect(() => {

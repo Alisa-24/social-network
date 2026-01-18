@@ -11,22 +11,35 @@ export default function ThemeToggle() {
     setMounted(true);
 
     const storedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
+    let dark: boolean;
 
-    const dark = storedTheme === "dark" || (!storedTheme && prefersDark);
+    if (storedTheme === "dark") {
+      dark = true;
+    } else if (storedTheme === "light") {
+      dark = false;
+    } else {
+      // No preference set, use system preference
+      dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
 
     setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
   }, []);
 
   function toggleTheme() {
+    console.log("Current isDark state:", isDark);
     const next = !isDark;
+    console.log("Next isDark state:", next);
     setIsDark(next);
 
+    const newTheme = next ? "dark" : "light";
+    console.log("Setting theme to:", newTheme);
+
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
+    localStorage.setItem("theme", newTheme);
+
+    console.log("Saved theme:", localStorage.getItem("theme"));
+    console.log("HTML classes:", document.documentElement.className);
   }
 
   if (!mounted) return null;
