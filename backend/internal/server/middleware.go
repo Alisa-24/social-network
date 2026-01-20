@@ -2,23 +2,31 @@ package server
 
 import (
 	"backend/internal/db/queries"
+	"backend/internal/models"
 	"backend/internal/utils"
 	"net/http"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 
 		// 1. Get session token (example: cookie)
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+				Success: false,
+				Message: "Unauthorized",
+			})
 			return
 		}
 
 		session, err := queries.GetSessionByID(cookie.Value)
 		if err != nil {
-			http.Error(w, "Invalid session", http.StatusUnauthorized)
+			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+				Success: false,
+				Message: "Invalid session",
+			})
 			return
 		}
 
@@ -28,7 +36,10 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// 3. Compare
 		if session.BrowserFingerprint != currentFP {
 			_ = queries.DeleteSession(session.ID)
-			http.Error(w, "Session invalidated", http.StatusUnauthorized)
+			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+				Success: false,
+				Message: "Session invalidated",
+			})
 			return
 		}
 
