@@ -71,7 +71,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sessionID, err := queries.CreateSession(dbUser.ID)
+	//get user's browser fingerprint
+	browserFingerprint := utils.FingerprintFromRequest(r)
+	// Create session
+	sessionID, err := queries.CreateSession(dbUser.ID, browserFingerprint)
 	if err != nil {
 		utils.RespondJSON(
 			w,

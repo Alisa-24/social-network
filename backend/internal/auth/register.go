@@ -194,8 +194,9 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	browserFingerprint := utils.FingerprintFromRequest(r)
 	// Create session for the new user
-	sessionID, err := queries.CreateSession(dbUser.ID)
+	sessionID, err := queries.CreateSession(dbUser.ID, browserFingerprint)
 	if err != nil {
 		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
 			Success: false,
@@ -203,7 +204,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	fmt.Printf("Created new session for user %d: %s\n", dbUser.ID, sessionID)
 
 	// Set session cookie
 	http.SetCookie(w, &http.Cookie{

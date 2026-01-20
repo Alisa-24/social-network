@@ -60,7 +60,8 @@ type UserPublic struct {
 }
 
 type Session struct {
-	ID        string
-	UserID    int
-	ExpiresAt time.Time
+	ID                 string
+	UserID             int
+	ExpiresAt          time.Time
+	BrowserFingerprint string
 }

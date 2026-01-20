@@ -33,6 +33,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
 		Expires:  time.Now().Add(-1 * time.Hour),
 	})
