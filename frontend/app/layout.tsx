@@ -26,10 +26,8 @@ export default function RootLayout({
                   } else if (theme === 'light') {
                     document.documentElement.classList.remove('dark');
                   } else {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    if (prefersDark) {
-                      document.documentElement.classList.add('dark');
-                    }
+                    // Default to light mode if no preference is set
+                    document.documentElement.classList.remove('dark');
                   }
                 } catch (e) {}
               })();
