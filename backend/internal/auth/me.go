@@ -61,6 +61,7 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "User retrieved successfully",
 		User: &models.UserPublic{
+			UserId:      user.ID,
 			Email:       user.Email,
 			FirstName:   user.FirstName,
 			LastName:    user.LastName,

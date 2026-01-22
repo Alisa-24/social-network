@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { User as UserIcon } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/auth";
 import { ServerError } from "@/lib/errors";
-import { User } from "@/lib/interfaces";
+import { User, OnlineUser } from "@/lib/interfaces";
+import { API_URL } from "@/lib/config";
+import * as ws from "@/lib/ws/ws";
 
 export default function FeedPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [wsConnected, setWsConnected] = useState(false);
 
   useEffect(() => {
     async function checkAuth() {
@@ -32,6 +37,34 @@ export default function FeedPage() {
     checkAuth();
   }, [router]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    // Handle online users updates
+    const handleOnlineUsers = (data: { users: OnlineUser[] }) => {
+      // Filter out current user from the list
+      const filteredUsers = (data.users || []).filter(
+        (onlineUser) => onlineUser.userId !== user.userId,
+      );
+      setOnlineUsers(filteredUsers);
+    };
+
+    // Handle connection status
+    const handleConnect = () => setWsConnected(true);
+    const handleDisconnect = () => setWsConnected(false);
+
+    ws.on("online_users", handleOnlineUsers);
+    ws.onConnect(handleConnect);
+    ws.onDisconnect(handleDisconnect);
+
+    // Set initial connection state
+    setWsConnected(ws.isConnected());
+
+    return () => {
+      ws.off("online_users", handleOnlineUsers);
+    };
+  }, [user]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -44,11 +77,84 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="border border-border rounded-lg bg-background p-8 text-center">
-        <h2 className="text-2xl font-semibold text-foreground mb-4">
-          Welcome, {user.firstName}!
-        </h2>
-        <p className="text-foreground/60">Your feed will appear here.</p>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Feed */}
+        <div className="lg:col-span-2">
+          <div className="border border-border rounded-lg bg-background p-8 text-center">
+            <h2 className="text-2xl font-semibold text-foreground mb-4">
+              Welcome, {user.firstName}!
+            </h2>
+            <p className="text-foreground/60">Your feed will appear here.</p>
+          </div>
+        </div>
+
+        {/* Online Users Sidebar */}
+        <div className="lg:col-span-1">
+          <div className="border border-border rounded-lg bg-background p-6 sticky top-20">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-foreground">
+                Online Users
+              </h3>
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    wsConnected ? "bg-green-500" : "bg-red-500"
+                  }`}
+                />
+                <span className="text-xs text-foreground/60">
+                  {wsConnected ? "Connected" : "Disconnected"}
+                </span>
+              </div>
+            </div>
+
+            {onlineUsers.length === 0 ? (
+              <p className="text-sm text-foreground/60 text-center py-8">
+                No users online
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {onlineUsers.map((onlineUser) => (
+                  <div
+                    key={onlineUser.userId}
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-foreground/5 transition-colors"
+                  >
+                    <div className="relative">
+                      {onlineUser.avatar ? (
+                        <img
+                          src={`${API_URL}${onlineUser.avatar}`}
+                          alt={onlineUser.firstName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center border border-border shrink-0">
+                          <UserIcon className="h-5 w-5 text-foreground/60" />
+                        </div>
+                      )}
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {onlineUser.nickname ||
+                          `${onlineUser.firstName} ${onlineUser.lastName}`}
+                      </p>
+                      <p className="text-xs text-foreground/60 truncate">
+                        {onlineUser.nickname &&
+                          `${onlineUser.firstName} ${onlineUser.lastName}`}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-4 pt-4 border-t border-border">
+              <p className="text-xs text-foreground/60 text-center">
+                {onlineUsers.length} user{onlineUsers.length !== 1 ? "s" : ""}{" "}
+                online
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

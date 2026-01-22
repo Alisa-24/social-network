@@ -39,29 +39,86 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <div className="text-center space-y-6 max-w-2xl px-4 animate-in fade-in zoom-in-95 duration-700">
-        <h1 className="text-6xl font-bold text-foreground tracking-tight animate-in slide-in-from-bottom-4 duration-700 delay-100">
-          Social Network
-        </h1>
-        <p className="text-xl text-foreground/60 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
-          Connect with friends and share your moments
-        </p>
-        <div className="flex gap-3 justify-center mt-8 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-300">
-          <Link
-            href="/login"
-            className="px-6 py-2.5 bg-foreground text-background rounded-md font-medium hover:opacity-90 transition-all duration-200 transform hover:scale-105 active:scale-95"
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/register"
-            className="px-6 py-2.5 border border-border text-foreground rounded-md font-medium hover:bg-foreground/5 transition-all duration-200 transform hover:scale-105 active:scale-95"
-          >
-            Sign Up
-          </Link>
+    <div className="relative flex h-screen w-full flex-col md:flex-row overflow-hidden bg-background text-foreground">
+      {/* Left Side: Brand & Value Proposition */}
+      <div className="flex flex-1 flex-col justify-between p-8 md:p-20 bg-background border-r border-border">
+        <div className="flex items-center gap-3">
+          <div className="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
+            <span className="material-symbols-outlined text-2xl">hub</span>
+          </div>
+          <h2 className="text-2xl font-extrabold tracking-tight">
+            SocialNetwork
+          </h2>
+        </div>
+
+        <div className="max-w-135">
+          <h1 className="text-6xl md:text-7xl font-extrabold leading-[1.1] tracking-[-0.04em] mb-8">
+            Connect.
+            <br />
+            <span className="text-primary">Share.</span>
+            <br />
+            Belong.
+          </h1>
+          <div className="flex flex-col gap-6">
+            <div className="flex items-start gap-4">
+              <span className="material-symbols-outlined text-ring mt-1">
+                check_circle
+              </span>
+              <p className="text-lg text-muted-foreground font-medium">
+                Follow your interests and stay updated with the people you love.
+              </p>
+            </div>
+            <div className="flex items-start gap-4">
+              <span className="material-symbols-outlined text-ring mt-1">
+                check_circle
+              </span>
+              <p className="text-lg text-muted-foreground font-medium">
+                Join vibrant, moderated groups for niche communities.
+              </p>
+            </div>
+            <div className="flex items-start gap-4">
+              <span className="material-symbols-outlined text-ring mt-1">
+                check_circle
+              </span>
+              <p className="text-lg text-muted-foreground font-medium">
+                Chat in real-time with end-to-end encrypted messaging.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Right Side: Action Card */}
+      <div className="flex flex-1 items-center justify-center p-8 bg-background/50">
+        <div className="w-full max-w-105 rounded-xl bg-background p-10 shadow-[0_20px_50px_rgba(0,0,0,0.08)] border border-border">
+          <div className="mb-8 text-center md:text-left">
+            <h3 className="text-2xl font-bold mb-2">Join the conversation.</h3>
+            <p className="text-muted-foreground">
+              Experience the next generation of social networking.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/register"
+              className="flex w-full items-center justify-center gap-2 rounded-lg h-14 font-bold text-lg transition-all active:scale-[0.98]"
+              style={{ backgroundColor: "#3b82f6", color: "#ffffff" }}
+            >
+              <span>Create Account</span>
+            </Link>
+            <Link
+              href="/login"
+              className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-border h-14 text-foreground font-bold text-lg hover:bg-foreground/5 transition-all active:scale-[0.98]"
+            >
+              <span>Sign In</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Decorative Elements */}
+      <div className="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] bg-ring/5 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] left-[-5%] w-[30%] h-[30%] bg-ring/5 rounded-full blur-[100px] pointer-events-none"></div>
     </div>
   );
 }

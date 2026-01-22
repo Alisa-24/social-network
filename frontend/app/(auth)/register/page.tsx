@@ -24,7 +24,6 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    confirmPassword: "",
     firstName: "",
     lastName: "",
     dateOfBirth: "",
@@ -58,10 +57,6 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
     setLoading(true);
     try {
       await register({

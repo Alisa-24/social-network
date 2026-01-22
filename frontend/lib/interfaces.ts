@@ -1,4 +1,5 @@
 export interface User {
+  userId?: number;
   email: string;
   firstName: string;
   lastName: string;
@@ -7,6 +8,14 @@ export interface User {
   avatar?: string;
   aboutMe?: string;
   createdAt: string;
+}
+
+export interface OnlineUser {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  avatar?: string;
 }
 
 export interface AuthResponse {

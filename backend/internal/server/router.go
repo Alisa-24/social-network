@@ -2,10 +2,14 @@ package server
 
 import (
 	"backend/internal/auth"
+	"backend/internal/ws"
 	"net/http"
 )
 
 func SetupRoutes(mux *http.ServeMux) {
+
+	// WebSocket
+	mux.HandleFunc("/ws", ws.WSHandler)
 
 	// Public
 	mux.HandleFunc("/api/auth/register", auth.RegisterHandler)

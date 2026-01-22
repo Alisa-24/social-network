@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"backend/internal/server"
 	"backend/internal/db"
+	"backend/internal/server"
 )
 
 func main() {

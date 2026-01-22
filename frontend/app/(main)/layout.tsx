@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import Navbar from "@/components/layout/Navbar";
-import { logout } from "@/lib/auth/auth";
+import { logout, getCurrentUser } from "@/lib/auth/auth";
 import { useRouter } from "next/navigation";
+import * as ws from "@/lib/ws/ws";
 
 export default function MainLayout({
   children,
@@ -10,6 +12,15 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+
+  useEffect(() => {
+    // Connect WebSocket when app loads if user is authenticated
+    getCurrentUser().then((user) => {
+      if (user) {
+        ws.connect();
+      }
+    });
+  }, []);
 
   const handleLogout = async () => {
     try {

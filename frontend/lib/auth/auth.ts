@@ -2,6 +2,7 @@ import { User, AuthResponse, RegisterData, LoginData } from "../interfaces";
 import { API_URL } from "../config";
 import { validateRegistrationData, validateLoginData } from "./validate";
 import { ServerError } from "../errors";
+import * as ws from "../ws/ws";
 
 // Cache for getCurrentUser to prevent multiple simultaneous requests
 let currentUserCache: User | null | undefined = undefined;
@@ -63,6 +64,8 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
     // Update cache
     currentUserCache = authResponse.user;
     cacheTimestamp = Date.now();
+    // Connect WebSocket
+    ws.connect();
   }
   return authResponse;
 }
@@ -102,6 +105,8 @@ export async function login(data: LoginData): Promise<AuthResponse> {
     // Update cache
     currentUserCache = authResponse.user;
     cacheTimestamp = Date.now();
+    // Connect WebSocket
+    ws.connect();
   }
   return authResponse;
 }
@@ -132,6 +137,9 @@ export async function logout(): Promise<AuthResponse> {
   // Clear the cache
   currentUserCache = undefined;
   currentUserPromise = null;
+
+  // Disconnect WebSocket
+  ws.disconnect();
 
   return response.json();
 }

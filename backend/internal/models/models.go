@@ -49,6 +49,7 @@ type AuthResponse struct {
 }
 
 type UserPublic struct {
+	UserId      int       `json:"userId,omitempty"`
 	Email       string    `json:"email"`
 	FirstName   string    `json:"firstName"`
 	LastName    string    `json:"lastName"`
@@ -64,4 +65,10 @@ type Session struct {
 	UserID             int
 	ExpiresAt          time.Time
 	BrowserFingerprint string
+}
+
+type OnlineUser struct {
+	UserID   int    `json:"user_id"`
+	Nickname string `json:"nickname"`
+	Online   bool   `json:"online"`
 }

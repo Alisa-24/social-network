@@ -102,6 +102,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Success: true,
 		Message: "Login successful",
 		User: &models.UserPublic{
+			UserId:      dbUser.ID,
 			Email:       dbUser.Email,
 			FirstName:   dbUser.FirstName,
 			LastName:    dbUser.LastName,

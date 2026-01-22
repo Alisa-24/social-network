@@ -12,6 +12,18 @@ const config: Config = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
+        primary: "#3c83f6",
+        "background-light": "#ffffff",
+        "background-dark": "#1a1d23",
+      },
+      fontFamily: {
+        display: ["Manrope", "sans-serif"],
+      },
+      borderRadius: {
+        DEFAULT: "0.5rem",
+        lg: "1rem",
+        xl: "1.5rem",
+        full: "9999px",
       },
     },
   },
