@@ -116,13 +116,13 @@ export default function Navbar({
         <div
           className={`flex items-center gap-3 transition-all duration-300 ${!open ? "mx-auto" : ""}`}
         >
-          <div className="bg-primary text-primary-foreground p-2 rounded-xl shrink-0 shadow-lg shadow-primary/20">
+          <div className="bg-primary text-white p-2 rounded-lg shrink-0">
             <Zap className="h-6 w-6 fill-current" />
           </div>
           <div
             className={`transition-all duration-300 ${open ? "opacity-100 translate-x-0 w-auto" : "opacity-0 -translate-x-10 w-0"}`}
           >
-            <span className="text-xl font-bold tracking-tighter whitespace-nowrap">
+            <span className="text-xl font-bold tracking-tight whitespace-nowrap">
               Nexus
             </span>
           </div>
@@ -160,12 +160,12 @@ export default function Navbar({
               href={it.href}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all group ${
                 active
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-foreground/60 hover:bg-foreground/5 hover:text-foreground"
+                  ? "bg-primary/10 text-primary border-r-2 border-primary"
+                  : "text-foreground/60 hover:bg-foreground/5 hover:text-primary"
               } ${!open ? "justify-center" : ""}`}
             >
               <it.icon
-                className={`h-5 w-5 shrink-0 ${active ? "text-primary" : ""}`}
+                className={`h-5 w-5 shrink-0 ${active ? "text-primary" : "group-hover:text-primary"}`}
               />
               <div
                 className={`transition-all duration-300 ${open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}
@@ -182,14 +182,14 @@ export default function Navbar({
       {/* 3. BOTTOM SECTION: User & Settings */}
       <div className="p-3 border-t border-border space-y-1 bg-background/50 backdrop-blur-sm">
         <div
-          className={`flex items-center gap-3 px-3 py-2 rounded-xl mb-2 transition-all ${open ? "bg-foreground/5" : "justify-center"}`}
+          className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-2 transition-all ${open ? "bg-surface" : "justify-center"}`}
         >
           <AvatarComponent />
           <div
             className={`transition-all duration-300 flex-1 min-w-0 ${open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}
           >
             <p className="text-sm font-semibold truncate">{getFullName()}</p>
-            <p className="text-[10px] text-foreground/40 truncate uppercase tracking-widest">
+            <p className="text-[10px] text-primary truncate uppercase tracking-widest font-bold">
               Active Now
             </p>
           </div>
@@ -198,7 +198,7 @@ export default function Navbar({
         {mounted && (
           <button
             onClick={toggleTheme}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-foreground/60 hover:bg-foreground/5 hover:text-foreground transition-all ${!open ? "justify-center" : ""}`}
+            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-foreground/60 hover:bg-foreground/5 hover:text-primary transition-all ${!open ? "justify-center" : ""}`}
           >
             {isDark ? (
               <Moon className="h-5 w-5" />

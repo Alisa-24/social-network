@@ -12,9 +12,10 @@ const config: Config = {
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
-        primary: "#3c83f6",
-        "background-light": "#ffffff",
-        "background-dark": "#1a1d23",
+        surface: "var(--surface)",
+        primary: "#00e6bf",
+        "background-light": "#f0f0f0",
+        "background-dark": "#0a0a0a",
       },
       fontFamily: {
         display: ["Manrope", "sans-serif"],

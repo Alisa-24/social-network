@@ -39,3 +39,18 @@ export interface LoginData {
   email: string;
   password: string;
 }
+
+export interface Group {
+  id: number;
+  name: string;
+  description: string;
+  coverImagePath?: string;
+  ownerId: number;
+  createdAt: string;
+}
+
+export interface CreateGroupData {
+  name: string;
+  description: string;
+  coverImage?: File;
+}

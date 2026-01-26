@@ -64,7 +64,7 @@ export default function LoginPage() {
           </span>
           <Link
             href="/register"
-            className="px-4 py-1.5 bg-blue-600 text-white text-[11px] font-bold rounded-md transition-all hover:bg-blue-500 active:scale-95"
+            className="px-4 py-1.5 bg-primary text-background-dark text-[11px] font-bold rounded-md transition-all hover:bg-primary/90 active:scale-95"
           >
             SIGN UP
           </Link>
@@ -73,7 +73,7 @@ export default function LoginPage() {
 
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-110 bg-background border border-border rounded-xl shadow-2xl h-fit overflow-hidden">
-          <div className="h-1 w-full bg-blue-600" />
+          <div className="h-1 w-full bg-primary" />
 
           <div className="p-8 md:p-10">
             <div className="mb-8 text-center">
@@ -139,7 +139,7 @@ export default function LoginPage() {
                 <button
                   disabled={loading}
                   type="submit"
-                  className="w-full h-11 bg-blue-600 text-white rounded-lg font-bold text-sm hover:bg-blue-500 active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                  className="w-full h-11 bg-primary text-background-dark rounded-lg font-bold text-sm hover:bg-primary/90 active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
                 >
                   {loading ? "Signing in..." : "Sign In"}
                 </button>

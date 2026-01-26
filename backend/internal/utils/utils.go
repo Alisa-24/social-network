@@ -4,12 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"backend/internal/models"
-
 	"github.com/google/uuid"
 )
 
-func RespondJSON(w http.ResponseWriter, statusCode int, response models.AuthResponse) {
+func RespondJSON(w http.ResponseWriter, statusCode int, response interface{}) {
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
 }

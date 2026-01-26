@@ -42,7 +42,7 @@ type CreateUserParams struct {
 	AboutMe      string
 }
 
-type AuthResponse struct {
+type GenericResponse struct {
 	Success bool        `json:"success"`
 	Message string      `json:"message,omitempty"`
 	User    *UserPublic `json:"user,omitempty"`
@@ -71,4 +71,26 @@ type OnlineUser struct {
 	UserID   int    `json:"user_id"`
 	Nickname string `json:"nickname"`
 	Online   bool   `json:"online"`
+}
+
+type CreateGroupRequest struct {
+	Name           string `json:"name"`
+	Description    string `json:"description,omitempty"`
+	CoverImagePath string `json:"cover_image_path,omitempty"`
+	OwnerID        int    `json:"owner_id"`
+}
+
+type Group struct {
+	ID             int64
+	Name           string
+	Description    string
+	CoverImagePath string
+	OwnerID        int
+	CreatedAt      time.Time
+}
+
+type GroupsResponse struct {
+	Success    bool    `json:"success"`
+	UserGroups []Group `json:"userGroups"`
+	AllGroups  []Group `json:"allGroups"`
 }

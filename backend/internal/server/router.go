@@ -2,6 +2,7 @@ package server
 
 import (
 	"backend/internal/auth"
+	"backend/internal/groups"
 	"backend/internal/ws"
 	"net/http"
 )
@@ -24,6 +25,20 @@ func SetupRoutes(mux *http.ServeMux) {
 	mux.Handle(
 		"/api/auth/logout",
 		AuthMiddleware(http.HandlerFunc(auth.LogoutHandler)),
+	)
+
+	// Groups
+	mux.Handle(
+		"/api/groups",
+		AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost {
+				groups.CreateGroup(w, r)
+			} else if r.Method == http.MethodGet {
+				groups.GetGroups(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		})),
 	)
 
 	// Files

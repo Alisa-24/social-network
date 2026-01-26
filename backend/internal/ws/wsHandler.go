@@ -25,7 +25,10 @@ var (
 func WSHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
+			Success: false,
+			Message: "Not authenticated",
+		})
 		return
 	}
 
@@ -33,13 +36,13 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := queries.GetSessionByID(cookie.Value)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
 				Message: "Invalid session",
 			})
 			return
 		}
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to verify session",
 		})
@@ -48,7 +51,10 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade HTTP connection to WebSocket
 	wsConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		http.Error(w, "Failed to upgrade to WebSocket", http.StatusInternalServerError)
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+			Success: false,
+			Message: "Failed to upgrade to WebSocket",
+		})
 		return
 	}
 	mu.Lock()

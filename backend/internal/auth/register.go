@@ -20,7 +20,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
-		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.GenericResponse{
 			Success: false,
 			Message: "Method not allowed",
 		})
@@ -29,7 +29,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse multipart form
 	if err := r.ParseMultipartForm(5 << 20); err != nil { // 5 MB max
-		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
 			Message: "Avatar file too large",
 		})
@@ -62,7 +62,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !allowedTypes[contentType] {
-			utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 				Success: false,
 				Message: "Avatar must be JPEG, PNG, WebP, or GIF",
 			})
@@ -76,7 +76,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Ensure uploads/avatars directory exists
 		if err := os.MkdirAll("uploads/avatars", 0755); err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 				Success: false,
 				Message: "Failed to create uploads directory",
 			})
@@ -86,7 +86,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		// Save file to disk
 		dst, err := os.Create(filepath.Join("uploads", "avatars", filename))
 		if err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 				Success: false,
 				Message: "Failed to save avatar",
 			})
@@ -95,7 +95,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		defer dst.Close()
 
 		if _, err := io.Copy(dst, file); err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 				Success: false,
 				Message: "Failed to save avatar",
 			})
@@ -109,7 +109,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if !validationResult.IsValid {
-		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
 			Message: validationResult.AllErrors(),
 		})
@@ -119,14 +119,14 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Check email uniqueness
 	exists, err := queries.EmailExists(email)
 	if err != nil {
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to validate email",
 		})
 		return
 	}
 	if exists {
-		utils.RespondJSON(w, http.StatusConflict, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusConflict, models.GenericResponse{
 			Success: false,
 			Message: "Email is already registered",
 		})
@@ -137,14 +137,14 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if nickname != "" {
 		exists, err := queries.NicknameExists(nickname)
 		if err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 				Success: false,
 				Message: "Failed to validate nickname",
 			})
 			return
 		}
 		if exists {
-			utils.RespondJSON(w, http.StatusConflict, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusConflict, models.GenericResponse{
 				Success: false,
 				Message: "Nickname is already taken",
 			})
@@ -158,7 +158,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to secure password",
 		})
@@ -177,7 +177,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		AboutMe:      aboutMe,
 	})
 	if err != nil {
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to create user",
 		})
@@ -187,7 +187,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Get the newly created user
 	dbUser, err := queries.GetUserByEmail(email)
 	if err != nil {
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to retrieve user",
 		})
@@ -198,7 +198,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Create session for the new user
 	sessionID, err := queries.CreateSession(dbUser.ID, browserFingerprint)
 	if err != nil {
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to create session",
 		})
@@ -218,7 +218,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Respond WITHOUT sensitive fields
-	utils.RespondJSON(w, http.StatusOK, models.AuthResponse{
+	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 		Success: true,
 		Message: "Registration successful",
 		User: &models.UserPublic{

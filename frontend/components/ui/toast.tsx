@@ -35,7 +35,7 @@ export default function ToastItem({
       ? "border-green-500/40 bg-green-950/50 text-green-400"
       : type === "error"
         ? "border-red-500/40 bg-red-950/50 text-red-400"
-        : "border-blue-500/40 bg-blue-950/50 text-blue-400";
+        : "border-primary/40 bg-primary/10 text-primary";
 
   return (
     <div

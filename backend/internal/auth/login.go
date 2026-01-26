@@ -18,7 +18,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
-		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.GenericResponse{
 			Success: false,
 			Message: "Method not allowed",
 		})
@@ -27,7 +27,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req models.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
 			Message: "Invalid request body",
 		})
@@ -35,7 +35,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.Email == "" || req.Password == "" {
-		utils.RespondJSON(w, http.StatusBadRequest, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
 			Message: "Email and password are required",
 		})
@@ -46,13 +46,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	dbUser, err := queries.GetUserByEmail(req.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
 				Message: "Invalid email or password",
 			})
 			return
 		}
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: fmt.Sprintf("Failed to retrieve user: %v", err),
 		})
@@ -64,7 +64,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		[]byte(dbUser.Password),
 		[]byte(req.Password),
 	); err != nil {
-		utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 			Success: false,
 			Message: "Invalid email or password",
 		})
@@ -79,7 +79,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		utils.RespondJSON(
 			w,
 			http.StatusInternalServerError,
-			models.AuthResponse{Success: false,
+			models.GenericResponse{Success: false,
 				Message: "Failed to create session",
 			})
 		return
@@ -98,7 +98,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Respond WITHOUT sensitive fields
-	utils.RespondJSON(w, http.StatusOK, models.AuthResponse{
+	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 		Success: true,
 		Message: "Login successful",
 		User: &models.UserPublic{

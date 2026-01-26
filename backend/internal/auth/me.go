@@ -13,7 +13,7 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodGet {
-		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.GenericResponse{
 			Success: false,
 			Message: "Method not allowed",
 		})
@@ -23,7 +23,7 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 	// Get session cookie
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 			Success: false,
 			Message: "Not authenticated",
 		})
@@ -34,13 +34,13 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 	session, err := queries.GetSessionByID(cookie.Value)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
 				Message: "Invalid session",
 			})
 			return
 		}
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to verify session",
 		})
@@ -50,14 +50,14 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 	// Get user by ID
 	user, err := queries.GetUserByID(session.UserID)
 	if err != nil {
-		utils.RespondJSON(w, http.StatusInternalServerError, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
 			Message: "Failed to get user",
 		})
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, models.AuthResponse{
+	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 		Success: true,
 		Message: "User retrieved successfully",
 		User: &models.UserPublic{

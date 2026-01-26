@@ -14,7 +14,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// 1. Get session token (example: cookie)
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
-			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
 				Message: "Unauthorized",
 			})
@@ -23,7 +23,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		session, err := queries.GetSessionByID(cookie.Value)
 		if err != nil {
-			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
 				Message: "Invalid session",
 			})
@@ -36,7 +36,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		// 3. Compare
 		if session.BrowserFingerprint != currentFP {
 			_ = queries.DeleteSession(session.ID)
-			utils.RespondJSON(w, http.StatusUnauthorized, models.AuthResponse{
+			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
 				Message: "Session invalidated",
 			})

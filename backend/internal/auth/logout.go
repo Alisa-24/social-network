@@ -13,7 +13,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if r.Method != http.MethodPost {
-		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.AuthResponse{
+		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.GenericResponse{
 			Success: false,
 			Message: "Method not allowed",
 		})
@@ -39,7 +39,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 		Expires:  time.Now().Add(-1 * time.Hour),
 	})
 
-	utils.RespondJSON(w, http.StatusOK, models.AuthResponse{
+	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 		Success: true,
 		Message: "Logged out successfully",
 	})
