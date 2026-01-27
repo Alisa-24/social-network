@@ -157,3 +157,94 @@ func GetAllGroups() ([]models.Group, error) {
 
 	return groups, rows.Err()
 }
+
+// GetGroupMembersCount returns the number of members in a group
+func GetGroupMembersCount(groupID int64) (int, error) {
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*) FROM group_members WHERE group_id = ?
+	`, groupID).Scan(&count)
+	return count, err
+}
+
+// GetGroupPosts retrieves all posts for a specific group
+func GetGroupPosts(groupID int64) ([]models.Post, error) {
+	rows, err := DB.Query(`
+		SELECT 
+			id, 
+			user_id, 
+			content, 
+			COALESCE(image_path, '') as image_path,
+			COALESCE(privacy, '') as privacy,
+			created_at
+		FROM posts
+		WHERE group_id = ?
+		ORDER BY created_at DESC
+	`, groupID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var post models.Post
+		err := rows.Scan(
+			&post.ID,
+			&post.UserID,
+			&post.Content,
+			&post.ImagePath,
+			&post.Privacy,
+			&post.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, rows.Err()
+}
+
+// GetGroupEvents retrieves all events for a specific group
+func GetGroupEvents(groupID int64) ([]models.Event, error) {
+	rows, err := DB.Query(`
+		SELECT 
+			id, 
+			group_id,
+			title, 
+			COALESCE(description, '') as description,
+			event_date || ' ' || event_time as start_time,
+			'' as end_time,
+			created_at
+		FROM group_events
+		WHERE group_id = ?
+		ORDER BY event_date, event_time
+	`, groupID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.Event
+	for rows.Next() {
+		var event models.Event
+		err := rows.Scan(
+			&event.ID,
+			&event.GroupID,
+			&event.Title,
+			&event.Description,
+			&event.StartTime,
+			&event.EndTime,
+			&event.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, rows.Err()
+}

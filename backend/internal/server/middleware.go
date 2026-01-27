@@ -4,6 +4,7 @@ import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
 	"backend/internal/utils"
+	"context"
 	"net/http"
 )
 
@@ -43,7 +44,11 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// 4. Continue to handler
+		// 4. Add userID to context
+		ctx := context.WithValue(r.Context(), "userID", session.UserID)
+		r = r.WithContext(ctx)
+
+		// 5. Continue to handler
 		next.ServeHTTP(w, r)
 	})
 }

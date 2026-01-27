@@ -81,16 +81,50 @@ type CreateGroupRequest struct {
 }
 
 type Group struct {
-	ID             int64
-	Name           string
-	Description    string
-	CoverImagePath string
-	OwnerID        int
-	CreatedAt      time.Time
+	ID             int64     `json:"id"`
+	Name           string    `json:"name"`
+	Description    string    `json:"description"`
+	CoverImagePath string    `json:"cover_image_path"`
+	OwnerID        int       `json:"owner_id"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type GroupsResponse struct {
 	Success    bool    `json:"success"`
 	UserGroups []Group `json:"userGroups"`
 	AllGroups  []Group `json:"allGroups"`
+}
+
+type Post struct {
+	ID        int64  `json:"id"`
+	UserID    int    `json:"user_id"`
+	Content   string `json:"content"`
+	ImagePath string `json:"image_path,omitempty"`
+	Privacy   string `json:"privacy,omitempty"`
+	CreatedAt string `json:"created_at"`
+}
+
+type Event struct {
+	ID          int64  `json:"id"`
+	GroupID     int64  `json:"group_id"`
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+	StartTime   string `json:"start_time"`
+	EndTime     string `json:"end_time"`
+	CreatedAt   string `json:"created_at"`
+}
+
+type GroupInfo struct {
+	ID             int64       `json:"id"`
+	Name           string      `json:"name"`
+	Description    string      `json:"description,omitempty"`
+	CoverImagePath string      `json:"cover_image_path,omitempty"`
+	OwnerID        int         `json:"owner_id"`
+	CreatedAt      string      `json:"created_at"`
+	MembersCount   int         `json:"members_count"`
+	IsMember       bool        `json:"is_member"`
+	IsOwner        bool        `json:"is_owner"`
+	Owner          *UserPublic `json:"owner,omitempty"`
+	Posts          []Post      `json:"posts"`
+	Events         []Event     `json:"events"`
 }

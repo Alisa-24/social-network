@@ -152,9 +152,10 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusCreated, models.GenericResponse{
-		Success: true,
-		Message: "Group created successfully",
+	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
+		"success": true,
+		"message": "Group created successfully",
+		"groupId": groupID,
 	})
 }
 

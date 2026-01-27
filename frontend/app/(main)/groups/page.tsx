@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Search, Filter, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Group } from "@/lib/groups/interface";
-import { fetchGroups, createGroup } from "@/lib/groups/api";
+import { fetchGroups, createGroup, requestToJoin } from "@/lib/groups/api";
 
 export default function GroupsPage() {
+  const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [userGroups, setUserGroups] = useState<Group[]>([]);
   const [allGroups, setAllGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
 
   useEffect(() => {
     loadGroups();
@@ -36,11 +39,28 @@ export default function GroupsPage() {
     if (result.success) {
       setShowCreateModal(false);
       loadGroups(); // Refresh the groups list
+      if (result.groupId) {
+        router.push(`/groups/${result.groupId}`);
+      }
     } else {
       alert(result.message || "Failed to create group");
     }
 
     setIsCreating(false);
+  };
+
+  const handleJoinGroup = async (groupId: number) => {
+    setJoiningGroupId(groupId);
+    const result = await requestToJoin({ groupId });
+    
+    if (result.success) {
+      alert("Join request sent successfully!");
+      loadGroups();
+    } else {
+      alert(result.message || "Failed to send join request");
+    }
+    
+    setJoiningGroupId(null);
   };
 
   return (
@@ -72,7 +92,7 @@ export default function GroupsPage() {
         </div>
       </header>
 
-      <div className="p-8 space-y-12 max-w-7xl mx-auto w-full">
+      <div className="p-8 space-y-12 w-full">
         {/* Your Groups Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
@@ -85,29 +105,30 @@ export default function GroupsPage() {
             </a>
           </div>
 
-          <div className="flex gap-6 overflow-x-auto pb-4 -mx-2 px-2 snap-x">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {userGroups.length === 0 ? (
-              <div className="w-full text-center py-8">
+              <div className="col-span-full text-center py-8">
                 <p className="text-muted-foreground text-sm">You haven't joined any groups yet.</p>
               </div>
             ) : (
               userGroups.map((group) => (
                 <div
-                  key={group.ID}
-                  className="min-w-87.5 bg-surface border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all cursor-pointer group snap-start"
+                  key={group.id}
+                  onClick={() => router.push(`/groups/${group.id}`)}
+                  className="bg-surface border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all cursor-pointer group"
                 >
                   <div className="h-36 bg-linear-to-br from-primary/20 to-primary/5 relative overflow-hidden">
-                    {group.CoverImagePath && (
+                    {group.cover_image_path && (
                       <img
-                        src={`http://localhost:8080${group.CoverImagePath}`}
-                        alt={group.Name}
+                        src={`http://localhost:8080${group.cover_image_path}`}
+                        alt={group.name}
                         className="w-full h-full object-cover"
                       />
                     )}
                   </div>
                   <div className="p-5">
-                    <h3 className="font-bold text-base text-foreground mb-2 line-clamp-1">{group.Name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{group.Description}</p>
+                    <h3 className="font-bold text-base text-foreground mb-2 line-clamp-1">{group.name}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{group.description}</p>
                   </div>
                 </div>
               ))
@@ -144,34 +165,44 @@ export default function GroupsPage() {
               allGroups
                 .filter((group) => {
                   // Exclude groups the user has already joined
-                  const isJoined = userGroups.some((userGroup) => userGroup.ID === group.ID);
+                  const isJoined = userGroups.some((userGroup) => userGroup.id === group.id);
                   if (isJoined) return false;
                   
                   // Apply search filter
                   return (
-                    group.Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    group.Description.toLowerCase().includes(searchQuery.toLowerCase())
+                    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    group.description.toLowerCase().includes(searchQuery.toLowerCase())
                   );
                 })
                 .map((group) => (
                   <div
-                    key={group.ID}
-                    className="bg-surface border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all cursor-pointer group"
+                    key={group.id}
+                    className="bg-surface border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group"
                   >
-                    <div className="h-48 bg-linear-to-br from-primary/20 to-primary/5 relative overflow-hidden">
-                      {group.CoverImagePath && (
+                    <div 
+                      className="h-48 bg-linear-to-br from-primary/20 to-primary/5 relative overflow-hidden"
+                    >
+                      {group.cover_image_path && (
                         <img
-                          src={`http://localhost:8080${group.CoverImagePath}`}
-                          alt={group.Name}
+                          src={`http://localhost:8080${group.cover_image_path}`}
+                          alt={group.name}
                           className="w-full h-full object-cover"
                         />
                       )}
                     </div>
                     <div className="p-6">
-                      <h3 className="font-bold text-lg text-foreground mb-2 line-clamp-1">{group.Name}</h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-5">{group.Description}</p>
-                      <button className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-black font-bold py-2.5 rounded-lg text-sm transition-all">
-                        Join Group
+                      <h3 
+                        className="font-bold text-lg text-foreground mb-2 line-clamp-1"
+                      >
+                        {group.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-5">{group.description}</p>
+                      <button 
+                        onClick={() => handleJoinGroup(group.id)}
+                        disabled={joiningGroupId === group.id}
+                        className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-black font-bold py-2.5 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {joiningGroupId === group.id ? "Requesting..." : "Request to Join"}
                       </button>
                     </div>
                   </div>

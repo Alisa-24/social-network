@@ -322,7 +322,7 @@ export default function Navbar({
 
       {/* Page Content */}
       <main className="flex-1 min-w-0 h-full">
-        <div className="mx-auto max-w-5xl p-4 md:p-10">{children}</div>
+        {children}
       </main>
     </div>
   );

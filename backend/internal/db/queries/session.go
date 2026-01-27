@@ -34,8 +34,8 @@ func CreateSession(userID int, browserFingerprint string) (string, error) {
 	expiresAt := time.Now().Add(30 * 24 * time.Hour)
 
 	_, err := DB.Exec(`
-		INSERT INTO sessions (id, user_id, expires_at, browser_fingerprint)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO sessions (id, user_id, expires_at, browser_fingerprint, created_at)
+		VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
 	`, sessionID, userID, expiresAt, browserFingerprint)
 
 	return sessionID, err
