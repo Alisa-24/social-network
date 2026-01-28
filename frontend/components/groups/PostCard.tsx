@@ -30,7 +30,7 @@ export default function PostCard({ post, onLike, onComment, onShare }: PostCardP
           {post.author?.Avatar ? (
             <div 
               className="w-full h-full rounded-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${post.author.Avatar})` }}
+              style={{ backgroundImage: `url(http://localhost:8080${post.author.Avatar})` }}
             />
           ) : (
             <span className="text-foreground font-bold text-sm">
@@ -43,11 +43,6 @@ export default function PostCard({ post, onLike, onComment, onShare }: PostCardP
             <span className="text-sm font-bold text-foreground truncate">
               {post.author?.FirstName || 'User'} {post.author?.LastName || ''}
             </span>
-            {post.author?.Role === "owner" && (
-              <span className="bg-primary/20 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0">
-                Owner
-              </span>
-            )}
           </div>
           <span className="text-muted text-[11px]">
             {formatTimeAgo(post.created_at)}
@@ -67,7 +62,7 @@ export default function PostCard({ post, onLike, onComment, onShare }: PostCardP
         {post.image_path && (
           <div 
             className="w-full h-80 bg-surface bg-cover bg-center rounded-lg border border-border"
-            style={{ backgroundImage: `url(${post.image_path})` }}
+            style={{ backgroundImage: `url(http://localhost:8080${post.image_path})` }}
           />
         )}
       </div>

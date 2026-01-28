@@ -23,7 +23,6 @@ export default function EventCard({ event, onResponseChange }: EventCardProps) {
       {/* Event Details */}
       <div className="p-5">
         <div className="flex items-start gap-4 mb-4">
-          {/* Date Badge */}
           <div className="shrink-0 w-14 h-14 bg-primary/10 rounded-lg flex flex-col items-center justify-center border border-primary/20">
             <span className="text-primary text-xs font-bold uppercase">
               {eventDate.toLocaleDateString('en-US', { month: 'short' })}

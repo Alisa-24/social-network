@@ -27,7 +27,17 @@ export interface GroupPost {
   content: string;
   image_path?: string;
   user_id: number;
-  author?: GroupMember;
+  author?: {
+    ID: number;
+    Email: string;
+    FirstName: string;
+    LastName: string;
+    Nickname: string;
+    Avatar: string;
+    AboutMe: string;
+    IsPublic: boolean;
+    CreatedAt: string;
+  };
   created_at: string;
   location?: string;
   likes?: number;
@@ -117,13 +127,6 @@ export interface GroupPostsResponse {
 export interface GroupEventsResponse {
   success: boolean;
   events: GroupEvent[];
-}
-
-export interface CreatePostRequest {
-  groupId: number;
-  content: string;
-  imagePath?: string;
-  location?: string;
 }
 
 export interface CreateEventRequest {

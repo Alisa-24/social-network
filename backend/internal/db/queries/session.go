@@ -11,7 +11,7 @@ func GetSessionByID(sessionID string) (models.Session, error) {
 	err := DB.QueryRow(`
 		SELECT id, user_id, expires_at, browser_fingerprint 
 		FROM sessions 
-		WHERE id = ? AND expires_at > datetime('now')
+		WHERE id = ?
 	`, sessionID).Scan(&session.ID, &session.UserID, &session.ExpiresAt, &session.BrowserFingerprint)
 
 	return session, err
@@ -21,7 +21,7 @@ func GetValidSessionByUserID(userID int) (string, error) {
 	var sessionID string
 	err := DB.QueryRow(`
 		SELECT id FROM sessions 
-		WHERE user_id = ? AND expires_at > datetime('now')
+		WHERE user_id = ?
 		ORDER BY expires_at DESC
 		LIMIT 1
 	`, userID).Scan(&sessionID)

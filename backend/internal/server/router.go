@@ -53,6 +53,20 @@ func SetupRoutes(mux *http.ServeMux) {
 		})),
 	)
 
+	// Group Posts
+	mux.Handle(
+		"/api/groups/posts",
+		AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodPost {
+				groups.CreateGroupPost(w, r)
+			} else if r.Method == http.MethodGet {
+				groups.GetGroupPosts(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		})),
+	)
+
 	// Files
 	mux.Handle(
 		"/uploads/",

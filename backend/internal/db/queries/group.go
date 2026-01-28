@@ -248,3 +248,32 @@ func GetGroupEvents(groupID int64) ([]models.Event, error) {
 
 	return events, rows.Err()
 }
+
+// HasPendingJoinRequest checks if a user has a pending join request for a group
+func HasPendingJoinRequest(groupID int64, userID int) (bool, error) {
+	var exists bool
+	err := DB.QueryRow(`
+		SELECT EXISTS(
+			SELECT 1 FROM group_join_requests 
+			WHERE group_id = ? AND user_id = ? AND status = 'pending'
+		)
+	`, groupID, userID).Scan(&exists)
+
+	return exists, err
+}
+
+// CreateGroupPost creates a new post in a group
+// All group posts are public to group members only
+func CreateGroupPost(groupID int64, userID int, content string, imagePath *string) error {
+	var imagePathValue interface{}
+	if imagePath != nil {
+		imagePathValue = *imagePath
+	}
+
+	_, err := DB.Exec(`
+		INSERT INTO posts (user_id, group_id, content, image_path, privacy) 
+		VALUES (?, ?, ?, ?, 'public')
+	`, userID, groupID, content, imagePathValue)
+
+	return err
+}

@@ -4,7 +4,6 @@ import {
   GroupDetailResponse,
   GroupPostsResponse,
   GroupEventsResponse,
-  CreatePostRequest,
   CreateEventRequest,
   InviteUsersRequest,
   JoinRequestRequest
@@ -78,9 +77,13 @@ export async function fetchGroupDetail(groupId: number): Promise<GroupDetailResp
 
 export async function fetchGroupPosts(groupId: number): Promise<GroupPostsResponse | null> {
   try {
-    const response = await fetch(`${API_URL}/${groupId}/posts`, {
+    const response = await fetch(`${API_URL}/posts?groupID=${groupId}`, {
       credentials: "include",
     });
+
+    if (!response.ok) {
+      return null;
+    }
 
     const data = await response.json();
     return data.success ? data : null;
@@ -90,19 +93,24 @@ export async function fetchGroupPosts(groupId: number): Promise<GroupPostsRespon
   }
 }
 
-export async function createGroupPost(request: CreatePostRequest): Promise<{ success: boolean; message?: string }> {
+export async function createGroupPost(
+  groupId: number, 
+  content: string, 
+  imageFile?: File
+): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await fetch(`${API_URL}/${request.groupId}/posts`, {
+    const formData = new FormData();
+    formData.append("content", content);
+    formData.append("groupID", groupId.toString());
+    
+    if (imageFile) {
+      formData.append("image", imageFile);
+    }
+
+    const response = await fetch(`${API_URL}/posts`, {
       method: "POST",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        content: request.content,
-        imagePath: request.imagePath,
-        location: request.location,
-      }),
+      body: formData,
     });
 
     const data = await response.json();

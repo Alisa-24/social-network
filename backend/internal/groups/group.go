@@ -4,13 +4,8 @@ import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
 	"backend/internal/utils"
-	"fmt"
-	"io"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
-	"time"
 )
 
 func CreateGroup(w http.ResponseWriter, r *http.Request) {
@@ -80,56 +75,16 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		defer file.Close()
 
-		// Validate file type
-		contentType := handler.Header.Get("Content-Type")
-		allowedTypes := map[string]bool{
-			"image/jpeg": true,
-			"image/jpg":  true,
-			"image/png":  true,
-			"image/webp": true,
-			"image/gif":  true,
-		}
-
-		if !allowedTypes[contentType] {
+		// Save cover image using utility function
+		path, err := utils.SaveUploadedFile(file, handler, "groups")
+		if err != nil {
 			utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 				Success: false,
-				Message: "Cover image must be JPEG, PNG, WebP, or GIF",
+				Message: err.Error(),
 			})
 			return
 		}
-
-		// Generate unique filename
-		ext := filepath.Ext(handler.Filename)
-		filename := fmt.Sprintf("%d_%s%s", time.Now().Unix(), utils.GenerateSessionID(), ext)
-		coverImagePath = "/uploads/groups/" + filename
-
-		// Ensure uploads/groups directory exists
-		if err := os.MkdirAll("uploads/groups", 0755); err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
-				Success: false,
-				Message: "Failed to create uploads directory",
-			})
-			return
-		}
-
-		// Save file to disk
-		dst, err := os.Create(filepath.Join("uploads", "groups", filename))
-		if err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
-				Success: false,
-				Message: "Failed to save cover image",
-			})
-			return
-		}
-		defer dst.Close()
-
-		if _, err := io.Copy(dst, file); err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
-				Success: false,
-				Message: "Failed to save cover image",
-			})
-			return
-		}
+		coverImagePath = path
 	}
 
 	// Create the group in the database

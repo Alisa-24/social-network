@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { 
   Home, Users, Compass, MessageSquare, Settings, 
   MoreHorizontal, Heart, Share2, UserPlus, LogOut,
-  Calendar, MapPin, Clock, Send, ArrowLeft
+  Calendar, MapPin, Clock, Send, ArrowLeft, Image as ImageIcon, X
 } from "lucide-react";
-import { fetchGroupDetail } from "@/lib/groups/api";
+import { fetchGroupDetail, createGroupPost, fetchGroupPosts } from "@/lib/groups/api";
+import { GroupPost, GroupEvent } from "@/lib/groups/interface";
+import PostCard from "@/components/groups/PostCard";
 
 interface Group {
   id: number;
@@ -20,41 +22,15 @@ interface Group {
   is_public?: boolean;
   is_member?: boolean;
   is_owner?: boolean;
-  posts?: Post[];
-  events?: Event[];
 }
 
-interface Member {
+interface Creator {
   ID: number;
   FirstName: string;
   LastName: string;
   Avatar: string;
-  Role: "owner" | "member";
+  Role: "owner";
   JoinedAt: string;
-}
-
-interface Post {
-  id: number;
-  content: string;
-  image_path?: string;
-  author: Member;
-  created_at: string;
-  location?: string;
-  likes?: number;
-  comments?: number;
-  is_liked?: boolean;
-}
-
-interface Event {
-  id: number;
-  title: string;
-  description: string;
-  start_time: string;
-  end_time?: string;
-  image_path?: string;
-  going_count?: number;
-  not_going_count?: number;
-  user_response?: "going" | "not-going" | null;
 }
 
 export default function GroupDetailPage() {
@@ -64,13 +40,17 @@ export default function GroupDetailPage() {
 
   const [activeTab, setActiveTab] = useState<"feed" | "events" | "chat">("feed");
   const [group, setGroup] = useState<Group | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [creator, setCreator] = useState<Member | null>(null);
+  const [posts, setPosts] = useState<GroupPost[]>([]);
+  const [events, setEvents] = useState<GroupEvent[]>([]);
+  const [creator, setCreator] = useState<Creator | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newPost, setNewPost] = useState("");
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadGroupData();
@@ -128,23 +108,6 @@ export default function GroupDetailPage() {
           });
         }
 
-        // Set posts from API with default author if not provided
-        const postsWithAuthors = (groupData.posts || []).map(post => ({
-          ...post,
-          author: post.author || {
-            ID: post.user_id || 0,
-            FirstName: "User",
-            LastName: "",
-            Avatar: "",
-            Role: "member" as const,
-            JoinedAt: post.created_at,
-          },
-          likes: post.likes || 0,
-          comments: post.comments || 0,
-          is_liked: post.is_liked || false,
-        }));
-        setPosts(postsWithAuthors);
-        
         // Set events from API with defaults
         const eventsWithDefaults = (groupData.events || []).map(event => ({
           ...event,
@@ -152,6 +115,12 @@ export default function GroupDetailPage() {
           not_going_count: event.not_going_count || 0,
         }));
         setEvents(eventsWithDefaults);
+
+        // Fetch posts separately
+        const postsData = await fetchGroupPosts(parseInt(groupId));
+        if (postsData && postsData.posts) {
+          setPosts(postsData.posts);
+        }
       } else {
         setError("Failed to load group. You may not have access or the group doesn't exist.");
       }
@@ -166,9 +135,49 @@ export default function GroupDetailPage() {
   const handleCreatePost = async () => {
     if (!newPost.trim()) return;
     
-    // TODO: API call to create post
-    console.log("Creating post:", newPost);
-    setNewPost("");
+    setIsCreatingPost(true);
+    try {
+      const result = await createGroupPost(
+        parseInt(groupId),
+        newPost,
+        selectedImage || undefined
+      );
+      
+      if (result.success) {
+        setNewPost("");
+        setSelectedImage(null);
+        setImagePreview(null);
+        // Reload group data to show new post
+        await loadGroupData();
+      } else {
+        alert(result.message || "Failed to create post");
+      }
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("Failed to create post");
+    } finally {
+      setIsCreatingPost(false);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleLeaveGroup = async () => {
@@ -342,70 +351,54 @@ export default function GroupDetailPage() {
                         value={newPost}
                         onChange={(e) => setNewPost(e.target.value)}
                       />
-                      <div className="flex justify-end mt-3">
+                      
+                      {/* Image Preview */}
+                      {imagePreview && (
+                        <div className="mt-3 relative">
+                          <div 
+                            className="w-full h-64 bg-surface bg-cover bg-center rounded-lg border border-border"
+                            style={{ backgroundImage: `url(${imagePreview})` }}
+                          />
+                          <button
+                            onClick={removeImage}
+                            className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm hover:bg-background text-foreground p-2 rounded-full transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between items-center mt-3">
+                        <div>
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageSelect}
+                            accept="image/*"
+                            className="hidden"
+                          />
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex items-center gap-2 text-muted hover:text-primary transition-colors text-sm"
+                          >
+                            <ImageIcon className="w-5 h-5" />
+                            {selectedImage ? "Change Image" : "Add Image"}
+                          </button>
+                        </div>
                         <button
                           onClick={handleCreatePost}
-                          disabled={!newPost.trim()}
+                          disabled={!newPost.trim() || isCreatingPost}
                           className="bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed text-black px-6 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
                         >
                           <Send className="w-4 h-4" />
-                          Post
+                          {isCreatingPost ? "Posting..." : "Post"}
                         </button>
                       </div>
                     </div>
 
                     {/* Posts Feed */}
                     {posts.map((post) => (
-                      <div key={post.id} className="bg-surface border border-border rounded-xl overflow-hidden">
-                        <div className="p-4 flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                            <span className="text-foreground font-bold text-sm">
-                              {post.author.FirstName[0]}{post.author.LastName[0]}
-                            </span>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold text-foreground">
-                                {post.author.FirstName} {post.author.LastName}
-                              </span>
-                              {post.author.Role === "owner" && (
-                                <span className="bg-primary/20 text-primary text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                                  Owner
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-muted text-[11px]">
-                              {formatTimeAgo(post.created_at)}
-                              {post.location && ` • ${post.location}`}
-                            </span>
-                          </div>
-                          <button className="text-muted hover:text-foreground">
-                            <MoreHorizontal className="w-5 h-5" />
-                          </button>
-                        </div>
-                        <div className="px-4 pb-4">
-                          <p className="text-foreground text-sm leading-relaxed mb-4">{post.content}</p>
-                          {post.image_path && (
-                            <div 
-                              className="w-full h-80 bg-surface bg-cover bg-center rounded-lg border border-border"
-                              style={{ backgroundImage: `url(http://localhost:8080${post.image_path})` }}
-                            />
-                          )}
-                        </div>
-                        <div className="border-t border-border p-3 flex gap-4">
-                          <button className="flex items-center gap-2 text-muted hover:text-primary transition-colors">
-                            <Heart className={`w-5 h-5 ${post.is_liked ? 'fill-primary text-primary' : ''}`} />
-                            <span className="text-xs font-bold">{post.likes || 0}</span>
-                          </button>
-                          <button className="flex items-center gap-2 text-muted hover:text-primary transition-colors">
-                            <MessageSquare className="w-5 h-5" />
-                            <span className="text-xs font-bold">{post.comments || 0} Comments</span>
-                          </button>
-                          <button className="ml-auto flex items-center gap-2 text-muted hover:text-foreground transition-colors">
-                            <Share2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </div>
+                      <PostCard key={post.id} post={post} />
                     ))}
                   </>
                 )}
