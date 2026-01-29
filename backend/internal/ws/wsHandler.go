@@ -88,3 +88,29 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 }
+
+// SendNotificationToUser sends a notification to a specific user via WebSocket
+func SendNotificationToUser(userID int, notification models.NotificationMessage) {
+	mu.Lock()
+	conn, ok := OnlineUsers[userID]
+	mu.Unlock()
+
+	if !ok {
+		return
+	}
+
+	data, err := json.Marshal(notification)
+	if err != nil {
+		return
+	}
+
+	err = conn.WriteMessage(websocket.TextMessage, data)
+	if err != nil {
+		// Connection might be closed, remove from online users
+		mu.Lock()
+		delete(OnlineUsers, userID)
+		mu.Unlock()
+	} else {
+		fmt.Printf("Successfully sent notification to user %d\n", userID)
+	}
+}

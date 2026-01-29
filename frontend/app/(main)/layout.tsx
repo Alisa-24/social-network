@@ -18,6 +18,36 @@ export default function MainLayout({
     getCurrentUser().then((user) => {
       if (user) {
         ws.connect();
+        
+        // Listen for join request responses
+        const handleApproved = (data: any) => {
+          console.log("Join request approved event received:", data);
+          if (data.type === "join_request_approved") {
+            (globalThis as any).addToast({
+              id: Date.now().toString(),
+              title: "Request Approved!",
+              message: data.data.message || `You can now access ${data.data.group_name}`,
+              type: "success",
+              duration: 5000,
+            });
+          }
+        };
+
+        const handleRejected = (data: any) => {
+          console.log("Join request rejected event received:", data);
+          if (data.type === "join_request_rejected") {
+            (globalThis as any).addToast({
+              id: Date.now().toString(),
+              title: "Request Declined",
+              message: data.data.message || `Your request to join ${data.data.group_name} was declined`,
+              type: "error",
+              duration: 5000,
+            });
+          }
+        };
+
+        ws.on("join_request_approved", handleApproved);
+        ws.on("join_request_rejected", handleRejected);
       }
     });
   }, []);

@@ -81,12 +81,13 @@ type CreateGroupRequest struct {
 }
 
 type Group struct {
-	ID             int64     `json:"id"`
-	Name           string    `json:"name"`
-	Description    string    `json:"description"`
-	CoverImagePath string    `json:"cover_image_path"`
-	OwnerID        int       `json:"owner_id"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID                int64     `json:"id"`
+	Name              string    `json:"name"`
+	Description       string    `json:"description"`
+	CoverImagePath    string    `json:"cover_image_path"`
+	OwnerID           int       `json:"owner_id"`
+	CreatedAt         time.Time `json:"created_at"`
+	HasPendingRequest bool      `json:"has_pending_request,omitempty"`
 }
 
 type GroupsResponse struct {
@@ -127,4 +128,20 @@ type GroupInfo struct {
 	Owner          *UserPublic `json:"owner,omitempty"`
 	Posts          []Post      `json:"posts"`
 	Events         []Event     `json:"events"`
+}
+
+type GroupJoinRequest struct {
+	ID        int64       `json:"id"`
+	GroupID   int64       `json:"group_id"`
+	UserID    int         `json:"user_id"`
+	Status    string      `json:"status"`
+	CreatedAt time.Time   `json:"created_at"`
+	User      *UserPublic `json:"user,omitempty"`
+	Group     *Group      `json:"group,omitempty"`
+}
+
+type NotificationMessage struct {
+	Type      string      `json:"type"`
+	Data      interface{} `json:"data"`
+	Timestamp time.Time   `json:"timestamp"`
 }

@@ -1,3 +1,18 @@
+// User/Author interface
+export interface User {
+  ID: number;
+  Email: string;
+  FirstName: string;
+  LastName: string;
+  Nickname: string;
+  Avatar: string;
+  AboutMe: string;
+  IsPublic: boolean;
+  CreatedAt: string;
+  DateOfBirth?: string;
+}
+
+// Group interface
 export interface Group {
   id: number;
   name: string;
@@ -8,10 +23,12 @@ export interface Group {
   members_count?: number;
   is_member?: boolean;
   is_owner?: boolean;
+  has_pending_request?: boolean;
   posts?: GroupPost[];
   events?: GroupEvent[];
 }
 
+// Group Member interface
 export interface GroupMember {
   ID: number;
   FirstName: string;
@@ -21,6 +38,7 @@ export interface GroupMember {
   JoinedAt: string;
 }
 
+// Group Post interface
 export interface GroupPost {
   id: number;
   group_id?: number;
@@ -45,6 +63,20 @@ export interface GroupPost {
   is_liked?: boolean;
 }
 
+// Comment interface (for future use)
+export interface PostComment {
+  id: number;
+  post_id: number;
+  author_id: number;
+  author?: User;
+  content: string;
+  created_at: string;
+  updated_at?: string;
+  likes: number;
+  is_liked: boolean;
+}
+
+// Group Event interface
 export interface GroupEvent {
   id: number;
   group_id: number;
@@ -60,6 +92,7 @@ export interface GroupEvent {
   created_at: string;
 }
 
+// Group Invitation interface
 export interface GroupInvitation {
   ID: number;
   GroupID: number;
@@ -71,15 +104,23 @@ export interface GroupInvitation {
   CreatedAt: string;
 }
 
+// Group Join Request interface
 export interface GroupJoinRequest {
-  ID: number;
-  GroupID: number;
-  UserID: number;
-  UserName: string;
-  Status: "pending" | "accepted" | "declined";
-  CreatedAt: string;
+  id: number;
+  group_id: number;
+  user_id: number;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  user?: {
+    userId: number;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+    nickname?: string;
+  };
 }
 
+// API Response interfaces
 export interface GroupsResponse {
   success: boolean;
   userGroups: Group[];
@@ -129,6 +170,7 @@ export interface GroupEventsResponse {
   events: GroupEvent[];
 }
 
+// API Request interfaces
 export interface CreateEventRequest {
   groupId: number;
   title: string;
@@ -145,4 +187,22 @@ export interface InviteUsersRequest {
 
 export interface JoinRequestRequest {
   groupId: number;
+}
+
+export interface LikePostResponse {
+  success: boolean;
+  message?: string;
+  likes?: number;
+  is_liked?: boolean;
+}
+
+export interface CommentResponse {
+  success: boolean;
+  message?: string;
+  comment?: any;
+}
+
+export interface ShareResponse {
+  success: boolean;
+  message?: string;
 }

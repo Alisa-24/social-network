@@ -228,9 +228,13 @@ export async function inviteUsers(request: InviteUsersRequest): Promise<{ succes
 
 export async function requestToJoin(request: JoinRequestRequest): Promise<{ success: boolean; message?: string }> {
   try {
-    const response = await fetch(`${API_URL}/${request.groupId}/request`, {
+    const formData = new FormData();
+    formData.append("groupID", request.groupId.toString());
+
+    const response = await fetch(`${API_URL}/join`, {
       method: "POST",
       credentials: "include",
+      body: formData,
     });
 
     const data = await response.json();
@@ -244,11 +248,59 @@ export async function requestToJoin(request: JoinRequestRequest): Promise<{ succ
   }
 }
 
-export async function leaveGroup(groupId: number): Promise<{ success: boolean; message?: string }> {
+export async function fetchJoinRequests(groupId: number): Promise<any> {
   try {
-    const response = await fetch(`${API_URL}/${groupId}/leave`, {
+    const response = await fetch(`${API_URL}/join-requests?groupID=${groupId}`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching join requests:", error);
+    return null;
+  }
+}
+
+export async function handleJoinRequest(
+  requestId: number, 
+  action: "approve" | "reject"
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const formData = new FormData();
+    formData.append("requestID", requestId.toString());
+    formData.append("action", action);
+
+    const response = await fetch(`${API_URL}/handle-request`, {
       method: "POST",
       credentials: "include",
+      body: formData,
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error handling join request:", error);
+    return {
+      success: false,
+      message: "Failed to handle join request",
+    };
+  }
+}
+
+export async function leaveGroup(groupId: number): Promise<{ success: boolean; message?: string }> {
+  try {
+    const formData = new FormData();
+    formData.append("groupID", groupId.toString());
+
+    const response = await fetch(`${API_URL}/leave`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
     });
 
     const data = await response.json();
@@ -258,6 +310,24 @@ export async function leaveGroup(groupId: number): Promise<{ success: boolean; m
     return {
       success: false,
       message: "Failed to leave group",
+    };
+  }
+}
+
+export async function deleteGroup(groupId: number): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await fetch(`${API_URL}/delete?groupID=${groupId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error deleting group:", error);
+    return {
+      success: false,
+      message: "Failed to delete group",
     };
   }
 }

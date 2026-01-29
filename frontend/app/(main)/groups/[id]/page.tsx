@@ -7,9 +7,13 @@ import {
   MoreHorizontal, Heart, Share2, UserPlus, LogOut,
   Calendar, MapPin, Clock, Send, ArrowLeft, Image as ImageIcon, X
 } from "lucide-react";
-import { fetchGroupDetail, createGroupPost, fetchGroupPosts } from "@/lib/groups/api";
+import { fetchGroupDetail, createGroupPost, fetchGroupPosts, leaveGroup, deleteGroup } from "@/lib/groups/api";
 import { GroupPost, GroupEvent } from "@/lib/groups/interface";
 import PostCard from "@/components/groups/PostCard";
+import JoinRequests from "@/components/groups/JoinRequests";
+import { getCurrentUser } from "@/lib/auth/auth";
+import { User } from "@/lib/interfaces";
+import ConfirmModal from "@/components/ui/confirm";
 
 interface Group {
   id: number;
@@ -43,6 +47,7 @@ export default function GroupDetailPage() {
   const [posts, setPosts] = useState<GroupPost[]>([]);
   const [events, setEvents] = useState<GroupEvent[]>([]);
   const [creator, setCreator] = useState<Creator | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [newPost, setNewPost] = useState("");
@@ -50,11 +55,25 @@ export default function GroupDetailPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isCreatingPost, setIsCreatingPost] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isLeavingGroup, setIsLeavingGroup] = useState(false);
+  const [isDeletingGroup, setIsDeletingGroup] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadGroupData();
+    loadCurrentUser();
   }, [groupId]);
+
+  const loadCurrentUser = async () => {
+    try {
+      const user = await getCurrentUser();
+      setCurrentUser(user);
+    } catch (error) {
+      console.error("Error loading current user:", error);
+    }
+  };
 
   const loadGroupData = async () => {
     try {
@@ -180,10 +199,47 @@ export default function GroupDetailPage() {
     }
   };
 
-  const handleLeaveGroup = async () => {
-    if (confirm("Are you sure you want to leave this group?")) {
-      // TODO: API call to leave group
-      router.push("/groups");
+  const handleLeaveGroup = () => {
+    setShowLeaveConfirm(true);
+  };
+
+  const confirmLeaveGroup = async () => {
+    setIsLeavingGroup(true);
+    try {
+      const result = await leaveGroup(parseInt(groupId));
+      if (result.success) {
+        router.push("/groups");
+      } else {
+        alert(result.message || "Failed to leave group");
+      }
+    } catch (error) {
+      console.error("Error leaving group:", error);
+      alert("Failed to leave group");
+    } finally {
+      setIsLeavingGroup(false);
+      setShowLeaveConfirm(false);
+    }
+  };
+
+  const handleDeleteGroup = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteGroup = async () => {
+    setIsDeletingGroup(true);
+    try {
+      const result = await deleteGroup(parseInt(groupId));
+      if (result.success) {
+        router.push("/groups");
+      } else {
+        alert(result.message || "Failed to delete group");
+      }
+    } catch (error) {
+      console.error("Error deleting group:", error);
+      alert("Failed to delete group");
+    } finally {
+      setIsDeletingGroup(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -288,13 +344,23 @@ export default function GroupDetailPage() {
               <UserPlus className="w-4 h-4 mr-2" />
               Invite Friends
             </button>
-            <button
-              onClick={handleLeaveGroup}
-              className="flex min-w-30 items-center justify-center rounded-lg h-10 px-5 border border-border bg-surface text-foreground text-sm font-bold hover:bg-red-900/20 hover:border-red-500/50 transition-colors"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Leave Group
-            </button>
+            {group.is_owner ? (
+              <button
+                onClick={handleDeleteGroup}
+                className="flex min-w-30 items-center justify-center rounded-lg h-10 px-5 border border-red-500/50 bg-red-900/20 text-red-500 text-sm font-bold hover:bg-red-900/30 transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Delete Group
+              </button>
+            ) : (
+              <button
+                onClick={handleLeaveGroup}
+                className="flex min-w-30 items-center justify-center rounded-lg h-10 px-5 border border-border bg-surface text-foreground text-sm font-bold hover:bg-red-900/20 hover:border-red-500/50 transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Leave Group
+              </button>
+            )}
           </div>
         </div>
 
@@ -398,7 +464,16 @@ export default function GroupDetailPage() {
 
                     {/* Posts Feed */}
                     {posts.map((post) => (
-                      <PostCard key={post.id} post={post} />
+                      <PostCard 
+                        key={post.id} 
+                        post={post} 
+                        currentUserId={currentUser?.userId}
+                        groupOwnerId={group?.owner_id}
+                        onDelete={async (postId) => {
+                          // Remove post from state
+                          setPosts(posts.filter(p => p.id !== postId));
+                        }}
+                      />
                     ))}
                   </>
                 )}
@@ -540,6 +615,15 @@ export default function GroupDetailPage() {
 
               {/* Right Sidebar */}
               <aside className="w-full lg:w-80 space-y-6">
+                {/* Join Requests (only visible to group owner) */}
+                {group.is_owner && (
+                  <JoinRequests 
+                    groupId={group.id} 
+                    isOwner={true}
+                    onRequestHandled={loadGroupData}
+                  />
+                )}
+
                 {/* About Group */}
                 <div className="bg-surface border border-border rounded-xl p-5">
                   <h3 className="text-sm font-bold text-muted uppercase tracking-widest mb-3">About Group</h3>
@@ -662,6 +746,32 @@ export default function GroupDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Leave Group Confirmation */}
+      <ConfirmModal
+        isOpen={showLeaveConfirm}
+        onClose={() => setShowLeaveConfirm(false)}
+        onConfirm={confirmLeaveGroup}
+        title="Leave Group"
+        message={`Are you sure you want to leave ${group.name}? You will need to request to join again.`}
+        confirmText="Leave Group"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        isLoading={isLeavingGroup}
+      />
+
+      {/* Delete Group Confirmation */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDeleteGroup}
+        title="Delete Group"
+        message={`Are you sure you want to permanently delete ${group.name}? This action cannot be undone. All posts, events, and members will be removed.`}
+        confirmText="Delete Permanently"
+        cancelText="Cancel"
+        confirmVariant="danger"
+        isLoading={isDeletingGroup}
+      />
     </div>
   );
 }

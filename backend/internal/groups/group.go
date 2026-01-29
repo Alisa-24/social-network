@@ -165,6 +165,14 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check for pending requests for each group
+	for i := range allGroups {
+		hasPending, err := queries.HasPendingJoinRequest(allGroups[i].ID, session.UserID)
+		if err == nil {
+			allGroups[i].HasPendingRequest = hasPending
+		}
+	}
+
 	// Return both user's groups and all groups
 	utils.RespondJSON(w, http.StatusOK, models.GroupsResponse{
 		Success:    true,

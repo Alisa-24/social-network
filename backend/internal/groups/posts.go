@@ -140,10 +140,16 @@ func GetGroupPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch author details for each post
+	// Get current user ID for like status
+	userID, _ := utils.GetUserIDFromContext(r)
+
+	// Fetch author details and like info for each post
 	type PostWithAuthor struct {
 		models.Post
-		Author *models.User `json:"author"`
+		Author   *models.User `json:"author"`
+		Likes    int          `json:"likes"`
+		IsLiked  bool         `json:"is_liked"`
+		Comments int          `json:"comments"`
 	}
 
 	postsWithAuthors := make([]PostWithAuthor, 0, len(posts))
@@ -154,9 +160,21 @@ func GetGroupPosts(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
+		// Get like count
+		likesCount, _ := queries.GetPostLikesCount(post.ID)
+
+		// Check if current user liked this post
+		isLiked := false
+		if userID != 0 {
+			isLiked, _ = queries.IsPostLikedByUser(post.ID, userID)
+		}
+
 		postsWithAuthors = append(postsWithAuthors, PostWithAuthor{
-			Post:   post,
-			Author: &user,
+			Post:     post,
+			Author:   &user,
+			Likes:    likesCount,
+			IsLiked:  isLiked,
+			Comments: 0, // TODO: Implement comments count
 		})
 	}
 

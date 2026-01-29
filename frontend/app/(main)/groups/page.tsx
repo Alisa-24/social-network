@@ -5,6 +5,7 @@ import { Plus, Search, Filter, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Group } from "@/lib/groups/interface";
 import { fetchGroups, createGroup, requestToJoin } from "@/lib/groups/api";
+import { on, off } from "@/lib/ws/ws";
 
 export default function GroupsPage() {
   const router = useRouter();
@@ -18,6 +19,25 @@ export default function GroupsPage() {
 
   useEffect(() => {
     loadGroups();
+
+    // Listen for join request approval and rejection
+    const handleJoinApproval = (data: any) => {
+      console.log("Join request approved, refreshing groups...", data);
+      loadGroups(); // Refresh groups when request is approved
+    };
+
+    const handleJoinRejection = (data: any) => {
+      console.log("Join request rejected, refreshing groups...", data);
+      loadGroups(); // Refresh groups when request is rejected
+    };
+
+    on("join_request_approved", handleJoinApproval);
+    on("join_request_rejected", handleJoinRejection);
+
+    return () => {
+      off("join_request_approved", handleJoinApproval);
+      off("join_request_rejected", handleJoinRejection);
+    };
   }, []);
 
   const loadGroups = async () => {
@@ -43,7 +63,13 @@ export default function GroupsPage() {
         router.push(`/groups/${result.groupId}`);
       }
     } else {
-      alert(result.message || "Failed to create group");
+      (globalThis as any).addToast({
+        id: Date.now().toString(),
+        title: "Error",
+        message: result.message || "Failed to create group",
+        type: "error",
+        duration: 5000,
+      });
     }
 
     setIsCreating(false);
@@ -54,10 +80,22 @@ export default function GroupsPage() {
     const result = await requestToJoin({ groupId });
     
     if (result.success) {
-      alert("Join request sent successfully!");
+      (globalThis as any).addToast({
+        id: Date.now().toString(),
+        title: "Request Sent",
+        message: "Your join request has been sent to the group owner",
+        type: "success",
+        duration: 5000,
+      });
       loadGroups();
     } else {
-      alert(result.message || "Failed to send join request");
+      (globalThis as any).addToast({
+        id: Date.now().toString(),
+        title: "Error",
+        message: result.message || "Failed to send join request",
+        type: "error",
+        duration: 5000,
+      });
     }
     
     setJoiningGroupId(null);
@@ -199,10 +237,18 @@ export default function GroupsPage() {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-5">{group.description}</p>
                       <button 
                         onClick={() => handleJoinGroup(group.id)}
-                        disabled={joiningGroupId === group.id}
-                        className="w-full bg-primary/10 hover:bg-primary text-primary hover:text-black font-bold py-2.5 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={joiningGroupId === group.id || group.has_pending_request}
+                        className={`w-full font-bold py-2.5 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                          group.has_pending_request
+                            ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/50"
+                            : "bg-primary/10 hover:bg-primary text-primary hover:text-black"
+                        }`}
                       >
-                        {joiningGroupId === group.id ? "Requesting..." : "Request to Join"}
+                        {joiningGroupId === group.id 
+                          ? "Requesting..." 
+                          : group.has_pending_request 
+                            ? "Pending" 
+                            : "Request to Join"}
                       </button>
                     </div>
                   </div>
