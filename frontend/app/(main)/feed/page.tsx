@@ -8,6 +8,7 @@ import { ServerError } from "@/lib/errors";
 import { User, OnlineUser } from "@/lib/interfaces";
 import { API_URL } from "@/lib/config";
 import * as ws from "@/lib/ws/ws";
+import WebSocketErrorPage from "@/components/layout/WebSocketErrorPage";
 
 export default function FeedPage() {
   const router = useRouter();
@@ -15,6 +16,8 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [wsConnected, setWsConnected] = useState(false);
+  const [showErrorPage, setShowErrorPage] = useState(false);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
   useEffect(() => {
     async function checkAuth() {
@@ -40,30 +43,47 @@ export default function FeedPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Handle online users updates
     const handleOnlineUsers = (data: { users: OnlineUser[] }) => {
-      // Filter out current user from the list
-      const filteredUsers = (data.users || []).filter(
-        (onlineUser) => onlineUser.userId !== user.userId,
+      setOnlineUsers(
+        (data.users || []).filter(
+          (onlineUser) => onlineUser.userId !== user.userId,
+        ),
       );
-      setOnlineUsers(filteredUsers);
     };
 
-    // Handle connection status
-    const handleConnect = () => setWsConnected(true);
-    const handleDisconnect = () => setWsConnected(false);
+    const handleConnect = () => {
+      setWsConnected(true);
+      setShowErrorPage(false);
+      setReconnectAttempts(0);
+
+      ws.requestOnlineUsers(); //once per connection
+    };
+
+    const handleDisconnect = () => {
+      setWsConnected(false);
+      setReconnectAttempts(ws.getReconnectAttempts());
+    };
+
+    const handleMaxRetries = () => {
+      setShowErrorPage(true);
+    };
 
     ws.on("online_users", handleOnlineUsers);
     ws.onConnect(handleConnect);
     ws.onDisconnect(handleDisconnect);
+    ws.onMaxRetriesReached(handleMaxRetries);
 
-    // Set initial connection state
     setWsConnected(ws.isConnected());
 
     return () => {
       ws.off("online_users", handleOnlineUsers);
     };
   }, [user]);
+
+  // Handle reload when user clicks retry
+  const handleReload = () => {
+    window.location.reload();
+  };
 
   if (loading) {
     return (
@@ -74,6 +94,18 @@ export default function FeedPage() {
   }
 
   if (!user) return null;
+
+  // Show error page if max retries reached
+  if (showErrorPage) {
+    return (
+      <WebSocketErrorPage
+        onRetry={handleReload}
+        isReconnecting={false}
+        reconnectAttempts={reconnectAttempts}
+        maxAttempts={ws.getMaxReconnectAttempts()}
+      />
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -106,6 +138,16 @@ export default function FeedPage() {
                 </span>
               </div>
             </div>
+
+            {/* Reconnecting Warning */}
+            {!wsConnected && reconnectAttempts > 0 && (
+              <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-xs text-yellow-600 dark:text-yellow-400 text-center">
+                  Reconnecting... ({reconnectAttempts}/
+                  {ws.getMaxReconnectAttempts()})
+                </p>
+              </div>
+            )}
 
             {onlineUsers.length === 0 ? (
               <p className="text-sm text-foreground/60 text-center py-8">

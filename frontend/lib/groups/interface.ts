@@ -92,6 +92,14 @@ export interface GroupEvent {
   created_at: string;
 }
 
+export interface EventVoter {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+  response: "going" | "not-going";
+}
+
 // Group Invitation interface
 export interface GroupInvitation {
   ID: number;
@@ -178,6 +186,7 @@ export interface CreateEventRequest {
   date: string;
   time: string;
   imagePath?: string;
+  imageFile?: File;
 }
 
 export interface InviteUsersRequest {

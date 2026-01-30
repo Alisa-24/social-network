@@ -61,10 +61,10 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if description == "" || len(description) > 100 {
+	if description == "" || len(description) > 200 {
 		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
-			Message: "Description is required and must be 100 characters or less",
+			Message: "Description is required and must be 200 characters or less",
 		})
 		return
 	}

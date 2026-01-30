@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Group } from "@/lib/groups/interface";
 import { fetchGroups, createGroup, requestToJoin } from "@/lib/groups/api";
 import { on, off } from "@/lib/ws/ws";
+import GroupInvitations from "@/components/groups/GroupInvitations";
 
 export default function GroupsPage() {
   const router = useRouter();
@@ -31,12 +32,21 @@ export default function GroupsPage() {
       loadGroups(); // Refresh groups when request is rejected
     };
 
+    // Listen for group_joined (e.g. after accepting an invitation) to refresh groups list
+    const handleGroupJoined = (data: any) => {
+      if (data.type === "group_joined") {
+        loadGroups(); // Refresh so the new group appears in "My Groups"
+      }
+    };
+
     on("join_request_approved", handleJoinApproval);
     on("join_request_rejected", handleJoinRejection);
+    on("group_joined", handleGroupJoined);
 
     return () => {
       off("join_request_approved", handleJoinApproval);
       off("join_request_rejected", handleJoinRejection);
+      off("group_joined", handleGroupJoined);
     };
   }, []);
 
@@ -131,6 +141,9 @@ export default function GroupsPage() {
       </header>
 
       <div className="p-8 space-y-12 w-full">
+        {/* Group Invitations */}
+        <GroupInvitations />
+
         {/* Your Groups Section */}
         <section>
           <div className="flex items-center justify-between mb-6">
@@ -296,7 +309,7 @@ export default function GroupsPage() {
                   className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-3 focus:ring-1 focus:ring-primary outline-none transition-all resize-none placeholder:text-muted-foreground"
                   placeholder="What is this community about?"
                   rows={4}
-                  maxLength={100}
+                  maxLength={200}
                   required
                 />
               </div>

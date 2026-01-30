@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	ID          int
@@ -106,13 +108,17 @@ type Post struct {
 }
 
 type Event struct {
-	ID          int64  `json:"id"`
-	GroupID     int64  `json:"group_id"`
-	Title       string `json:"title"`
-	Description string `json:"description,omitempty"`
-	StartTime   string `json:"start_time"`
-	EndTime     string `json:"end_time"`
-	CreatedAt   string `json:"created_at"`
+	ID            int64  `json:"id"`
+	GroupID       int64  `json:"group_id"`
+	Title         string `json:"title"`
+	Description   string `json:"description,omitempty"`
+	ImagePath     string `json:"image_path,omitempty"`
+	StartTime     string `json:"start_time"`
+	EndTime       string `json:"end_time"`
+	CreatedAt     string `json:"created_at"`
+	GoingCount    int    `json:"going_count"`
+	NotGoingCount int    `json:"not_going_count"`
+	UserResponse  string `json:"user_response,omitempty"` // "going", "not-going", or empty
 }
 
 type GroupInfo struct {
@@ -140,8 +146,63 @@ type GroupJoinRequest struct {
 	Group     *Group      `json:"group,omitempty"`
 }
 
+type GroupInvitation struct {
+	ID          int       `json:"id"`
+	GroupID     int64     `json:"group_id"`
+	GroupName   string    `json:"group_name"`
+	InviterID   int       `json:"inviter_id"`
+	InviterName string    `json:"inviter_name"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 type NotificationMessage struct {
 	Type      string      `json:"type"`
 	Data      interface{} `json:"data"`
 	Timestamp time.Time   `json:"timestamp"`
+}
+
+type OnlineUserData struct {
+	UserID    int    `json:"userId"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Nickname  string `json:"nickname,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
+}
+
+type OnlineUsersMessage struct {
+	Type  string           `json:"type"`
+	Users []OnlineUserData `json:"users"`
+}
+
+type EventRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Date        string `json:"date"`
+}
+
+// GroupEvent represents an event created in a group
+type GroupEvent struct {
+	ID          int64     `json:"id"`
+	GroupID     int64     `json:"groupId"`
+	CreatorID   int64     `json:"creatorId"`
+	Title       string    `json:"title"`
+	Description string    `json:"description,omitempty"`
+	EventTime   time.Time `json:"eventTime"` // combined date + time
+	CoverImage  string    `json:"coverImage,omitempty"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+// EventResponse represents a user's response to an event
+type EventResponse struct {
+	EventID   int64     `json:"eventId"`
+	UserID    int64     `json:"userId"`
+	Response  string    `json:"response"` // "going" or "not-going"
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+// Optional: Counts for frontend UI
+type EventResponseCounts struct {
+	EventID  int64 `json:"eventId"`
+	Going    int   `json:"going"`
+	NotGoing int   `json:"notGoing"`
 }

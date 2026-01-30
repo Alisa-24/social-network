@@ -13,111 +13,61 @@ func SetupRoutes(mux *http.ServeMux) {
 	// WebSocket
 	mux.HandleFunc("/ws", ws.WSHandler)
 
-	// Public
+	// ===== AUTH =====
 	mux.HandleFunc("/api/auth/register", auth.RegisterHandler)
 	mux.HandleFunc("/api/auth/login", auth.LoginHandler)
+	mux.Handle("/api/auth/me", Auth(auth.MeHandler))
+	mux.Handle("/api/auth/logout", Auth(auth.LogoutHandler))
 
-	// Protected
-	mux.Handle(
-		"/api/auth/me",
-		AuthMiddleware(http.HandlerFunc(auth.MeHandler)),
-	)
+	// ===== GROUP ACTIONS =====
+	authHandle(mux, "/api/groups/invite", groups.InviteUser)
+	authHandle(mux, "/api/groups/events", groups.CreateAnEvent)
+	authHandle(mux, "/api/groups/invitations", groups.GetInvitations)
+	authHandle(mux, "/api/groups/handle-invitation", groups.HandleInvitation)
+	authHandle(mux, "/api/groups/join", groups.JoinGroup)
+	authHandle(mux, "/api/groups/join-requests", groups.GetJoinRequests)
+	authHandle(mux, "/api/groups/handle-request", groups.HandleJoinRequest)
+	authHandle(mux, "/api/groups/leave", groups.LeaveGroup)
+	authHandle(mux, "/api/groups/delete", groups.DeleteGroup)
 
-	mux.Handle(
-		"/api/auth/logout",
-		AuthMiddleware(http.HandlerFunc(auth.LogoutHandler)),
-	)
+	// ===== GROUP POSTS =====
+	mux.Handle("/api/groups/posts", Auth(http.HandlerFunc(methodSwitch(
+		http.MethodGet, groups.GetGroupPosts,
+		http.MethodPost, groups.CreateGroupPost,
+	))))
 
-	// Groups - Note: Specific paths MUST come before wildcard paths!
+	// ===== GROUP LIST / CREATE =====
+	mux.Handle("/api/groups", Auth(http.HandlerFunc(methodSwitch(
+		http.MethodGet, groups.GetGroups,
+		http.MethodPost, groups.CreateGroup,
+	))))
 
-	// Join Group Request
-	mux.Handle(
-		"/api/groups/join",
-		AuthMiddleware(http.HandlerFunc(groups.JoinGroup)),
-	)
+	// ===== GROUP WILDCARD (LAST) =====
+	mux.Handle("/api/groups/", Auth(http.HandlerFunc(groupWildcard)))
 
-	// Get Join Requests (for group owners)
-	mux.Handle(
-		"/api/groups/join-requests",
-		AuthMiddleware(http.HandlerFunc(groups.GetJoinRequests)),
-	)
+	// ===== EVENT RESPONSES =====
+	// Using a specific path to avoid wildcard conflict if possible, or handle it inside wildcard.
+	// But /groups/events/respond is not covered by /groups/events (which is a specific handler).
+	// Let's rely on exact match or appropriate prefix.
+	// Note: /api/groups/events is registered. /api/groups/events/respond should also work if mux supports it (ServeMux pattern matching).
+	authHandle(mux, "/api/groups/events/respond", groups.RespondToEvent)
+	authHandle(mux, "/api/groups/events/responses", groups.GetEventResponsesHandler)
 
-	// Handle Join Request (approve/reject)
-	mux.Handle(
-		"/api/groups/handle-request",
-		AuthMiddleware(http.HandlerFunc(groups.HandleJoinRequest)),
-	)
+	// ===== POSTS =====
+	mux.Handle("/posts/", Auth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/like") && r.Method == http.MethodPost {
+			groups.PostLike(w, r)
+			return
+		}
+		if r.Method == http.MethodDelete {
+			groups.DeletePost(w, r)
+			return
+		}
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	})))
 
-	// Leave Group
-	mux.Handle(
-		"/api/groups/leave",
-		AuthMiddleware(http.HandlerFunc(groups.LeaveGroup)),
-	)
-
-	// Delete Group
-	mux.Handle(
-		"/api/groups/delete",
-		AuthMiddleware(http.HandlerFunc(groups.DeleteGroup)),
-	)
-
-	// Group Posts
-	mux.Handle(
-		"/api/groups/posts",
-		AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodPost {
-				groups.CreateGroupPost(w, r)
-			} else if r.Method == http.MethodGet {
-				groups.GetGroupPosts(w, r)
-			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-
-	// Groups list/create
-	mux.Handle(
-		"/api/groups",
-		AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodPost {
-				groups.CreateGroup(w, r)
-			} else if r.Method == http.MethodGet {
-				groups.GetGroups(w, r)
-			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-
-	// Group Info (wildcard - must be LAST)
-	mux.Handle(
-		"/api/groups/",
-		AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.Method == http.MethodGet {
-				groups.GetGroupInfo(w, r)
-			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-
-	// Post Like and Delete
-	mux.Handle(
-		"/posts/",
-		AuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Handle /posts/{id}/like and /posts/{id}
-			if strings.HasSuffix(r.URL.Path, "/like") && r.Method == http.MethodPost {
-				groups.PostLike(w, r)
-			} else if r.Method == http.MethodDelete {
-				groups.DeletePost(w, r)
-			} else {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			}
-		})),
-	)
-
-	// Files
-	mux.Handle(
-		"/uploads/",
+	// ===== FILES =====
+	mux.Handle("/uploads/",
 		http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))),
 	)
 }

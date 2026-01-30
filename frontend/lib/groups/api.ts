@@ -6,7 +6,8 @@ import {
   GroupEventsResponse,
   CreateEventRequest,
   InviteUsersRequest,
-  JoinRequestRequest
+  JoinRequestRequest,
+  EventVoter
 } from "./interface";
 
 const API_URL = "http://localhost:8080/api/groups";
@@ -182,18 +183,17 @@ export async function createGroupEvent(request: CreateEventRequest): Promise<{ s
 }
 
 export async function respondToEvent(
-  groupId: number, 
   eventId: number, 
   response: "going" | "not-going"
 ): Promise<{ success: boolean }> {
   try {
-    const res = await fetch(`${API_URL}/${groupId}/events/${eventId}/respond`, {
+    const res = await fetch(`${API_URL}/events/respond`, {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ response }),
+      body: JSON.stringify({ event_id: eventId, response }),
     });
 
     const data = await res.json();
@@ -329,5 +329,177 @@ export async function deleteGroup(groupId: number): Promise<{ success: boolean; 
       success: false,
       message: "Failed to delete group",
     };
+  }
+}
+
+export interface PotentialInvitee {
+  id: number;
+  first_name: string;
+  last_name: string;
+  avatar: string;
+}
+
+export async function fetchPotentialInvitees(
+  groupId: number
+): Promise<{ success: boolean; users?: PotentialInvitee[]; message?: string }> {
+  if (!Number.isInteger(groupId) || groupId <= 0) {
+    return { success: false, message: "Invalid group ID" };
+  }
+  try {
+    const response = await fetch(`${API_URL}/${groupId}/invitees`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      return { success: false, message: (data as { message?: string }).message ?? "Failed to fetch invitees" };
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching potential invitees:", error);
+    return {
+      success: false,
+      message: "Failed to fetch users to invite",
+    };
+  }
+}
+
+export async function inviteUserToGroup(
+  groupId: number,
+  inviteeId: number
+): Promise<{ success: boolean; message?: string }> {
+  if (!Number.isInteger(groupId) || groupId <= 0 || !Number.isInteger(inviteeId) || inviteeId <= 0) {
+    return { success: false, message: "Invalid group ID or user ID" };
+  }
+  try {
+    const body = new URLSearchParams();
+    body.set("group_id", String(groupId));
+    body.set("invitee_id", String(inviteeId));
+
+    const response = await fetch(`${API_URL}/invite`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error inviting user:", error);
+    return {
+      success: false,
+      message: "Failed to invite user",
+    };
+  }
+}
+
+export async function fetchGroupInvitations(): Promise<any> {
+  try {
+    const response = await fetch(`${API_URL}/invitations`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching invitations:", error);
+    return null;
+  }
+}
+
+export async function handleGroupInvitation(
+  invitationId: number,
+  action: "accept" | "decline"
+): Promise<{ success: boolean; message?: string }> {
+  if (!Number.isInteger(invitationId) || invitationId <= 0) {
+    return { success: false, message: "Invalid invitation ID" };
+  }
+  if (action !== "accept" && action !== "decline") {
+    return { success: false, message: "Invalid action" };
+  }
+  try {
+    const body = new URLSearchParams();
+    body.set("invitation_id", String(invitationId));
+    body.set("action", action);
+
+    const response = await fetch(`${API_URL}/handle-invitation`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error handling invitation:", error);
+    return {
+      success: false,
+      message: "Failed to handle invitation",
+    };
+  }
+}
+
+export async function fetchGroupMembers(groupId: number): Promise<any> {
+  try {
+    const response = await fetch(`${API_URL}/${groupId}/members`, {
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching members:", error);
+    return null;
+  }
+}
+
+export async function kickGroupMember(
+  groupId: number,
+  memberId: number
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const response = await fetch(`${API_URL}/${groupId}/members/${memberId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error kicking member:", error);
+    return {
+      success: false,
+      message: "Failed to kick member",
+    };
+  }
+}
+
+export async function fetchEventVoters(
+  eventId: number
+): Promise<{ success: boolean; voters?: EventVoter[] }> {
+  try {
+    const response = await fetch(
+      `${API_URL}/events/responses?event_id=${eventId}`,
+      {
+        credentials: "include",
+      }
+    );
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching event voters:", error);
+    return { success: false };
   }
 }

@@ -46,8 +46,22 @@ export default function MainLayout({
           }
         };
 
+        const handleInvitation = (data: any) => {
+          console.log("Group invitation received:", data);
+          if (data.type === "group_invitation") {
+            (globalThis as any).addToast({
+              id: Date.now().toString(),
+              title: "Group Invitation",
+              message: `${data.data.inviter_name} invited you to join ${data.data.group_name}`,
+              type: "info",
+              duration: 6000,
+            });
+          }
+        };
+
         ws.on("join_request_approved", handleApproved);
         ws.on("join_request_rejected", handleRejected);
+        ws.on("group_invitation", handleInvitation);
       }
     });
   }, []);

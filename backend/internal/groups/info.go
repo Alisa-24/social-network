@@ -64,7 +64,7 @@ func GetGroupInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get events
-	events, err := queries.GetGroupEvents(groupID)
+	events, err := queries.GetGroupEvents(groupID, userID)
 	if err != nil {
 		events = []models.Event{} // Empty array on error
 	}

@@ -19,6 +19,11 @@ func RespondJSON(w http.ResponseWriter, statusCode int, response interface{}) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func ParseJSON(r *http.Request, v interface{}) error {
+	defer r.Body.Close()
+	return json.NewDecoder(r.Body).Decode(v)
+}
+
 func GenerateSessionID() string {
 	return uuid.New().String()
 }

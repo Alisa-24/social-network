@@ -1,32 +1,39 @@
 import { WS_URL } from "@/lib/config";
-import { OnlineUser } from "@/lib/interfaces";
 
 type MessageHandler = (data: any) => void;
+type MaxRetriesCallback = () => void;
 
 let ws: WebSocket | null = null;
 const messageHandlers = new Map<string, MessageHandler[]>();
+
 let reconnectAttempts = 0;
 const maxReconnectAttempts = 5;
 const reconnectDelay = 3000;
+
 let isConnecting = false;
+let manuallyClosed = false;
+
 let connectionCallbacks: Array<() => void> = [];
 let disconnectCallbacks: Array<() => void> = [];
+let maxRetriesCallbacks: Array<MaxRetriesCallback> = [];
 
 const attemptReconnect = () => {
   if (reconnectAttempts < maxReconnectAttempts) {
     reconnectAttempts++;
     console.log(
-      `Attempting to reconnect... (${reconnectAttempts}/${maxReconnectAttempts})`,
+      `Attempting to reconnect... (${reconnectAttempts}/${maxReconnectAttempts})`
     );
-    setTimeout(() => connect(), reconnectDelay);
+    setTimeout(connect, reconnectDelay);
+  } else {
+    console.error("Max reconnection attempts reached");
+    maxRetriesCallbacks.forEach((cb) => cb());
   }
 };
 
 export const connect = () => {
-  if (ws?.readyState === WebSocket.OPEN || isConnecting) {
-    return;
-  }
+  if (ws?.readyState === WebSocket.OPEN || isConnecting) return;
 
+  manuallyClosed = false;
   isConnecting = true;
 
   try {
@@ -42,9 +49,7 @@ export const connect = () => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("WebSocket message received:", data);
         const handlers = messageHandlers.get(data.type) || [];
-        console.log(`Found ${handlers.length} handlers for type: ${data.type}`);
         handlers.forEach((handler) => handler(data));
       } catch (error) {
         console.error("Failed to parse WebSocket message:", error);
@@ -60,7 +65,10 @@ export const connect = () => {
       console.log("WebSocket disconnected");
       isConnecting = false;
       disconnectCallbacks.forEach((cb) => cb());
-      attemptReconnect();
+
+      if (!manuallyClosed) {
+        attemptReconnect();
+      }
     };
   } catch (error) {
     console.error("Failed to connect to WebSocket:", error);
@@ -70,13 +78,14 @@ export const connect = () => {
 };
 
 export const disconnect = () => {
-  if (ws) {
-    ws.close();
-    ws = null;
-  }
+  manuallyClosed = true;
+  ws?.close();
+  ws = null;
+
   messageHandlers.clear();
   connectionCallbacks = [];
   disconnectCallbacks = [];
+  maxRetriesCallbacks = [];
 };
 
 export const on = (messageType: string, handler: MessageHandler) => {
@@ -88,12 +97,10 @@ export const on = (messageType: string, handler: MessageHandler) => {
 
 export const off = (messageType: string, handler: MessageHandler) => {
   const handlers = messageHandlers.get(messageType);
-  if (handlers) {
-    const index = handlers.indexOf(handler);
-    if (index > -1) {
-      handlers.splice(index, 1);
-    }
-  }
+  if (!handlers) return;
+
+  const index = handlers.indexOf(handler);
+  if (index !== -1) handlers.splice(index, 1);
 };
 
 export const onConnect = (callback: () => void) => {
@@ -104,14 +111,23 @@ export const onDisconnect = (callback: () => void) => {
   disconnectCallbacks.push(callback);
 };
 
+export const onMaxRetriesReached = (callback: MaxRetriesCallback) => {
+  maxRetriesCallbacks.push(callback);
+};
+
 export const send = (data: any) => {
   if (ws?.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(data));
-  } else {
-    console.warn("WebSocket is not connected");
   }
 };
 
 export const isConnected = (): boolean => {
   return ws?.readyState === WebSocket.OPEN;
+};
+
+export const getReconnectAttempts = () => reconnectAttempts;
+export const getMaxReconnectAttempts = () => maxReconnectAttempts;
+
+export const requestOnlineUsers = () => {
+  send({ type: "get_online_users" });
 };
