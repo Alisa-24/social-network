@@ -206,3 +206,12 @@ type EventResponseCounts struct {
 	Going    int   `json:"going"`
 	NotGoing int   `json:"notGoing"`
 }
+
+type GroupChatMessage struct {
+	ID        int       `json:"id"`
+	GroupID   int       `json:"group_id"`
+	UserID    int       `json:"user_id"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	User      User      `json:"user,omitempty"` // For displaying author details
+}

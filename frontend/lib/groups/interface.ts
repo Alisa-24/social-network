@@ -215,3 +215,23 @@ export interface ShareResponse {
   success: boolean;
   message?: string;
 }
+
+export interface GroupChatMessage {
+  id: number;
+  group_id: number;
+  user_id: number;
+  content: string;
+  created_at: string;
+  user?: {
+    ID: number;
+    FirstName: string;
+    LastName: string;
+    Avatar: string;
+    Nickname: string;
+  };
+}
+
+export interface GroupChatHistoryResponse {
+  success: boolean;
+  messages: GroupChatMessage[];
+}

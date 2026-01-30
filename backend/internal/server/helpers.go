@@ -44,6 +44,11 @@ func groupWildcard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.HasSuffix(r.URL.Path, "/messages") && r.Method == http.MethodGet {
+		groups.GetGroupChatMessages(w, r)
+		return
+	}
+
 	if r.Method == http.MethodGet {
 		groups.GetGroupInfo(w, r)
 		return

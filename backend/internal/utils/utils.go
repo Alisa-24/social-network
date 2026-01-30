@@ -122,3 +122,32 @@ func SaveUploadedFile(file multipart.File, header *multipart.FileHeader, directo
 
 	return "/uploads/" + directory + "/" + filename, nil
 }
+
+func GetPathParts(path string) []string {
+	// Remove leading/trailing slashes
+	if len(path) > 0 && path[0] == '/' {
+		path = path[1:]
+	}
+	if len(path) > 0 && path[len(path)-1] == '/' {
+		path = path[:len(path)-1]
+	}
+
+	var parts []string
+	// simple manual split to avoid empty strings if we just used strings.Split
+	// primarily for /api/groups/123/messages -> [api, groups, 123, messages]
+	current := ""
+	for _, c := range path {
+		if c == '/' {
+			if current != "" {
+				parts = append(parts, current)
+				current = ""
+			}
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		parts = append(parts, current)
+	}
+	return parts
+}

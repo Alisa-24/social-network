@@ -147,12 +147,8 @@ export default function GroupDetailPage() {
 
   const loadGroupData = async () => {
     try {
-      // setError(null); // removed to avoid flickering if verifying again? 
-      // check if we already have group data to avoid full loading state 
-      // but maybe better to keep simplified
-      
+
       const data = await fetchGroupDetail(parseInt(groupId));
-      // console.log("Received data:", data);
 
       if (data && (data as any).error) {
         setError((data as any).error);
@@ -347,7 +343,12 @@ export default function GroupDetailPage() {
                   </div>
                 )}
 
-                {activeTab === "chat" && <GroupChat />}
+                {activeTab === "chat" && (
+                  <GroupChat 
+                    groupId={group.id} 
+                    currentUser={currentUser} 
+                  />
+                )}
               </div>
 
               {/* Right Sidebar */}
