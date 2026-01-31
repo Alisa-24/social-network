@@ -7,6 +7,8 @@ import { Group } from "@/lib/groups/interface";
 import { fetchGroups, createGroup, requestToJoin } from "@/lib/groups/api";
 import { on, off } from "@/lib/ws/ws";
 import GroupInvitations from "@/components/groups/GroupInvitations";
+import { ServerError } from "@/lib/errors";
+import { getCurrentUser } from "@/lib/auth/auth";
 
 export default function GroupsPage() {
   const router = useRouter();
@@ -17,6 +19,26 @@ export default function GroupsPage() {
   const [allGroups, setAllGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
+
+  useEffect(() => {
+      async function checkAuth() {
+        try {
+          const currentUser = await getCurrentUser();
+          if (!currentUser) {
+            router.push("/login");
+            return;
+          }
+          setLoading(false);
+        } catch (error) {
+          if (error instanceof ServerError) {
+            router.push("/error/500");
+            return;
+          }
+          router.push("/login");
+        }
+      }
+      checkAuth();
+    }, [router]);
 
   useEffect(() => {
     loadGroups();
