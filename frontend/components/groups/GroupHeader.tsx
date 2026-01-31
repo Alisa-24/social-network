@@ -112,7 +112,7 @@ export default function GroupHeader({
 
         {/* Tabs */}
         <div className="flex border-t border-border px-6 gap-8">
-          {(["feed", "events", "members", "chat"] as const).map((tab) => (
+          {(["feed", "events", "chat", "members"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}

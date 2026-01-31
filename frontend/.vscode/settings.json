@@ -1,0 +1,18 @@
+{
+    "css.customData": [],
+    "css.validate": true,
+    "css.lint.unknownAtRules": "ignore",
+    "tailwindCSS.experimental.classRegex": [
+        [
+            "(?:twJoin|twMerge|cva)\\(([^)]*)\\)",
+            "[\"'`]([^\"'`]*)[\"'`]"
+        ]
+    ],
+    "tailwindCSS.includeLanguages": {
+        "plaintext": "css",
+        "typescriptreact": "javascript"
+    },
+    "files.associations": {
+        "*.css": "tailwindcss"
+    }
+}

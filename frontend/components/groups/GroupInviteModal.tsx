@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MoreHorizontal, X, Search } from "lucide-react"; // Added missing imports
+import { MoreHorizontal, X, Search, UserIcon } from "lucide-react"; // Added missing imports
 import { fetchPotentialInvitees, inviteUserToGroup, type PotentialInvitee } from "@/lib/groups/api";
 import { Group } from "@/lib/groups/interface";
 
@@ -150,10 +150,7 @@ export default function GroupInviteModal({
                               }}
                             />
                           ) : (
-                            <span className="text-foreground font-bold text-sm">
-                              {u.first_name[0]}
-                              {u.last_name[0]}
-                            </span>
+                            <UserIcon className="h-6 w-6 text-muted-foreground" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">

@@ -35,8 +35,13 @@ func GetGroupEvents(groupID int64, userID int) ([]models.Event, error) {
 			ge.created_at,
 			(SELECT COUNT(*) FROM group_event_responses WHERE event_id = ge.id AND response = 'going') AS going_count,
 			(SELECT COUNT(*) FROM group_event_responses WHERE event_id = ge.id AND response = 'not-going') AS not_going_count,
-			COALESCE((SELECT response FROM group_event_responses WHERE event_id = ge.id AND user_id = ?), '') AS user_response
+			COALESCE((SELECT response FROM group_event_responses WHERE event_id = ge.id AND user_id = ?), '') AS user_response,
+			ge.creator_id,
+			u.first_name,
+			u.last_name,
+			COALESCE(u.avatar, '')
 		FROM group_events ge
+		JOIN users u ON ge.creator_id = u.id
 		WHERE ge.group_id = ?
 		ORDER BY ge.event_date, ge.event_time
 	`, userID, groupID)
@@ -48,6 +53,7 @@ func GetGroupEvents(groupID int64, userID int) ([]models.Event, error) {
 	var events []models.Event
 	for rows.Next() {
 		var event models.Event
+		var creator models.UserPublic
 		err := rows.Scan(
 			&event.ID,
 			&event.GroupID,
@@ -60,10 +66,16 @@ func GetGroupEvents(groupID int64, userID int) ([]models.Event, error) {
 			&event.GoingCount,
 			&event.NotGoingCount,
 			&event.UserResponse,
+			&event.CreatorID,
+			&creator.FirstName,
+			&creator.LastName,
+			&creator.Avatar,
 		)
 		if err != nil {
 			return nil, err
 		}
+		creator.UserId = int(event.CreatorID)
+		event.Creator = &creator
 		events = append(events, event)
 	}
 
@@ -77,6 +89,15 @@ func AddEventResponse(eventID, userID int64, response string) error {
 		VALUES (?, ?, ?)
 		ON CONFLICT(event_id, user_id) DO UPDATE SET response = excluded.response
 	`, eventID, userID, response)
+	return err
+}
+
+// RemoveEventResponse deletes a user's response for an event
+func RemoveEventResponse(eventID, userID int64) error {
+	_, err := DB.Exec(`
+		DELETE FROM group_event_responses 
+		WHERE event_id = ? AND user_id = ?
+	`, eventID, userID)
 	return err
 }
 

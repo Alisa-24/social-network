@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, UserIcon } from "lucide-react";
 import { User } from "@/lib/interfaces";
 import { GroupChatMessage } from "@/lib/groups/interface";
 import { fetchGroupMessages } from "@/lib/groups/api";
@@ -110,17 +110,17 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
   };
 
   return (
-    <div className="flex flex-col h-150 bg-surface border border-border rounded-xl overflow-hidden">
-      {/* Chat Header */}
-      <div className="p-4 border-b border-border bg-background">
-        <h3 className="text-lg font-bold text-foreground">Group Chat</h3>
+    <div className="flex-1 flex flex-col bg-surface rounded-3xl border border-border overflow-hidden glass relative h-[600px]">
+      {/* Group Chat Header */}
+      <div className="p-6 border-b border-border flex items-center justify-between">
+        <h3 className="text-lg font-bold">Group Chat</h3>
       </div>
 
       {/* Chat Messages */}
       <div 
         ref={chatContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-4 space-y-4"
+        className="flex-1 overflow-y-auto p-6 space-y-6"
       >
         {loadingMore && (
           <div className="flex justify-center p-2">
@@ -135,35 +135,48 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
         ) : (
           messages.map((msg, index) => {
             const isMe = currentUser?.userId === msg.user_id;
-            const showAvatar = index === 0 || messages[index - 1].user_id !== msg.user_id;
+            const showDetails = index === 0 || messages[index - 1].user_id !== msg.user_id;
 
             return (
-              <div key={msg.id || index} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
-                <div className={`w-8 h-8 rounded-full bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 ${!showAvatar ? "invisible" : ""}`}>
-                   {msg.user?.Avatar ? (
-                     <img src={`http://localhost:8080${msg.user.Avatar}`} alt="Avatar" className="w-full h-full rounded-full object-cover" />
-                   ) : (
-                     <span className="text-foreground font-bold text-xs">
-                       {msg.user?.FirstName?.[0]}{msg.user?.LastName?.[0]}
-                     </span>
-                   )}
+              <div key={msg.id || index} className={`flex gap-3 max-w-[85%] ${isMe ? "flex-row-reverse ml-auto" : ""}`}>
+                <div className={`shrink-0 ${!showDetails ? "w-10" : ""}`}>
+                  {showDetails && (
+                    <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border flex items-center justify-center overflow-hidden">
+                      {msg.user?.Avatar ? (
+                        <img src={`http://localhost:8080${msg.user.Avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-muted-foreground font-bold text-xs uppercase">
+                        <UserIcon className="h-6 w-6 text-muted-foreground" />
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className={`flex-1 max-w-[80%] ${isMe ? "text-right" : ""}`}>
-                  {showAvatar && (
-                    <div className={`flex items-center gap-2 mb-1 ${isMe ? "justify-end" : ""}`}>
-                      <span className="text-xs font-bold text-foreground">
-                        {isMe ? "You" : `${msg.user?.FirstName} ${msg.user?.LastName}`}
-                      </span>
-                      <span className="text-[10px] text-muted">
-                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                <div className={`flex flex-col ${isMe ? "items-end" : ""}`}>
+                  {showDetails && (
+                    <div className="flex items-center gap-2 mb-1">
+                      {isMe ? (
+                        <>
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          <span className="text-sm font-bold">You</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-sm font-bold">{msg.user?.FirstName}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </>
+                      )}
                     </div>
                   )}
                   <div 
-                    className={`rounded-lg p-3 text-sm inline-block text-left ${
+                    className={`p-4 text-sm leading-relaxed ${
                       isMe 
-                        ? "bg-primary text-black font-medium" 
-                        : "bg-background text-foreground"
+                        ? "bg-primary text-black font-semibold rounded-2xl rounded-tr-none shadow-lg shadow-primary/20" 
+                        : "bg-muted/10 text-foreground rounded-2xl rounded-tl-none border border-border"
                     }`}
                   >
                     {msg.content}
@@ -177,28 +190,30 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
       </div>
 
       {/* Chat Input */}
-      <div className="p-4 border-t border-border bg-background">
+      <div className="p-6 bg-transparent">
         <form 
           onSubmit={(e) => {
             e.preventDefault();
             handleSendMessage();
           }}
-          className="flex gap-2"
+          className="relative"
         >
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 bg-surface text-foreground border border-border rounded-lg px-4 py-2 text-sm outline-none placeholder:text-muted focus:ring-1 focus:ring-primary"
+            className="w-full bg-muted/5 border border-border rounded-2xl py-4 pl-6 pr-16 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder-muted-foreground text-sm transition-all text-foreground"
           />
-          <button
-            type="submit"
-            disabled={!newMessage.trim()}
-            className="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-black px-4 py-2 rounded-lg font-bold text-sm transition-all"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+          <div className="absolute inset-y-0 right-3 flex items-center">
+            <button
+              type="submit"
+              disabled={!newMessage.trim()}
+              className="w-10 h-10 bg-primary text-black rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-md shadow-primary/10"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </form>
       </div>
     </div>

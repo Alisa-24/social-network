@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Search, UserPlus } from "lucide-react";
+import { X, Search, UserPlus, UserIcon } from "lucide-react";
 
 interface InviteFriendsModalProps {
   groupName: string;
@@ -125,9 +125,7 @@ export default function InviteFriendsModal({
                         style={{ backgroundImage: `url(${friend.avatar})` }}
                       />
                     ) : (
-                      <span className="text-foreground font-bold text-sm">
-                        {friend.firstName[0]}{friend.lastName[0]}
-                      </span>
+                        <UserIcon className="h-6 w-6 text-muted-foreground" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

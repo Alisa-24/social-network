@@ -77,7 +77,7 @@ export async function createGroupEvent(
 
 export async function respondToEvent(
   eventId: number,
-  response: "going" | "not-going"
+  response: "going" | "not-going" | "" | null
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const res = await fetch(`${GROUPS_API_URL}/events/respond`, {

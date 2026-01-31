@@ -133,7 +133,18 @@ func CreateAnEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prepare event data for WebSocket notification
-	// We construct the event object to send back immediately
+	// Fetch creator details for the broadcast
+	creator, err := queries.GetUserByID(int(userID64))
+	var creatorPublic *models.UserPublic
+	if err == nil {
+		creatorPublic = &models.UserPublic{
+			UserId:    creator.ID,
+			FirstName: creator.FirstName,
+			LastName:  creator.LastName,
+			Avatar:    creator.Avatar,
+		}
+	}
+
 	newEvent := models.Event{
 		ID:          eventID,
 		GroupID:     groupID64,
@@ -143,6 +154,8 @@ func CreateAnEvent(w http.ResponseWriter, r *http.Request) {
 		EndTime:     "", // Assumed empty for now as per schema
 		ImagePath:   coverImagePath,
 		CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
+		CreatorID:   userID64,
+		Creator:     creatorPublic,
 	}
 
 	// Notify group members
@@ -214,10 +227,10 @@ func RespondToEvent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate response
-	if req.Response != "going" && req.Response != "not-going" {
+	if req.Response != "going" && req.Response != "not-going" && req.Response != "" {
 		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
-			Message: "Response must be 'going' or 'not-going'",
+			Message: "Response must be 'going', 'not-going', or empty to remove",
 		})
 		return
 	}
@@ -225,8 +238,13 @@ func RespondToEvent(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value("userID").(int)
 	userID64 := int64(userID)
 
-	// Update response in DB
-	err := queries.AddEventResponse(req.EventID, userID64, req.Response)
+	var err error
+	if req.Response == "" {
+		err = queries.RemoveEventResponse(req.EventID, userID64)
+	} else {
+		err = queries.AddEventResponse(req.EventID, userID64, req.Response)
+	}
+
 	if err != nil {
 		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
 			Success: false,
@@ -240,30 +258,6 @@ func RespondToEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Printf("Error getting counts: %v\n", err)
 	}
-
-	// Get group ID to broadcast to (we need to fetch event details or assume passed, but event structure has groupID)
-	// We don't have event struct here, let's fetch it or just broadcast to the group if we knew it.
-	// But `RespondToEvent` only receives `event_id`. We need to query the event to know the group_id.
-	// For now, let's assume we can get it from the event (not implemented in queries yet effectively).
-	// Let's implement a quick query to get event details or just group_id.
-	// Or we can rely on `queries.GetGroupEvents` but that returns a list.
-	// Since we need to broadcast to the group, we MUST know the group_id.
-
-	// Quick fix: Add GetEventByID in queries or use existing means.
-	// I'll skip the broadcast for a second if I can't get groupID easily, but checking `groupEvents.go`...
-	// `GetGroupEvents` gets events by groupID.
-	// I'll create a helper or just query it here raw if needed, but better to be safe.
-	// I'll do a direct DB query for group_id here for speed, or add a proper query.
-	// Actually, let's add `GetEventByID` to `queries/groupEvents.go` in the next step if strictly needed,
-	// but for now I will try to use `queries.DB.QueryRow` here temporarily or just add the query function.
-	// Wait, I am in `event.go`. I should use `queries` package.
-	// I will assume I can create `queries.GetEventByID` swiftly.
-
-	// ... Actually, I'll modify `groupEvents.go` next. For now, let's use a placeholder for groupID.
-	// OR I can use the `GetGroupEvents` and filter... no that's inefficient.
-
-	// Let's defer the broadcast momentarily and add the query function first?
-	// No, I'll write the code to use `queries.GetGroupIDByEventID` and then implement it.
 
 	groupID, err := queries.GetGroupIDByEventID(req.EventID)
 	if err == nil {

@@ -297,7 +297,7 @@ export default function GroupDetailPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-background">
+    <div className="flex-1 flex flex-col overflow-y-auto bg-background">
       <GroupHeader
         group={group}
         activeTab={activeTab}
@@ -307,62 +307,58 @@ export default function GroupDetailPage() {
         onDelete={() => setShowDeleteConfirm(true)}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
-          <div className="max-w-5xl mx-auto w-full">
-            <div className="flex flex-col lg:flex-row gap-6 p-6">
-              {/* Main Content */}
-              <div className="flex-1 space-y-6">
-                {activeTab === "feed" && (
-                  <GroupFeed
-                    group={group}
-                    posts={posts}
-                    currentUser={currentUser}
-                    onPostCreated={loadGroupData}
-                    onPostDeleted={(postId) => setPosts(posts.filter((p) => p.id !== postId))}
-                  />
-                )}
-
-                {activeTab === "events" && (
-                  <GroupEvents
-                    events={events}
-                    group={group}
-                    onCreateEvent={() => setCreateEventModalOpen(true)}
-                    onViewVoters={handleViewVoters}
-                  />
-                )}
-
-                {activeTab === "members" && (
-                  <div className="space-y-4">
-                    <GroupMembers
-                      groupId={group.id}
-                      isOwner={group.is_owner || false}
-                      currentUserId={currentUser?.userId}
-                      onMemberKicked={loadGroupData}
-                    />
-                  </div>
-                )}
-
-                {activeTab === "chat" && (
-                  <GroupChat 
-                    groupId={group.id} 
-                    currentUser={currentUser} 
-                  />
-                )}
-              </div>
-
-              {/* Right Sidebar */}
-              <GroupSidebar
+      <div className="max-w-7xl mx-auto w-full px-8 py-8 flex flex-col lg:flex-row gap-8">
+        {/* Main Content */}
+        <div className="flex-1 min-w-0 min-h-[60vh]">
+          {activeTab === "feed" && (
+            <div className="space-y-6">
+              <GroupFeed
                 group={group}
-                creator={creator}
-                events={events}
-                activeTab={activeTab}
-                onViewAllEvents={() => setActiveTab("events")}
-                onRefresh={loadGroupData}
+                posts={posts}
+                currentUser={currentUser}
+                onPostCreated={loadGroupData}
+                onPostDeleted={(postId) => setPosts(posts.filter((p) => p.id !== postId))}
               />
             </div>
-          </div>
+          )}
+
+          {activeTab === "events" && (
+            <GroupEvents
+              events={events}
+              group={group}
+              onCreateEvent={() => setCreateEventModalOpen(true)}
+              onViewVoters={handleViewVoters}
+            />
+          )}
+
+          {activeTab === "chat" && (
+            <GroupChat 
+              groupId={group.id} 
+              currentUser={currentUser} 
+            />
+          )}
+
+          {activeTab === "members" && (
+            <div className="space-y-4">
+              <GroupMembers
+                groupId={group.id}
+                isOwner={group.is_owner || false}
+                currentUserId={currentUser?.userId}
+                onMemberKicked={loadGroupData}
+              />
+            </div>
+          )}
         </div>
+
+        {/* Right Sidebar */}
+        <GroupSidebar
+          group={group}
+          creator={creator}
+          events={events}
+          activeTab={activeTab}
+          onViewAllEvents={() => setActiveTab("events")}
+          onRefresh={loadGroupData}
+        />
       </div>
 
       <GroupInviteModal

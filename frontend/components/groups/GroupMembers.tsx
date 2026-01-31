@@ -3,6 +3,7 @@ import { Users, UserMinus, ExternalLink, UserIcon} from "lucide-react";
 import { fetchGroupMembers, kickGroupMember, GroupMember } from "@/lib/groups/members";
 import ConfirmModal from "@/components/ui/confirm";
 import Link from "next/link";
+import { on, off, requestOnlineUsers } from "@/lib/ws/ws";
 
 interface GroupMembersProps {
   groupId: number;
@@ -23,9 +24,24 @@ export default function GroupMembers({
   const [memberToKick, setMemberToKick] = useState<GroupMember | null>(null);
   const [isKicking, setIsKicking] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadMembers();
+
+    const handleOnlineUsers = (data: any) => {
+      if (data.type === "online_users" && data.users) {
+        const ids = new Set<number>(data.users.map((u: any) => u.userId));
+        setOnlineUserIds(ids);
+      }
+    };
+
+    on("online_users", handleOnlineUsers);
+    requestOnlineUsers();
+
+    return () => {
+      off("online_users", handleOnlineUsers);
+    };
   }, [groupId]);
 
   const loadMembers = async () => {
@@ -118,7 +134,9 @@ export default function GroupMembers({
           </div>
         ) : (
           <div className="space-y-2">
-            {displayedMembers.map((member) => (
+            {displayedMembers.map((member) => {
+              const isOnline = onlineUserIds.has(member.ID);
+              return (
               <div
                 key={member.ID}
                 className="flex items-center gap-3 p-3 bg-background rounded-lg border border-border hover:border-border/80 transition-colors group"
@@ -128,18 +146,23 @@ export default function GroupMembers({
                   href={`/profile/${member.ID}`}
                   className="shrink-0"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-primary/50 transition-all">
-                    {member.Avatar ? (
-                      <img
-                        src={`http://localhost:8080${member.Avatar}`}
-                        alt={`${member.FirstName} ${member.LastName}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                        <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center border border-border shrink-0">
-                          <UserIcon className="h-5 w-5 text-foreground/60" />
-                        </div>
-                      )}
+                  <div className="relative">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-primary/50 transition-all">
+                      {member.Avatar ? (
+                        <img
+                          src={`http://localhost:8080${member.Avatar}`}
+                          alt={`${member.FirstName} ${member.LastName}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                          <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center border border-border shrink-0">
+                            <UserIcon className="h-5 w-5 text-foreground/60" />
+                          </div>
+                        )}
+                    </div>
+                    {isOnline && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                    )}
                   </div>
                 </Link>
 
@@ -160,9 +183,15 @@ export default function GroupMembers({
                         </span>
                       )}
                     </div>
-                    <p className="text-muted text-[11px]">
-                      Joined {formatJoinDate(member.JoinedAt)}
-                    </p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className={`text-[10px] font-bold uppercase tracking-wider ${isOnline ? 'text-green-500' : 'text-muted'}`}>
+                        {isOnline ? 'Online' : 'Offline'}
+                      </p>
+                      <span className="text-muted text-[10px]">•</span>
+                      <p className="text-muted text-[10px]">
+                        Joined {formatJoinDate(member.JoinedAt)}
+                      </p>
+                    </div>
                   </Link>
                 </div>
 
@@ -177,7 +206,8 @@ export default function GroupMembers({
                   </button>
                 )}
               </div>
-            ))}
+            );
+          })}
           </div>
         )}
       </div>

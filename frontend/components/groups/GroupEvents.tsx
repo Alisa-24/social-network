@@ -1,4 +1,4 @@
-import { Calendar, Clock } from "lucide-react";
+import { Calendar, Clock, User as UserIcon } from "lucide-react";
 import { Group, GroupEvent } from "@/lib/groups/interface";
 import { respondToEvent } from "@/lib/groups/api";
 
@@ -77,13 +77,34 @@ export default function GroupEvents({
                       </div>
                     </div>
                     <p className="text-sm text-muted">{event.description}</p>
+                    {event.creator && (
+                      <div className="flex items-center gap-2 mt-3 p-1.5 bg-background rounded-lg border border-border w-fit">
+                        <div className="w-5 h-5 rounded-full overflow-hidden bg-muted">
+                          {event.creator.avatar ? (
+                            <img 
+                              src={`http://localhost:8080${event.creator.avatar}`} 
+                              alt={event.creator.firstName} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-foreground/10 text-foreground/60">
+                              <UserIcon className="w-3 h-3" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          By <span className="font-bold text-foreground">{event.creator.firstName} {event.creator.lastName}</span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={async () => {
                       if (!group.is_member) return;
-                      await respondToEvent(event.id, "going");
+                      const newResponse = event.user_response === "going" ? "" : "going";
+                      await respondToEvent(event.id, newResponse);
                     }}
                     disabled={!group.is_member}
                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${
@@ -97,7 +118,8 @@ export default function GroupEvents({
                   <button
                     onClick={async () => {
                       if (!group.is_member) return;
-                      await respondToEvent(event.id, "not-going");
+                      const newResponse = event.user_response === "not-going" ? "" : "not-going";
+                      await respondToEvent(event.id, newResponse);
                     }}
                     disabled={!group.is_member}
                     className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${

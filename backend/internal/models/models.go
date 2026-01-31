@@ -108,17 +108,19 @@ type Post struct {
 }
 
 type Event struct {
-	ID            int64  `json:"id"`
-	GroupID       int64  `json:"group_id"`
-	Title         string `json:"title"`
-	Description   string `json:"description,omitempty"`
-	ImagePath     string `json:"image_path,omitempty"`
-	StartTime     string `json:"start_time"`
-	EndTime       string `json:"end_time"`
-	CreatedAt     string `json:"created_at"`
-	GoingCount    int    `json:"going_count"`
-	NotGoingCount int    `json:"not_going_count"`
-	UserResponse  string `json:"user_response,omitempty"` // "going", "not-going", or empty
+	ID            int64       `json:"id"`
+	GroupID       int64       `json:"group_id"`
+	Title         string      `json:"title"`
+	Description   string      `json:"description,omitempty"`
+	ImagePath     string      `json:"image_path,omitempty"`
+	StartTime     string      `json:"start_time"`
+	EndTime       string      `json:"end_time"`
+	CreatedAt     string      `json:"created_at"`
+	GoingCount    int         `json:"going_count"`
+	NotGoingCount int         `json:"not_going_count"`
+	UserResponse  string      `json:"user_response,omitempty"` // "going", "not-going", or empty
+	CreatorID     int64       `json:"creator_id"`
+	Creator       *UserPublic `json:"creator,omitempty"`
 }
 
 type GroupInfo struct {

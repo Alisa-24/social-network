@@ -1,4 +1,4 @@
-import { Heart, MessageSquare, Share2, MoreHorizontal, Trash2 } from "lucide-react";
+import { Heart, MessageSquare, Share2, MoreHorizontal, Trash2, UserIcon } from "lucide-react";
 import { GroupPost } from "@/lib/groups/interface";
 import { useState, useEffect, useRef } from "react";
 import { togglePostLike, deletePost } from "@/lib/groups/posts";
@@ -80,11 +80,6 @@ export default function PostCard({
     }
   };
 
-  const getAuthorInitials = () => {
-    const firstName = post.author?.FirstName?.[0] || '';
-    const lastName = post.author?.LastName?.[0] || '';
-    return firstName && lastName ? `${firstName}${lastName}` : 'U';
-  };
 
   const getAuthorFullName = () => {
     const firstName = post.author?.FirstName || 'User';
@@ -242,9 +237,7 @@ export default function PostCard({
               onError={handleAvatarError}
             />
           ) : (
-            <span className="text-foreground font-bold text-sm">
-              {getAuthorInitials()}
-            </span>
+            <UserIcon className="h-6 w-6 text-muted-foreground" />
           )}
         </div>
         <div className="flex-1 min-w-0">

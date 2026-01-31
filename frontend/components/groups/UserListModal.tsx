@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, UserIcon } from "lucide-react";
 import { User } from "@/lib/interfaces"; // or EventVoter?
 import { EventVoter } from "@/lib/groups/interface";
 
@@ -57,7 +57,7 @@ export default function UserListModal({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold">
-                        {user.firstName[0]}
+                        <UserIcon className="h-5 w-5 text-muted-foreground" />
                       </div>
                     )}
                   </div>

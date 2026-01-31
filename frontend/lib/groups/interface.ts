@@ -86,6 +86,12 @@ export interface GroupEvent {
   end_time?: string;
   image_path?: string;
   creator_id?: number;
+  creator?: {
+    userId: number;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  };
   going_count?: number;
   not_going_count?: number;
   user_response?: "going" | "not-going" | null;
