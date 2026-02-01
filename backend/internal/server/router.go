@@ -49,6 +49,7 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "POST /api/groups/events", groups.CreateAnEvent)
 	authHandle(mux, "POST /api/groups/events/respond", groups.RespondToEvent)
 	authHandle(mux, "GET /api/groups/events/responses", groups.GetEventResponsesHandler)
+	authHandle(mux, "DELETE /api/groups/events/{id}", groups.DeleteAnEvent)
 
 	// ===== POSTS =====
 	authHandle(mux, "POST /posts/{id}/like", groups.PostLike)

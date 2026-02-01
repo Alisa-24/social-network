@@ -167,3 +167,43 @@ func GetEventVoters(eventID int64) ([]EventVoter, error) {
 	}
 	return voters, nil
 }
+
+func GetEventOwnerID(eventID int64) (int64, error) {
+	var ownerID int64
+	err := DB.QueryRow(`
+		SELECT creator_id
+		FROM group_events
+		WHERE id = ?
+	`, eventID).Scan(&ownerID)
+	return ownerID, err
+}
+
+func GetGroupOwnerIDByEventID(eventID int64) (int64, error) {
+	var ownerID int64
+	err := DB.QueryRow(`
+		SELECT g.owner_id
+		FROM groups g
+		JOIN group_events ge ON g.id = ge.group_id
+		WHERE ge.id = ?
+	`, eventID).Scan(&ownerID)
+	return ownerID, err
+}
+
+// DeleteGroupEvent deletes an event from the database
+func DeleteGroupEvent(eventID int64) error {
+	_, err := DB.Exec(`
+		DELETE FROM group_events
+		WHERE id = ?
+	`, eventID)
+	return err
+}
+
+func GetEventImagePath(eventID int64) (string, error) {
+	var imagePath string
+	err := DB.QueryRow(`
+		SELECT image_path
+		FROM group_events
+		WHERE id = ?
+	`, eventID).Scan(&imagePath)
+	return imagePath, err
+}

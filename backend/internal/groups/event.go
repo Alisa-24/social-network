@@ -5,6 +5,7 @@ import (
 	"backend/internal/models"
 	"backend/internal/utils"
 	"backend/internal/ws"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -163,6 +164,31 @@ func CreateAnEvent(w http.ResponseWriter, r *http.Request) {
 		"groupId": groupID64,
 		"event":   newEvent,
 	})
+
+	// Add persistent notifications for all members (except the creator)
+	members, err := queries.GetGroupMembersWithDetails(groupID64)
+	if err == nil {
+		// Prepare notification data
+		notifData := map[string]interface{}{
+			"group_id":   groupID64,
+			"group_name": "Group Event: " + title,
+			"event_id":   eventID,
+		}
+		dataJSON, _ := json.Marshal(notifData)
+
+		for _, m := range members {
+			if m.UserID != int(userID64) {
+				_ = queries.CreateNotification(m.UserID, &userID, "new_event", string(dataJSON))
+
+				// Optional: also push a real-time notification update if there's a listener for general notifications
+				ws.SendNotificationToUser(m.UserID, models.NotificationMessage{
+					Type:      "new_event",
+					Data:      notifData,
+					Timestamp: time.Now(),
+				})
+			}
+		}
+	}
 
 	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 		Success: true,

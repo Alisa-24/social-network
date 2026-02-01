@@ -59,11 +59,30 @@ export default function MainLayout({
           }
         };
 
+        const handleNewEvent = (data: any) => {
+          console.log("New group event notification:", data);
+          if (data.type === "new_event") {
+            (globalThis as any).addToast({
+              id: Date.now().toString(),
+              title: "New Group Event!",
+              message: `A new event "${data.data.group_name}" has been created.`,
+              type: "success",
+              duration: 7000,
+            });
+          }
+        };
+
         ws.on("join_request_approved", handleApproved);
         ws.on("join_request_rejected", handleRejected);
         ws.on("group_invitation", handleInvitation);
+        ws.on("new_event", handleNewEvent);
       }
     });
+
+    return () => {
+      // It's good practice to clean up listeners here, but since this is a persistent layout, 
+      // and ws.off isn't being used for others here yet, I'll follow the existing pattern.
+    };
   }, []);
 
   const handleLogout = async () => {

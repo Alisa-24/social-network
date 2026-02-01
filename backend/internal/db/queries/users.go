@@ -105,3 +105,50 @@ func GetUserByID(id int) (models.User, error) {
 	)
 	return user, err
 }
+
+func GetAllUsers() ([]models.User, error) {
+	rows, err := DB.Query(`
+		SELECT 
+			id, 
+			email, 
+			first_name, 
+			last_name, 
+			COALESCE(nickname, '') as nickname, 
+			COALESCE(avatar, '') as avatar, 
+			created_at
+		FROM users`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		var nickname sql.NullString
+		var avatar sql.NullString
+
+		err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.FirstName,
+			&user.LastName,
+			&nickname,
+			&avatar,
+			&user.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if nickname.Valid {
+			user.Nickname = nickname.String
+		}
+		if avatar.Valid {
+			user.Avatar = avatar.String
+		}
+
+		users = append(users, user)
+	}
+	return users, nil
+}

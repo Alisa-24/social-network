@@ -1,20 +1,48 @@
-import { Calendar, Clock, User as UserIcon } from "lucide-react";
+import { useState } from "react";
+import { Calendar, Clock, User as UserIcon, XCircle, Trash2 } from "lucide-react";
 import { Group, GroupEvent } from "@/lib/groups/interface";
-import { respondToEvent } from "@/lib/groups/api";
+import { respondToEvent, deleteGroupEvent } from "@/lib/groups/api";
+import { User as AuthUser } from "@/lib/interfaces";
+import ConfirmModal from "@/components/ui/confirm";
 
 interface GroupEventsProps {
   events: GroupEvent[];
   group: Group;
+  currentUser: AuthUser | null;
   onCreateEvent: () => void;
-  onViewVoters: (eventId: number, title: string) => void;
+  onViewVoters: (eventId: any, title: string) => void;
+  onEventDeleted?: (eventId: number) => void;
 }
 
 export default function GroupEvents({
   events,
   group,
+  currentUser,
   onCreateEvent,
   onViewVoters,
+  onEventDeleted,
 }: GroupEventsProps) {
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<GroupEvent | null>(null);
+
+  const handleDeleteConfirm = async () => {
+    if (!eventToDelete) return;
+    
+    setDeletingId(eventToDelete.id);
+    try {
+      const res = await deleteGroupEvent(eventToDelete.id);
+      if (res.success) {
+        onEventDeleted?.(eventToDelete.id);
+        setShowDeleteModal(false);
+        setEventToDelete(null);
+      } else {
+        alert(res.message || "Failed to delete event");
+      }
+    } finally {
+      setDeletingId(null);
+    }
+  };
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center bg-surface border border-border p-4 rounded-xl">
@@ -35,48 +63,99 @@ export default function GroupEvents({
           <p className="text-muted">No upcoming events</p>
         </div>
       ) : (
-        events.map((event) => {
-          const eventDate = new Date(event.start_time);
-          const eventTime = eventDate.toLocaleTimeString("en-US", {
-            hour: "numeric",
-            minute: "2-digit",
-          });
-          return (
-            <div
-              key={event.id}
-              className="bg-surface border border-border rounded-xl overflow-hidden"
-            >
-              {event.image_path && (
-                <div
-                  className="h-48 bg-surface bg-cover bg-center"
-                  style={{
-                    backgroundImage: `url(http://localhost:8080${event.image_path})`,
-                  }}
-                />
-              )}
-              <div className="p-5">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="shrink-0 w-14 h-14 bg-primary/10 rounded-lg flex flex-col items-center justify-center border border-primary/20">
-                    <span className="text-primary text-xs font-bold uppercase">
-                      {eventDate.toLocaleDateString("en-US", {
-                        month: "short",
-                      })}
-                    </span>
-                    <span className="text-foreground text-xl font-bold">
-                      {eventDate.getDate()}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-foreground mb-2">
-                      {event.title}
-                    </h3>
-                    <div className="flex items-center gap-3 text-muted text-xs mb-2">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span>{eventTime}</span>
+        [...events]
+          .sort((a, b) => {
+            const now = new Date().getTime();
+            const timeA = new Date(a.start_time).getTime();
+            const timeB = new Date(b.start_time).getTime();
+            
+            const isPassedA = timeA < now;
+            const isPassedB = timeB < now;
+
+            if (isPassedA && !isPassedB) return 1;
+            if (!isPassedA && isPassedB) return -1;
+            
+            return timeA - timeB;
+          })
+          .map((event) => {
+            const eventDate = new Date(event.start_time);
+            const isPassed = eventDate.getTime() < new Date().getTime();
+            const eventTime = eventDate.toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+            });
+            return (
+              <div
+                key={event.id}
+                className={`bg-surface border border-border rounded-xl overflow-hidden transition-opacity ${
+                  isPassed ? "opacity-60 grayscale-[0.3]" : ""
+                }`}
+              >
+                {event.image_path && (
+                  <div className="relative">
+                    <div
+                      className="h-48 bg-surface bg-cover bg-center"
+                      style={{
+                        backgroundImage: `url(http://localhost:8080${event.image_path})`,
+                      }}
+                    />
+                    {isPassed && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="bg-red-500 text-white px-4 py-1.5 rounded-full font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-xl">
+                          <XCircle className="w-4 h-4" />
+                          Passed
+                        </div>
                       </div>
+                    )}
+                  </div>
+                )}
+                <div className="p-5">
+                  {!event.image_path && isPassed && (
+                    <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-500 px-3 py-1.5 rounded-lg font-black uppercase text-[10px] tracking-widest flex items-center gap-2 w-fit">
+                      <XCircle className="w-3.5 h-3.5" />
+                      Passed Event
                     </div>
-                    <p className="text-sm text-muted">{event.description}</p>
+                  )}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className={`shrink-0 w-14 h-14 rounded-lg flex flex-col items-center justify-center border ${
+                      isPassed ? "bg-muted/10 border-muted/20" : "bg-primary/10 border-primary/20"
+                    }`}>
+                      <span className={`text-xs font-bold uppercase ${isPassed ? "text-muted" : "text-primary"}`}>
+                        {eventDate.toLocaleDateString("en-US", {
+                          month: "short",
+                        })}
+                      </span>
+                      <span className={`text-xl font-bold ${isPassed ? "text-muted" : "text-foreground"}`}>
+                        {eventDate.getDate()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start gap-2 mb-2">
+                        <h3 className={`text-lg font-bold ${isPassed ? "text-muted" : "text-foreground"} truncate`}>
+                          {event.title}
+                        </h3>
+                        {(group.is_owner || event.creator_id === currentUser?.userId) && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEventToDelete(event);
+                              setShowDeleteModal(true);
+                            }}
+                            disabled={deletingId === event.id}
+                            className="text-muted hover:text-red-500 transition-colors shrink-0 disabled:opacity-50"
+                            title="Delete Event"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 text-muted text-xs mb-2">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          <span>{eventTime}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted">{event.description}</p>
                     {event.creator && (
                       <div className="flex items-center gap-2 mt-3 p-1.5 bg-background rounded-lg border border-border w-fit">
                         <div className="w-5 h-5 rounded-full overflow-hidden bg-muted">
@@ -142,6 +221,22 @@ export default function GroupEvents({
           );
         })
       )}
+
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          if (deletingId === null) {
+            setShowDeleteModal(false);
+            setEventToDelete(null);
+          }
+        }}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Event"
+        message={`Are you sure you want to delete "${eventToDelete?.title}"? This action cannot be undone.`}
+        confirmText="Delete Event"
+        confirmVariant="danger"
+        isLoading={deletingId !== null}
+      />
     </div>
   );
 }

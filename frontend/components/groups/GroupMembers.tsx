@@ -31,7 +31,9 @@ export default function GroupMembers({
 
     const handleOnlineUsers = (data: any) => {
       if (data.type === "online_users" && data.users) {
-        const ids = new Set<number>(data.users.map((u: any) => u.userId));
+        const ids = new Set<number>(
+          data.users.filter((u: any) => u.online).map((u: any) => u.userId)
+        );
         setOnlineUserIds(ids);
       }
     };

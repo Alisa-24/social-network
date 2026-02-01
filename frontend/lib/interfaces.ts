@@ -16,6 +16,7 @@ export interface OnlineUser {
   lastName: string;
   nickname?: string;
   avatar?: string;
+  online?: boolean;
 }
 
 export interface AuthResponse {

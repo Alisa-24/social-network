@@ -125,14 +125,19 @@ export default function GroupDetailPage() {
           })
         );
       }
+      if (data.type === "event_deleted" && data.data.groupId === id) {
+        setEvents((prev) => prev.filter((e) => e.id !== data.data.eventId));
+      }
     };
 
     on("new_group_event", handleNewEvent);
     on("event_response_update", handleNewEvent);
+    on("event_deleted", handleNewEvent);
     
     return () => {
       off("new_group_event", handleNewEvent);
       off("event_response_update", handleNewEvent);
+      off("event_deleted", handleNewEvent);
     };
   }, [groupId, currentUser]);
 
@@ -326,8 +331,10 @@ export default function GroupDetailPage() {
             <GroupEvents
               events={events}
               group={group}
+              currentUser={currentUser}
               onCreateEvent={() => setCreateEventModalOpen(true)}
               onViewVoters={handleViewVoters}
+              onEventDeleted={(eventId: number) => setEvents(events.filter((e) => e.id !== eventId))}
             />
           )}
 

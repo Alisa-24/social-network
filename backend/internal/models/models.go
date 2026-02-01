@@ -169,6 +169,7 @@ type OnlineUserData struct {
 	LastName  string `json:"lastName"`
 	Nickname  string `json:"nickname,omitempty"`
 	Avatar    string `json:"avatar,omitempty"`
+	Online    bool   `json:"online"`
 }
 
 type OnlineUsersMessage struct {

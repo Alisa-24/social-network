@@ -46,7 +46,7 @@ export default function FeedPage() {
     const handleOnlineUsers = (data: { users: OnlineUser[] }) => {
       setOnlineUsers(
         (data.users || []).filter(
-          (onlineUser) => onlineUser.userId !== user.userId,
+          (onlineUser) => onlineUser.userId !== user.userId && onlineUser.online,
         ),
       );
     };
@@ -74,6 +74,11 @@ export default function FeedPage() {
     ws.onMaxRetriesReached(handleMaxRetries);
 
     setWsConnected(ws.isConnected());
+    
+    // Request online users when component mounts (if already connected)
+    if (ws.isConnected()) {
+      ws.requestOnlineUsers();
+    }
 
     return () => {
       ws.off("online_users", handleOnlineUsers);
@@ -172,7 +177,7 @@ export default function FeedPage() {
                           <UserIcon className="h-5 w-5 text-foreground/60" />
                         </div>
                       )}
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${onlineUser.online ? "bg-green-500" : "bg-foreground/20"}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">

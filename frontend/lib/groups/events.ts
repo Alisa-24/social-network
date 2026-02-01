@@ -95,4 +95,19 @@ export async function respondToEvent(
   }
 }
 
+export async function deleteGroupEvent(
+  eventId: number
+): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await fetch(`${GROUPS_API_URL}/events/${eventId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+    return await res.json();
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    return { success: false, message: "Failed to delete event" };
+  }
+}
+
 
