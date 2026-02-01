@@ -112,14 +112,24 @@ export default function GroupsPage() {
     const result = await requestToJoin({ groupId });
     
     if (result.success) {
+      // Check if user was auto-accepted due to pending invitation
+      const wasAutoAccepted = result.message?.includes("added to the group");
+      
       (globalThis as any).addToast({
         id: Date.now().toString(),
-        title: "Request Sent",
-        message: "Your join request has been sent to the group owner",
+        title: wasAutoAccepted ? "🎉 Welcome to the Group!" : "Request Sent",
+        message: wasAutoAccepted 
+          ? "You had a pending invitation and were automatically added to the group!"
+          : "Your join request has been sent to the group owner",
         type: "success",
         duration: 5000,
       });
       loadGroups();
+      
+      // Trigger a custom event to refresh invitations if auto-joined
+      if (wasAutoAccepted) {
+        window.dispatchEvent(new CustomEvent("groupInvitationAccepted"));
+      }
     } else {
       (globalThis as any).addToast({
         id: Date.now().toString(),
@@ -272,17 +282,21 @@ export default function GroupsPage() {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-5">{group.description}</p>
                       <button 
                         onClick={() => handleJoinGroup(group.id)}
-                        disabled={joiningGroupId === group.id || group.has_pending_request}
+                        disabled={joiningGroupId === group.id || group.has_pending_request || group.has_pending_invitation}
                         className={`w-full font-bold py-2.5 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                          group.has_pending_request
+                          group.has_pending_invitation
+                            ? "bg-blue-500/10 text-blue-500 border border-blue-500/50"
+                            : group.has_pending_request
                             ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/50"
                             : "bg-primary/10 hover:bg-primary text-primary hover:text-black"
                         }`}
                       >
                         {joiningGroupId === group.id 
                           ? "Requesting..." 
-                          : group.has_pending_request 
-                            ? "Pending" 
+                          : group.has_pending_invitation
+                            ? "Invitation Pending"
+                            : group.has_pending_request 
+                            ? "Request Pending" 
                             : "Request to Join"}
                       </button>
                     </div>

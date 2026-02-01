@@ -83,13 +83,14 @@ type CreateGroupRequest struct {
 }
 
 type Group struct {
-	ID                int64     `json:"id"`
-	Name              string    `json:"name"`
-	Description       string    `json:"description"`
-	CoverImagePath    string    `json:"cover_image_path"`
-	OwnerID           int       `json:"owner_id"`
-	CreatedAt         time.Time `json:"created_at"`
-	HasPendingRequest bool      `json:"has_pending_request,omitempty"`
+	ID                   int64     `json:"id"`
+	Name                 string    `json:"name"`
+	Description          string    `json:"description"`
+	CoverImagePath       string    `json:"cover_image_path"`
+	OwnerID              int       `json:"owner_id"`
+	CreatedAt            time.Time `json:"created_at"`
+	HasPendingRequest    bool      `json:"has_pending_request,omitempty"`
+	HasPendingInvitation bool      `json:"has_pending_invitation,omitempty"`
 }
 
 type GroupsResponse struct {

@@ -93,7 +93,41 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// send join request
+	// Check if user has a pending invitation - if so, auto-accept them
+	hasInvitation, err := queries.HasPendingInvitation(groupIDInt, userID)
+	if err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+			Success: false,
+			Message: "Failed to check pending invitations",
+		})
+		return
+	}
+
+	if hasInvitation {
+		// User has an invitation, so add them directly as a member
+		err = queries.AddGroupMember(groupIDInt, userID)
+		if err != nil {
+			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+				Success: false,
+				Message: "Failed to add you to the group",
+			})
+			return
+		}
+
+		// Delete all pending invitations for this user and group
+		err = queries.DeletePendingInvitation(groupIDInt, userID)
+		if err != nil {
+			fmt.Printf("Failed to delete pending invitation: %v\n", err)
+		}
+
+		utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
+			Success: true,
+			Message: "You have been added to the group!",
+		})
+		return
+	}
+
+	// No invitation, send join request
 	err = queries.CreateGroupJoinRequest(groupIDInt, userID)
 	if err != nil {
 		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{

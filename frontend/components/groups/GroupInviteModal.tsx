@@ -56,15 +56,60 @@ export default function GroupInviteModal({
     setIsInviting(true);
     try {
       let lastError: string | null = null;
+      let autoAcceptedCount = 0;
+      let invitedCount = 0;
+      
       for (const id of selectedInvitees) {
         const result = await inviteUserToGroup(groupIdNum, id);
-        if (!result.success)
+        if (!result.success) {
           lastError = result.message ?? "Failed to send invite";
+        } else if (result.message?.includes("automatically added")) {
+          autoAcceptedCount++;
+        } else {
+          invitedCount++;
+        }
       }
+      
       if (lastError) {
-        alert(lastError); // Consider using a toast callback prop instead
+        alert(lastError);
         return;
       }
+      
+      // Trigger event to refresh join requests list if any were auto-accepted
+      if (autoAcceptedCount > 0) {
+        console.log("Dispatching joinRequestAutoAccepted event for", autoAcceptedCount, "users");
+        window.dispatchEvent(new CustomEvent("joinRequestAutoAccepted"));
+        // Small delay to ensure event is processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Show success message
+      if (autoAcceptedCount > 0 && invitedCount > 0) {
+        (globalThis as any).addToast({
+          id: Date.now().toString(),
+          title: "Success",
+          message: `${autoAcceptedCount} user(s) automatically added (had pending requests), ${invitedCount} invitation(s) sent`,
+          type: "success",
+          duration: 6000,
+        });
+      } else if (autoAcceptedCount > 0) {
+        (globalThis as any).addToast({
+          id: Date.now().toString(),
+          title: "Users Automatically Added",
+          message: `${autoAcceptedCount} user(s) had pending join requests and were automatically added to the group`,
+          type: "success",
+          duration: 6000,
+        });
+      } else {
+        (globalThis as any).addToast({
+          id: Date.now().toString(),
+          title: "Invitations Sent",
+          message: `${invitedCount} invitation(s) sent successfully`,
+          type: "success",
+          duration: 5000,
+        });
+      }
+      
       setSelectedInvitees([]);
       onClose();
       onSuccess();

@@ -24,6 +24,7 @@ export interface Group {
   is_member?: boolean;
   is_owner?: boolean;
   has_pending_request?: boolean;
+  has_pending_invitation?: boolean;
   posts?: GroupPost[];
   events?: GroupEvent[];
 }

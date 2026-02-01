@@ -29,10 +29,17 @@ export default function GroupInvitations() {
       }
     };
 
+    // Listen for custom event when user auto-joins via "Request to Join"
+    const handleAutoAccept = () => {
+      loadInvitations();
+    };
+
     on("group_invitation", handleNewInvitation);
+    window.addEventListener("groupInvitationAccepted", handleAutoAccept);
 
     return () => {
       off("group_invitation", handleNewInvitation);
+      window.removeEventListener("groupInvitationAccepted", handleAutoAccept);
     };
   }, []);
 

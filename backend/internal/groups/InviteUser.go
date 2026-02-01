@@ -99,6 +99,46 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if invitee has a pending join request - if so, auto-accept them
+	hasPendingRequest, err := queries.HasPendingJoinRequest(groupID, inviteeID)
+	if err == nil && hasPendingRequest {
+		// User has a pending request, so add them directly as a member
+		err = queries.AddGroupMember(groupID, inviteeID)
+		if err != nil {
+			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+				Success: false,
+				Message: "Failed to add user to the group",
+			})
+			return
+		}
+
+		// Delete the pending join request
+		err = queries.DeleteGroupJoinRequest(groupID, inviteeID)
+		if err != nil {
+			// Log error but don't fail the request
+			println("Failed to delete join request:", err.Error())
+		}
+
+		// Send notification to the user that they were accepted
+		group, _ := queries.GetGroupByID(groupID)
+		notification := models.NotificationMessage{
+			Type: "join_request_approved",
+			Data: map[string]interface{}{
+				"group_id":   groupID,
+				"group_name": group.Name,
+				"message":    "You have been added to the group!",
+			},
+			Timestamp: time.Now(),
+		}
+		ws.SendNotificationToUser(inviteeID, notification)
+
+		utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
+			Success: true,
+			Message: "User had a pending request and was automatically added to the group",
+		})
+		return
+	}
+
 	// Create invitation
 	err = queries.CreateGroupInvitation(groupID, inviterID, inviteeID)
 	if err != nil {

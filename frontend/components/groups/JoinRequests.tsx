@@ -39,13 +39,26 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
         }
       };
 
+      // Listen for when users are auto-accepted (e.g., when owner invites someone with a pending request)
+      const handleAutoAccept = async () => {
+        console.log("joinRequestAutoAccepted event received! Refreshing join requests...");
+        // Small delay to ensure backend has completed the deletion
+        await new Promise(resolve => setTimeout(resolve, 300));
+        onRequestHandled?.();
+        loadRequests();
+      };
+
       on("group_join_request", handleNewRequest);
+      window.addEventListener("joinRequestAutoAccepted", handleAutoAccept);
+      console.log("JoinRequests: Added event listener for joinRequestAutoAccepted");
 
       return () => {
         off("group_join_request", handleNewRequest);
+        window.removeEventListener("joinRequestAutoAccepted", handleAutoAccept);
+        console.log("JoinRequests: Removed event listener for joinRequestAutoAccepted");
       };
     }
-  }, [groupId, isOwner]);
+  }, [groupId, isOwner, onRequestHandled]);
 
   const loadRequests = async () => {
     if (!isOwner) return;

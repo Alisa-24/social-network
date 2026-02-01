@@ -122,3 +122,12 @@ func GetJoinRequestByID(requestID int64) (models.GroupJoinRequest, error) {
 	)
 	return req, err
 }
+
+// DeleteGroupJoinRequest deletes all pending join requests for a user and group
+func DeleteGroupJoinRequest(groupID int64, userID int) error {
+	_, err := DB.Exec(`
+		DELETE FROM group_join_requests 
+		WHERE group_id = ? AND user_id = ? AND status = 'pending'
+	`, groupID, userID)
+	return err
+}

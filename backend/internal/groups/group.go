@@ -165,11 +165,16 @@ func GetGroups(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check for pending requests for each group
+	// Check for pending requests and pending invitations for each group
 	for i := range allGroups {
-		hasPending, err := queries.HasPendingJoinRequest(allGroups[i].ID, session.UserID)
+		hasPendingRequest, err := queries.HasPendingJoinRequest(allGroups[i].ID, session.UserID)
 		if err == nil {
-			allGroups[i].HasPendingRequest = hasPending
+			allGroups[i].HasPendingRequest = hasPendingRequest
+		}
+
+		hasPendingInvitation, err := queries.HasPendingInvitation(allGroups[i].ID, session.UserID)
+		if err == nil {
+			allGroups[i].HasPendingInvitation = hasPendingInvitation
 		}
 	}
 
