@@ -137,14 +137,19 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
           messages.map((msg, index) => {
             const isMe = currentUser?.userId === msg.user_id;
             const showDetails = index === 0 || messages[index - 1].user_id !== msg.user_id;
+            
+            // Handle both capitalized and lowercase field names
+            const user = msg.user as any;
+            const avatar = user?.Avatar || user?.avatar;
+            const firstName = user?.FirstName || user?.firstName || 'User';
 
             return (
               <div key={msg.id || index} className={`flex gap-3 max-w-[85%] ${isMe ? "flex-row-reverse ml-auto" : ""}`}>
                 <div className={`shrink-0 ${!showDetails ? "w-10" : ""}`}>
                   {showDetails && (
                     <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border flex items-center justify-center overflow-hidden">
-                      {msg.user?.Avatar ? (
-                        <img src={`${API_URL}${msg.user.Avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                      {avatar ? (
+                        <img src={`${API_URL}${avatar}`} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-muted-foreground font-bold text-xs uppercase">
                         <UserIcon className="h-6 w-6 text-muted-foreground" />
@@ -165,7 +170,7 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                         </>
                       ) : (
                         <>
-                          <span className="text-sm font-bold shrink-0">{msg.user?.FirstName}</span>
+                          <span className="text-sm font-bold shrink-0">{firstName}</span>
                           <span className="text-[10px] text-muted-foreground font-medium shrink-0">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
