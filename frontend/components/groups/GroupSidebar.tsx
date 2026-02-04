@@ -2,9 +2,11 @@ import Link from "next/link";
 import { UserIcon } from "lucide-react";
 import JoinRequests from "@/components/groups/JoinRequests";
 import { Group, GroupEvent } from "@/lib/groups/interface";
+import { API_URL } from "@/lib/config";
 
 interface Creator {
   ID: number;
+  Username: string;
   FirstName: string;
   LastName: string;
   Avatar: string;
@@ -60,7 +62,7 @@ export default function GroupSidebar({
             <div className="w-10 h-10 rounded-xl bg-muted/20 flex items-center justify-center overflow-hidden shrink-0">
               {creator.Avatar ? (
                 <img
-                  src={`http://localhost:8080${creator.Avatar}`}
+                  src={`${API_URL}${creator.Avatar}`}
                   alt="Creator"
                   className="w-full h-full object-cover"
                 />
@@ -71,11 +73,11 @@ export default function GroupSidebar({
               )}
             </div>
             <div className="flex-1 overflow-hidden">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold truncate">
+              <div className="flex items-baseline gap-2">
+                <span className="text-sm font-bold shrink-0">
                   {creator.FirstName} {creator.LastName}
                 </span>
-                <span className="px-2 py-0.5 bg-primary/20 text-primary text-[8px] font-black rounded uppercase">
+                <span className="px-2 py-0.5 bg-primary/20 text-primary text-[8px] font-black rounded uppercase shrink-0">
                   Owner
                 </span>
               </div>
@@ -103,7 +105,7 @@ export default function GroupSidebar({
             {events[0].image_path && (
               <div className="h-24 overflow-hidden">
                 <img
-                  src={`http://localhost:8080${events[0].image_path}`}
+                  src={`${ API_URL }${events[0].image_path}`}
                   alt="Event"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />

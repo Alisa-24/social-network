@@ -23,6 +23,7 @@ export default function RegisterPage() {
 
   const [formData, setFormData] = useState({
     email: "",
+    username: "",
     password: "",
     firstName: "",
     lastName: "",
@@ -96,7 +97,7 @@ export default function RegisterPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <LayoutGrid className="w-5 h-5 text-blue-500" strokeWidth={2.5} />
+          <LayoutGrid className="w-5 h-5 text-green-200" strokeWidth={2.5} />
           <h2 className="text-sm font-bold tracking-tight">SocialNet</h2>
         </div>
         <div className="flex items-center gap-4">
@@ -181,6 +182,24 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="alex@example.com"
                     value={formData.email}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-input bg-background h-10 pl-9 pr-3 text-sm focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">
+                  Username
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground/30" />
+                  <input
+                    name="username"
+                    required
+                    type="text"
+                    placeholder="alex_rivers"
+                    value={formData.username}
                     onChange={handleChange}
                     className="w-full rounded-lg border border-input bg-background h-10 pl-9 pr-3 text-sm focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all"
                   />

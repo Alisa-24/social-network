@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Users, UserPlus, LogOut } from "lucide-react";
 import { Group } from "@/lib/groups/interface";
+import { API_URL } from "@/lib/config";
 
 interface GroupHeaderProps {
   group: Group;
@@ -29,7 +30,7 @@ export default function GroupHeader({
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url(http://localhost:8080${group.cover_image_path})`,
+              backgroundImage: `url(${API_URL}${group.cover_image_path})`,
             }}
           />
         )}
@@ -64,7 +65,7 @@ export default function GroupHeader({
                 <div
                   className="w-full h-full bg-cover bg-center"
                   style={{
-                    backgroundImage: `url(http://localhost:8080${group.cover_image_path})`,
+                    backgroundImage: `url(${API_URL}${group.cover_image_path})`,
                   }}
                 />
               ) : (

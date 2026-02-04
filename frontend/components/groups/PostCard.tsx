@@ -3,6 +3,7 @@ import { GroupPost } from "@/lib/groups/interface";
 import { useState, useEffect, useRef } from "react";
 import { togglePostLike, deletePost } from "@/lib/groups/posts";
 import ConfirmModal from "@/components/ui/confirm";
+import { API_URL } from "@/lib/config";
 
 interface PostCardProps {
   post: GroupPost;
@@ -82,9 +83,14 @@ export default function PostCard({
 
 
   const getAuthorFullName = () => {
-    const firstName = post.author?.FirstName || 'User';
-    const lastName = post.author?.LastName || '';
+    // Handle both old (capitalized) and new (lowercase) field names
+    const firstName = post.author?.FirstName || post.author?.FirstName || 'User';
+    const lastName = post.author?.LastName || post.author?.LastName || '';
     return `${firstName} ${lastName}`.trim();
+  };
+
+  const getAuthorUsername = () => {
+    return post.author?.Username || post.author?.Username || 'user';
   };
 
   const handleImageLoad = () => {
@@ -98,6 +104,10 @@ export default function PostCard({
 
   const handleAvatarError = () => {
     setAvatarError(true);
+  };
+
+  const getAuthorAvatar = () => {
+    return post.author?.Avatar || post.author?.Avatar || '';
   };
 
   const handleLike = async () => {
@@ -229,9 +239,9 @@ export default function PostCard({
       {/* Post Header */}
       <header className="p-4 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0 overflow-hidden">
-          {post.author?.Avatar && !avatarError ? (
+          {getAuthorAvatar() && !avatarError ? (
             <img
-              src={`http://localhost:8080${post.author.Avatar}`}
+              src={`${API_URL}${getAuthorAvatar()}`}
               alt={`${getAuthorFullName()}'s avatar`}
               className="w-full h-full object-cover"
               onError={handleAvatarError}
@@ -241,10 +251,13 @@ export default function PostCard({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-bold text-foreground truncate">
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-sm font-bold text-foreground shrink-0">
               {getAuthorFullName()}
             </h3>
+            <span className="text-[11px] text-muted shrink-0 italic">
+              @{getAuthorUsername()}
+            </span>
           </div>
           <p className="text-muted text-[11px]">
             {formatTimeAgo(post.created_at)}
@@ -291,7 +304,7 @@ export default function PostCard({
               </div>
             )}
             <img
-              src={`http://localhost:8080${post.image_path}`}
+              src={`${ API_URL }${post.image_path}`}
               alt="Post image"
               className={`w-full h-auto max-h-125 object-cover transition-opacity ${
                 imageLoading ? 'opacity-0' : 'opacity-100'

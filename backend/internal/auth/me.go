@@ -63,6 +63,7 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		User: &models.UserPublic{
 			UserId:      user.ID,
 			Email:       user.Email,
+			Username:    user.Username,
 			FirstName:   user.FirstName,
 			LastName:    user.LastName,
 			DateOfBirth: user.DateOfBirth,

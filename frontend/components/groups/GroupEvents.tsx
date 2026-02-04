@@ -4,6 +4,7 @@ import { Group, GroupEvent } from "@/lib/groups/interface";
 import { respondToEvent, deleteGroupEvent } from "@/lib/groups/api";
 import { User as AuthUser } from "@/lib/interfaces";
 import ConfirmModal from "@/components/ui/confirm";
+import { API_URL } from "@/lib/config";
 
 interface GroupEventsProps {
   events: GroupEvent[];
@@ -96,7 +97,7 @@ export default function GroupEvents({
                     <div
                       className="h-48 bg-surface bg-cover bg-center"
                       style={{
-                        backgroundImage: `url(http://localhost:8080${event.image_path})`,
+                        backgroundImage: `url(${API_URL}${event.image_path})`,
                       }}
                     />
                     {isPassed && (
@@ -161,7 +162,7 @@ export default function GroupEvents({
                         <div className="w-5 h-5 rounded-full overflow-hidden bg-muted">
                           {event.creator.avatar ? (
                             <img 
-                              src={`http://localhost:8080${event.creator.avatar}`} 
+                              src={`${API_URL}${event.creator.avatar}`} 
                               alt={event.creator.firstName} 
                               className="w-full h-full object-cover"
                             />

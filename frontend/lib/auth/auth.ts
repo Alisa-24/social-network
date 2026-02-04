@@ -21,6 +21,7 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
 
   const formData = new FormData();
   formData.append("email", data.email);
+  formData.append("username", data.username);
   formData.append("password", data.password);
   formData.append("firstName", data.firstName);
   formData.append("lastName", data.lastName);
@@ -224,4 +225,18 @@ export function getUserFromLocalStorage(): User | null {
   } catch {
     return null;
   }
+}
+export async function updateUserSettings(data: any): Promise<AuthResponse> {
+  // This is a placeholder for the backend integration the user will provide.
+  // For now, we'll just simulate a successful update and update the local state.
+  
+  console.log("Updating user settings with:", data);
+  
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+
+  return {
+    success: true,
+    message: "Settings updated successfully (local simulation)",
+  };
 }

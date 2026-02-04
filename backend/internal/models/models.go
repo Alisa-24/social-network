@@ -5,26 +5,28 @@ import (
 )
 
 type User struct {
-	ID          int
-	Email       string
-	Password    string
-	FirstName   string
-	LastName    string
-	DateOfBirth string
-	Nickname    string
-	Avatar      string
-	AboutMe     string
-	IsPublic    bool
-	CreatedAt   time.Time
+	ID          int       `json:"userId"`
+	Email       string    `json:"email"`
+	Username    string    `json:"username"`
+	Password    string    `json:"-"` // Never send password to client
+	FirstName   string    `json:"firstName"`
+	LastName    string    `json:"lastName"`
+	DateOfBirth string    `json:"dateOfBirth"`
+	Nickname    string    `json:"nickname"`
+	Avatar      string    `json:"avatar"`
+	AboutMe     string    `json:"aboutMe"`
+	IsPublic    bool      `json:"isPublic"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Identifier string `json:"identifier"`
+	Password   string `json:"password"`
 }
 
 type RegisterRequest struct {
 	Email       string `json:"email"`
+	Username    string `json:"username"`
 	Password    string `json:"password"`
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
@@ -35,6 +37,7 @@ type RegisterRequest struct {
 
 type CreateUserParams struct {
 	Email        string
+	Username     string
 	PasswordHash string
 	FirstName    string
 	LastName     string
@@ -53,6 +56,7 @@ type GenericResponse struct {
 type UserPublic struct {
 	UserId      int       `json:"userId,omitempty"`
 	Email       string    `json:"email"`
+	Username    string    `json:"username"`
 	FirstName   string    `json:"firstName"`
 	LastName    string    `json:"lastName"`
 	DateOfBirth string    `json:"dateOfBirth"`
@@ -102,6 +106,7 @@ type GroupsResponse struct {
 type Post struct {
 	ID        int64  `json:"id"`
 	UserID    int    `json:"user_id"`
+	GroupID   *int64 `json:"group_id,omitempty"`
 	Content   string `json:"content"`
 	ImagePath string `json:"image_path,omitempty"`
 	Privacy   string `json:"privacy,omitempty"`
@@ -166,6 +171,7 @@ type NotificationMessage struct {
 
 type OnlineUserData struct {
 	UserID    int    `json:"userId"`
+	Username  string `json:"username,omitempty"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Nickname  string `json:"nickname,omitempty"`
@@ -218,4 +224,17 @@ type GroupChatMessage struct {
 	Content   string    `json:"content"`
 	CreatedAt time.Time `json:"created_at"`
 	User      User      `json:"user,omitempty"` // For displaying author details
+}
+
+type UpdateUserRequest struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Username    string `json:"username"`
+	Nickname    string `json:"nickname"`
+	Email       string `json:"email"`
+	DateOfBirth string `json:"date_of_birth"`
+	AboutMe     string `json:"about_me"`
+	IsPublic    bool   `json:"is_public"`
+	Avatar      string `json:"avatar,omitempty"`
+	Password    string `json:"password,omitempty"` // For password changes
 }

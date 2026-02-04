@@ -4,6 +4,7 @@ import { fetchGroupMembers, kickGroupMember, GroupMember } from "@/lib/groups/me
 import ConfirmModal from "@/components/ui/confirm";
 import Link from "next/link";
 import { on, off, requestOnlineUsers } from "@/lib/ws/ws";
+import { API_URL } from "@/lib/config";
 
 interface GroupMembersProps {
   groupId: number;
@@ -145,14 +146,14 @@ export default function GroupMembers({
               >
                 {/* Avatar */}
                 <Link 
-                  href={`/profile/${member.ID}`}
+                  href={`/profile/${member.Username}`}
                   className="shrink-0"
                 >
                   <div className="relative">
                     <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden group-hover:ring-2 group-hover:ring-primary/50 transition-all">
                       {member.Avatar ? (
                         <img
-                          src={`http://localhost:8080${member.Avatar}`}
+                          src={`${API_URL}${member.Avatar}`}
                           alt={`${member.FirstName} ${member.LastName}`}
                           className="w-full h-full object-cover"
                         />
@@ -171,16 +172,17 @@ export default function GroupMembers({
                 {/* Member Info */}
                 <div className="flex-1 min-w-0">
                   <Link 
-                    href={`/profile/${member.ID}`}
+                    href={`/profile/${member.Username}`}
                     className="group/link"
                   >
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold text-foreground truncate group-hover/link:text-primary transition-colors">
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-sm font-bold text-foreground shrink-0 group-hover/link:text-primary transition-colors">
                         {member.FirstName} {member.LastName}
                       </p>
-                      <ExternalLink className="w-3 h-3 text-muted opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                      <span className="text-[10px] text-muted-foreground shrink-0 italic">@{member.Username}</span>
+                      <ExternalLink className="w-3 h-3 text-muted opacity-0 group-hover/link:opacity-100 transition-opacity shrink-0" />
                       {member.Role === "owner" && (
-                        <span className="bg-primary/20 text-primary text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">
+                        <span className="bg-primary/20 text-primary text-[9px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0">
                           Owner
                         </span>
                       )}

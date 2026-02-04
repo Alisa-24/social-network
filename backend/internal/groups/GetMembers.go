@@ -12,6 +12,7 @@ import (
 // MemberResponse represents a group member with their details
 type MemberResponse struct {
 	ID        int    `json:"ID"`
+	Username  string `json:"Username"`
 	FirstName string `json:"FirstName"`
 	LastName  string `json:"LastName"`
 	Avatar    string `json:"Avatar"`
@@ -116,6 +117,7 @@ func GetMembers(w http.ResponseWriter, r *http.Request) {
 
 		membersResponse = append(membersResponse, MemberResponse{
 			ID:        member.UserID,
+			Username:  member.Username,
 			FirstName: member.FirstName,
 			LastName:  member.LastName,
 			Avatar:    member.Avatar,

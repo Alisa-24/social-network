@@ -3,6 +3,7 @@ package server
 import (
 	"backend/internal/auth"
 	"backend/internal/groups"
+	"backend/internal/profile"
 	"backend/internal/ws"
 	"net/http"
 )
@@ -16,6 +17,10 @@ func SetupRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/auth/login", auth.LoginHandler)
 	authHandle(mux, "GET /api/auth/me", auth.MeHandler)
 	authHandle(mux, "POST /api/auth/logout", auth.LogoutHandler)
+
+	// ===== PROFILE =====
+	authHandle(mux, "PUT /api/profile/edit", profile.EditProfile)
+	authHandle(mux, "DELETE /api/profile/delete", profile.DeleteProfile)
 
 	// ===== GROUPS =====
 	// List & Create

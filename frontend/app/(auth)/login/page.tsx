@@ -8,7 +8,7 @@ import { LayoutGrid, Mail, Lock, Sparkles, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -55,7 +55,7 @@ export default function LoginPage() {
     <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
       <header className="flex items-center justify-between px-6 py-3 border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <LayoutGrid className="w-5 h-5 text-blue-500" strokeWidth={2.5} />
+          <LayoutGrid className="w-5 h-5 text-green-200" strokeWidth={2.5} />
           <h2 className="text-sm font-bold tracking-tight">SocialNet</h2>
         </div>
         <div className="flex items-center gap-4">
@@ -94,16 +94,16 @@ export default function LoginPage() {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-foreground/50 uppercase tracking-wider">
-                  Email Address
+                  Email or Username
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/30" />
                   <input
-                    name="email"
+                    name="identifier"
                     required
-                    type="email"
-                    placeholder="alex@example.com"
-                    value={formData.email}
+                    type="text"
+                    placeholder="example@example.com or example"
+                    value={formData.identifier}
                     onChange={handleChange}
                     className="w-full rounded-lg border border-input bg-background h-11 pl-10 pr-3 text-sm focus:ring-2 focus:ring-ring focus:border-transparent outline-none transition-all"
                   />

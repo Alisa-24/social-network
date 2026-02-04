@@ -95,6 +95,7 @@ func IsUserGroupMember(groupID int, userID int) (bool, error) {
 // GroupMemberDetail contains member information with user details
 type GroupMemberDetail struct {
 	UserID    int    `json:"user_id"`
+	Username  string `json:"username"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	Avatar    string `json:"avatar"`
@@ -106,6 +107,7 @@ func GetGroupMembersWithDetails(groupID int64) ([]GroupMemberDetail, error) {
 	rows, err := DB.Query(`
 		SELECT 
 			u.id,
+			u.username,
 			u.first_name,
 			u.last_name,
 			COALESCE(u.avatar, '') as avatar,
@@ -126,6 +128,7 @@ func GetGroupMembersWithDetails(groupID int64) ([]GroupMemberDetail, error) {
 		var member GroupMemberDetail
 		err := rows.Scan(
 			&member.UserID,
+			&member.Username,
 			&member.FirstName,
 			&member.LastName,
 			&member.Avatar,

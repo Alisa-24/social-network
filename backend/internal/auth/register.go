@@ -38,6 +38,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	firstName := strings.TrimSpace(r.FormValue("firstName"))
 	lastName := strings.TrimSpace(r.FormValue("lastName"))
 	dateOfBirth := r.FormValue("dateOfBirth")
+	username := strings.TrimSpace(r.FormValue("username"))
 	nickname := strings.TrimSpace(r.FormValue("nickname"))
 	aboutMe := strings.TrimSpace(r.FormValue("aboutMe"))
 
@@ -61,7 +62,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// If no file uploaded or error reading file (other than missing), avatarPath remains empty
 	// Validate all fields using the validation functions
 	validationResult := ValidateRegistrationRequest(
-		email, password, firstName, lastName, dateOfBirth, nickname, aboutMe,
+		email, username, password, firstName, lastName, dateOfBirth, nickname, aboutMe,
 	)
 
 	if !validationResult.IsValid {
@@ -89,23 +90,21 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check nickname uniqueness if provided
-	if nickname != "" {
-		exists, err := queries.NicknameExists(nickname)
-		if err != nil {
-			utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
-				Success: false,
-				Message: "Failed to validate nickname",
-			})
-			return
-		}
-		if exists {
-			utils.RespondJSON(w, http.StatusConflict, models.GenericResponse{
-				Success: false,
-				Message: "Nickname is already taken",
-			})
-			return
-		}
+	// Check username uniqueness
+	exists, err = queries.UsernameExists(username)
+	if err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+			Success: false,
+			Message: "Failed to validate username",
+		})
+		return
+	}
+	if exists {
+		utils.RespondJSON(w, http.StatusConflict, models.GenericResponse{
+			Success: false,
+			Message: "Username is already taken",
+		})
+		return
 	}
 
 	// Hash password
@@ -124,6 +123,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Create user
 	err = queries.CreateUser(models.CreateUserParams{
 		Email:        email,
+		Username:     username,
 		PasswordHash: string(hashedPassword),
 		FirstName:    firstName,
 		LastName:     lastName,
@@ -180,6 +180,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		User: &models.UserPublic{
 			UserId:      dbUser.ID,
 			Email:       dbUser.Email,
+			Username:    dbUser.Username,
 			FirstName:   dbUser.FirstName,
 			LastName:    dbUser.LastName,
 			DateOfBirth: dbUser.DateOfBirth,

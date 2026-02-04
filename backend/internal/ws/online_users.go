@@ -92,6 +92,7 @@ func SendOnlineUsersToClient(sConn *SafeConn, currentUserID int) {
 		if onlineMap[u.ID] {
 			userList = append(userList, models.OnlineUserData{
 				UserID:    u.ID,
+				Username:  u.Username,
 				FirstName: u.FirstName,
 				LastName:  u.LastName,
 				Nickname:  u.Nickname,
@@ -102,7 +103,7 @@ func SendOnlineUsersToClient(sConn *SafeConn, currentUserID int) {
 	}
 
 	sort.Slice(userList, func(i, j int) bool {
-		return userList[i].Nickname < userList[j].Nickname
+		return userList[i].Username < userList[j].Username
 	})
 
 	message := map[string]interface{}{
@@ -151,6 +152,7 @@ func BroadcastOnlineUsers() {
 		if onlineMap[u.ID] {
 			userList = append(userList, models.OnlineUserData{
 				UserID:    u.ID,
+				Username:  u.Username,
 				FirstName: u.FirstName,
 				LastName:  u.LastName,
 				Nickname:  u.Nickname,
@@ -161,7 +163,7 @@ func BroadcastOnlineUsers() {
 	}
 
 	sort.Slice(userList, func(i, j int) bool {
-		return userList[i].Nickname < userList[j].Nickname
+		return userList[i].Username < userList[j].Username
 	})
 
 	message := map[string]interface{}{

@@ -15,7 +15,10 @@ import {
   Moon,
   Sun,
   Zap,
+  LayoutGrid,
+  Settings,
 } from "lucide-react";
+import { API_URL } from "@/lib/config";
 
 type NavItem = {
   label: string;
@@ -25,6 +28,7 @@ type NavItem = {
 
 type CurrentUser = {
   email: string;
+  username: string;
   firstName: string;
   lastName: string;
   avatar?: string;
@@ -57,10 +61,26 @@ export default function Navbar({
 
     try {
       const userStr = localStorage.getItem("currentUser");
-      if (userStr) setCurrentUser(JSON.parse(userStr));
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        console.log("Navbar loaded user from localStorage:", user);
+        setCurrentUser(user);
+      }
     } catch (error) {
       console.error("Error loading user data:", error);
     }
+
+    // Listen for user updates
+    const handleUserUpdate = (event: any) => {
+      console.log("Navbar received userUpdated event:", event.detail);
+      setCurrentUser(event.detail);
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdate);
+
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdate);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -77,6 +97,7 @@ export default function Navbar({
       { label: "Groups", href: "/groups", icon: Users },
       { label: "Chat", href: "/chat", icon: MessageSquare },
       { label: "Notifications", href: "/notifications", icon: Bell },
+      { label: "Settings", href: "/settings", icon: Settings },
     ],
     [],
   );
@@ -87,14 +108,22 @@ export default function Navbar({
 
   const getFullName = () =>
     currentUser
-      ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim()
+      ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "User"
       : "User";
+
+  const getUsername = () => {
+    if (!currentUser) return "user";
+    // Handle both old (capitalized) and new (lowercase) field names
+    const username = currentUser.username || (currentUser as any).Username || "";
+    console.log("getUsername called, currentUser:", currentUser, "username:", username);
+    return username || "user";
+  };
 
   const AvatarComponent = () => {
     if (currentUser?.avatar) {
       return (
         <img
-          src={`http://localhost:8080${currentUser.avatar}`}
+          src={`${ API_URL }${currentUser.avatar}`}
           alt={getFullName()}
           className="h-8 w-8 rounded-full object-cover shrink-0"
         />
@@ -116,15 +145,13 @@ export default function Navbar({
         <div
           className={`flex items-center gap-3 transition-all duration-300 ${!open ? "mx-auto" : ""}`}
         >
-          <div className="bg-primary text-white p-2 rounded-lg shrink-0">
-            <Zap className="h-6 w-6 fill-current" />
-          </div>
-          <div
-            className={`transition-all duration-300 ${open ? "opacity-100 translate-x-0 w-auto" : "opacity-0 -translate-x-10 w-0"}`}
-          >
-            <span className="text-xl font-bold tracking-tight whitespace-nowrap">
-              Nexus
-            </span>
+          <div className="flex items-center gap-2">
+            <LayoutGrid className="w-5 h-5 text-green-200" strokeWidth={2.5} />
+            {open && (
+              <h2 className="text-sm font-bold tracking-tight whitespace-nowrap">
+                SocialNet
+              </h2>
+            )}
           </div>
         </div>
         {open && (
@@ -189,6 +216,7 @@ export default function Navbar({
             className={`transition-all duration-300 flex-1 min-w-0 ${open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}
           >
             <p className="text-sm font-semibold truncate">{getFullName()}</p>
+            <p className="text-[10px] text-foreground/40 truncate">@{getUsername()}</p>
             <p className="text-[10px] text-primary truncate uppercase tracking-widest font-bold">
               Active Now
             </p>
@@ -243,9 +271,10 @@ export default function Navbar({
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <Zap className="h-5 w-5 text-primary fill-current" />
-          <span className="font-bold tracking-tight">Nexus</span>
+          <LayoutGrid className="w-5 h-5 text-green-200" strokeWidth={2.5} />
+          <h2 className="text-sm font-bold tracking-tight">SocialNet</h2>
         </div>
+
         <Link
           href="/notifications"
           className="p-2 hover:bg-foreground/5 rounded-lg"
@@ -270,10 +299,16 @@ export default function Navbar({
             {/* Direct Mobile Content */}
             <div className="h-full bg-background border-r border-border flex flex-col">
               <div className="h-20 flex items-center px-6 justify-between border-b border-border">
-                <div className="flex items-center gap-3">
-                  <Zap className="h-6 w-6 text-primary fill-current" />
-                  <span className="text-xl font-bold">Nexus</span>
+                <div className="flex items-center gap-2">
+                  <LayoutGrid
+                    className="w-6 h-6 text-green-200"
+                    strokeWidth={2.5}
+                  />
+                  <h2 className="text-lg font-bold tracking-tight">
+                    SocialNet
+                  </h2>
                 </div>
+
                 <button onClick={() => setMobileOpen(false)} className="p-2">
                   <X className="h-5 w-5" />
                 </button>
@@ -321,9 +356,7 @@ export default function Navbar({
       )}
 
       {/* Page Content */}
-      <main className="flex-1 min-w-0 h-full">
-        {children}
-      </main>
+      <main className="flex-1 min-w-0 h-full">{children}</main>
     </div>
   );
 }

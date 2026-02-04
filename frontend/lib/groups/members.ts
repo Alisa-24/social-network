@@ -8,6 +8,7 @@ import {
 
 export interface GroupMember {
   ID: number;
+  Username: string;
   FirstName: string;
   LastName: string;
   Avatar: string;

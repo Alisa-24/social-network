@@ -1,17 +1,20 @@
 export interface User {
   userId?: number;
   email: string;
+  username: string;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
   nickname?: string;
   avatar?: string;
   aboutMe?: string;
+  isPublic?: boolean;
   createdAt: string;
 }
 
 export interface OnlineUser {
   userId: number;
+  username: string;
   firstName: string;
   lastName: string;
   nickname?: string;
@@ -27,6 +30,7 @@ export interface AuthResponse {
 
 export interface RegisterData {
   email: string;
+  username: string;
   password: string;
   firstName: string;
   lastName: string;
@@ -37,7 +41,7 @@ export interface RegisterData {
 }
 
 export interface LoginData {
-  email: string;
+  identifier: string;
   password: string;
 }
 

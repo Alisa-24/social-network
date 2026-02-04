@@ -3,6 +3,7 @@
 import { X, UserIcon } from "lucide-react";
 import { User } from "@/lib/interfaces"; // or EventVoter?
 import { EventVoter } from "@/lib/groups/interface";
+import { API_URL } from "@/lib/config";
 
 interface UserListModalProps {
   isOpen: boolean;
@@ -51,7 +52,7 @@ export default function UserListModal({
                   <div className="w-10 h-10 rounded-full bg-surface border border-border overflow-hidden flex-shrink-0">
                     {user.avatar ? (
                       <img
-                        src={`http://localhost:8080${user.avatar}`}
+                        src={`${ API_URL }${user.avatar}`}
                         alt={`${user.firstName} ${user.lastName}`}
                         className="w-full h-full object-cover"
                       />
@@ -63,7 +64,10 @@ export default function UserListModal({
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground">
-                      {user.firstName} {user.lastName}
+                      {user.firstName} {user.lastName}{" "}
+                      <span className="text-xs font-normal text-muted">
+                        @{user.username}
+                      </span>
                     </h4>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${

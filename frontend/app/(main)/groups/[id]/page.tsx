@@ -27,6 +27,7 @@ import GroupInviteModal from "@/components/groups/GroupInviteModal";
 
 interface Creator {
   ID: number;
+  Username: string;
   FirstName: string;
   LastName: string;
   Avatar: string;
@@ -179,6 +180,7 @@ export default function GroupDetailPage() {
         if (groupData.owner) {
           setCreator({
             ID: groupData.owner.userId,
+            Username: groupData.owner.username,
             FirstName: groupData.owner.firstName,
             LastName: groupData.owner.lastName,
             Avatar: groupData.owner.avatar || "",
@@ -188,6 +190,7 @@ export default function GroupDetailPage() {
         } else {
           setCreator({
             ID: groupData.owner_id,
+            Username: "group_owner",
             FirstName: "Group",
             LastName: "Owner",
             Avatar: "",

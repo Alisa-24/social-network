@@ -5,6 +5,7 @@ import { Check, X, UserPlus, User } from "lucide-react";
 import { GroupJoinRequest } from "@/lib/groups/interface";
 import { fetchJoinRequests, handleJoinRequest } from "@/lib/groups/api";
 import { on, off } from "@/lib/ws/ws";
+import { API_URL } from "@/lib/config";
 
 interface JoinRequestsProps {
   groupId: number;
@@ -147,7 +148,7 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
               <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center border border-border shrink-0 overflow-hidden">
                 {request.user?.avatar ? (
                   <img
-                    src={`http://localhost:8080${request.user.avatar}`}
+                    src={`${ API_URL }${request.user.avatar}`}
                     alt={`${request.user.firstName}'s avatar`}
                     className="w-full h-full object-cover"
                   />
@@ -159,7 +160,8 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
               {/* User Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">
-                  {request.user?.firstName} {request.user?.lastName}
+                  {request.user?.firstName} {request.user?.lastName} (
+                  <span className="font-normal text-muted">@{request.user?.username}</span>)
                 </p>
                 <p className="text-xs text-muted">
                   {new Date(request.created_at).toLocaleDateString()}

@@ -11,6 +11,7 @@ interface InviteFriendsModalProps {
 // Mock friend type - replace with actual user type
 interface Friend {
   id: number;
+  username: string;
   firstName: string;
   lastName: string;
   avatar?: string;
@@ -132,6 +133,7 @@ export default function InviteFriendsModal({
                     <p className="text-sm font-bold text-foreground truncate">
                       {friend.firstName} {friend.lastName}
                     </p>
+                    <p className="text-[10px] text-muted truncate">@{friend.username}</p>
                     {friend.isInvited && (
                       <p className="text-xs text-muted">Already invited</p>
                     )}

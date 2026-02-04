@@ -28,6 +28,31 @@ export function validateEmail(email: string): ValidationError | null {
   return null;
 }
 
+// Username validation
+export function validateUsername(username: string): ValidationError | null {
+  if (!username || username.trim() === "") {
+    return { field: "username", message: "Username is required" };
+  }
+
+  if (username.length < 3) {
+    return { field: "username", message: "Username is too short" };
+  }
+
+  if (username.length > 30) {
+    return { field: "username", message: "Username is too long" };
+  }
+
+  const usernameRegex = /^[a-zA-Z0-9_-]+$/;
+  if (!usernameRegex.test(username)) {
+    return {
+      field: "username",
+      message: "Username can only contain letters, numbers, underscores, and hyphens",
+    };
+  }
+
+  return null;
+}
+
 // Password validation
 export function validatePassword(password: string): ValidationError | null {
   if (!password || password.trim() === "") {
@@ -97,19 +122,34 @@ export function validateDateOfBirth(dateOfBirth: string): ValidationError | null
 
   const date = new Date(dateOfBirth);
   if (isNaN(date.getTime())) {
-    return { field: "dateOfBirth", message: "Invalid date format" };
+    return { field: "dateOfBirth", message: "Invalid date format (use YYYY-MM-DD)" };
   }
 
-  // Check if date is not in the future
   const today = new Date();
+  
+  // Check if date is not in the future
   if (date > today) {
     return { field: "dateOfBirth", message: "Date of birth cannot be in the future" };
   }
 
-  // Check if date is reasonable (not before 1900)
-  const minYear = new Date("1900-01-01");
-  if (date < minYear) {
-    return { field: "dateOfBirth", message: "Invalid date of birth" };
+  // Calculate age
+  let age = today.getFullYear() - date.getFullYear();
+  const monthDiff = today.getMonth() - date.getMonth();
+  const dayDiff = today.getDate() - date.getDate();
+  
+  // Adjust age if birthday hasn't occurred yet this year
+  if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+    age--;
+  }
+
+  // Check minimum age (13 years)
+  if (age < 13) {
+    return { field: "dateOfBirth", message: "You must be at least 13 years old to register" };
+  }
+
+  // Check maximum age (100 years)
+  if (age > 100) {
+    return { field: "dateOfBirth", message: "Invalid date of birth (maximum age is 100 years)" };
   }
 
   return null;
@@ -181,6 +221,9 @@ export function validateRegistrationData(data: RegisterData): ValidationResult {
   const emailError = validateEmail(data.email);
   if (emailError) errors.push(emailError);
 
+  const usernameError = validateUsername(data.username);
+  if (usernameError) errors.push(usernameError);
+
   const passwordError = validatePassword(data.password);
   if (passwordError) errors.push(passwordError);
 
@@ -212,8 +255,9 @@ export function validateRegistrationData(data: RegisterData): ValidationResult {
 export function validateLoginData(data: LoginData): ValidationResult {
   const errors: ValidationError[] = [];
 
-  const emailError = validateEmail(data.email);
-  if (emailError) errors.push(emailError);
+  if (!data.identifier || data.identifier.trim() === "") {
+    errors.push({ field: "identifier", message: "Email or Username is required" });
+  }
 
   if (!data.password || data.password.trim() === "") {
     errors.push({ field: "password", message: "Password is required" });

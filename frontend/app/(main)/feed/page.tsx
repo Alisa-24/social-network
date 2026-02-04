@@ -181,12 +181,10 @@ export default function FeedPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {onlineUser.nickname ||
-                          `${onlineUser.firstName} ${onlineUser.lastName}`}
+                        {onlineUser.username}
                       </p>
                       <p className="text-xs text-foreground/60 truncate">
-                        {onlineUser.nickname &&
-                          `${onlineUser.firstName} ${onlineUser.lastName}`}
+                        {onlineUser.firstName} {onlineUser.lastName}
                       </p>
                     </div>
                   </div>

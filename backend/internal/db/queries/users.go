@@ -13,6 +13,7 @@ func GetUserByEmail(email string) (models.User, error) {
 		SELECT 
 			id, 
 			email, 
+			username,
 			password_hash, 
 			first_name, 
 			last_name, 
@@ -25,6 +26,40 @@ func GetUserByEmail(email string) (models.User, error) {
 		FROM users WHERE LOWER(email) = LOWER(?)`, email).Scan(
 		&user.ID,
 		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.FirstName,
+		&user.LastName,
+		&user.DateOfBirth,
+		&user.Nickname,
+		&user.Avatar,
+		&user.AboutMe,
+		&user.IsPublic,
+		&user.CreatedAt,
+	)
+	return user, err
+}
+
+func GetUserByIdentifier(identifier string) (models.User, error) {
+	var user models.User
+	err := DB.QueryRow(`
+		SELECT 
+			id, 
+			email, 
+			username,
+			password_hash, 
+			first_name, 
+			last_name, 
+			date_of_birth, 
+			COALESCE(nickname, '') as nickname, 
+			COALESCE(avatar, '') as avatar, 
+			COALESCE(about_me, '') as about_me, 
+			is_public, 
+			created_at
+		FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)`, identifier, identifier).Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
 		&user.Password,
 		&user.FirstName,
 		&user.LastName,
@@ -56,14 +91,24 @@ func NicknameExists(nickname string) (bool, error) {
 	return exists, err
 }
 
+func UsernameExists(username string) (bool, error) {
+	var exists bool
+	err := DB.QueryRow(
+		"SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(username) = LOWER(?))",
+		username,
+	).Scan(&exists)
+	return exists, err
+}
+
 func CreateUser(p models.CreateUserParams) error {
 	_, err := DB.Exec(`
 		INSERT INTO users (
-			email, password_hash, first_name, last_name,
+			email, username, password_hash, first_name, last_name,
 			date_of_birth, nickname, avatar, about_me
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`,
 		p.Email,
+		p.Username,
 		p.PasswordHash,
 		p.FirstName,
 		p.LastName,
@@ -81,6 +126,7 @@ func GetUserByID(id int) (models.User, error) {
 		SELECT 
 			id, 
 			email, 
+			username,
 			password_hash, 
 			first_name, 
 			last_name, 
@@ -93,6 +139,7 @@ func GetUserByID(id int) (models.User, error) {
 		FROM users WHERE id = ?`, id).Scan(
 		&user.ID,
 		&user.Email,
+		&user.Username,
 		&user.Password,
 		&user.FirstName,
 		&user.LastName,
@@ -111,6 +158,7 @@ func GetAllUsers() ([]models.User, error) {
 		SELECT 
 			id, 
 			email, 
+			username,
 			first_name, 
 			last_name, 
 			COALESCE(nickname, '') as nickname, 
@@ -131,6 +179,7 @@ func GetAllUsers() ([]models.User, error) {
 		err := rows.Scan(
 			&user.ID,
 			&user.Email,
+			&user.Username,
 			&user.FirstName,
 			&user.LastName,
 			&nickname,
@@ -151,4 +200,35 @@ func GetAllUsers() ([]models.User, error) {
 		users = append(users, user)
 	}
 	return users, nil
+}
+func UpdateUser(userID int, p models.UpdateUserRequest) error {
+	_, err := DB.Exec(`
+		UPDATE users SET 
+			email = ?, 
+			username = ?, 
+			first_name = ?, 
+			last_name = ?, 
+			date_of_birth = ?, 
+			nickname = ?, 
+			about_me = ?, 
+			avatar = ?,
+			is_public = ?
+		WHERE id = ?`,
+		p.Email,
+		p.Username,
+		p.FirstName,
+		p.LastName,
+		p.DateOfBirth,
+		p.Nickname,
+		p.AboutMe,
+		p.Avatar,
+		p.IsPublic,
+		userID,
+	)
+	return err
+}
+
+func UpdateUserPassword(userID int, passwordHash string) error {
+	_, err := DB.Exec(`UPDATE users SET password_hash = ? WHERE id = ?`, passwordHash, userID)
+	return err
 }

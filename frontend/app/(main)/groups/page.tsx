@@ -9,6 +9,7 @@ import { on, off } from "@/lib/ws/ws";
 import GroupInvitations from "@/components/groups/GroupInvitations";
 import { ServerError } from "@/lib/errors";
 import { getCurrentUser } from "@/lib/auth/auth";
+import { API_URL } from "@/lib/config";
 
 export default function GroupsPage() {
   const router = useRouter();
@@ -203,7 +204,7 @@ export default function GroupsPage() {
                   <div className="h-36 bg-linear-to-br from-primary/20 to-primary/5 relative overflow-hidden">
                     {group.cover_image_path && (
                       <img
-                        src={`http://localhost:8080${group.cover_image_path}`}
+                        src={`${API_URL}${group.cover_image_path}`}
                         alt={group.name}
                         className="w-full h-full object-cover"
                       />
@@ -267,7 +268,7 @@ export default function GroupsPage() {
                     >
                       {group.cover_image_path && (
                         <img
-                          src={`http://localhost:8080${group.cover_image_path}`}
+                          src={`${API_URL}${group.cover_image_path}`}
                           alt={group.name}
                           className="w-full h-full object-cover"
                         />

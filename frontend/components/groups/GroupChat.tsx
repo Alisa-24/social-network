@@ -4,6 +4,7 @@ import { User } from "@/lib/interfaces";
 import { GroupChatMessage } from "@/lib/groups/interface";
 import { fetchGroupMessages } from "@/lib/groups/api";
 import { send, on, off } from "@/lib/ws/ws";
+import { API_URL } from "@/lib/config";
 
 interface GroupChatProps {
   groupId: number;
@@ -143,7 +144,7 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                   {showDetails && (
                     <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border flex items-center justify-center overflow-hidden">
                       {msg.user?.Avatar ? (
-                        <img src={`http://localhost:8080${msg.user.Avatar}`} alt="Avatar" className="w-full h-full object-cover" />
+                        <img src={`${API_URL}${msg.user.Avatar}`} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-muted-foreground font-bold text-xs uppercase">
                         <UserIcon className="h-6 w-6 text-muted-foreground" />
@@ -154,7 +155,7 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                 </div>
                 <div className={`flex flex-col ${isMe ? "items-end" : ""}`}>
                   {showDetails && (
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-baseline gap-2 mb-1">
                       {isMe ? (
                         <>
                           <span className="text-[10px] text-muted-foreground font-medium">
@@ -164,8 +165,8 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                         </>
                       ) : (
                         <>
-                          <span className="text-sm font-bold">{msg.user?.FirstName}</span>
-                          <span className="text-[10px] text-muted-foreground font-medium">
+                          <span className="text-sm font-bold shrink-0">{msg.user?.FirstName}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium shrink-0">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </>

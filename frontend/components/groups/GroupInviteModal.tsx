@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { MoreHorizontal, X, Search, UserIcon } from "lucide-react"; // Added missing imports
 import { fetchPotentialInvitees, inviteUserToGroup, type PotentialInvitee } from "@/lib/groups/api";
 import { Group } from "@/lib/groups/interface";
+import { API_URL } from "@/lib/config";
 
 interface GroupInviteModalProps {
   isOpen: boolean;
@@ -191,7 +192,7 @@ export default function GroupInviteModal({
                             <div
                               className="w-full h-full rounded-full bg-cover bg-center"
                               style={{
-                                backgroundImage: `url(http://localhost:8080${u.avatar})`,
+                                backgroundImage: `url(${API_URL}${u.avatar})`,
                               }}
                             />
                           ) : (

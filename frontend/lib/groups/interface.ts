@@ -2,6 +2,7 @@
 export interface User {
   ID: number;
   Email: string;
+  Username: string;
   FirstName: string;
   LastName: string;
   Nickname: string;
@@ -32,6 +33,7 @@ export interface Group {
 // Group Member interface
 export interface GroupMember {
   ID: number;
+  Username: string;
   FirstName: string;
   LastName: string;
   Avatar: string;
@@ -49,6 +51,7 @@ export interface GroupPost {
   author?: {
     ID: number;
     Email: string;
+    Username: string;
     FirstName: string;
     LastName: string;
     Nickname: string;
@@ -89,6 +92,7 @@ export interface GroupEvent {
   creator_id?: number;
   creator?: {
     userId: number;
+    username: string;
     firstName: string;
     lastName: string;
     avatar?: string;
@@ -101,6 +105,7 @@ export interface GroupEvent {
 
 export interface EventVoter {
   userId: number;
+  username: string;
   firstName: string;
   lastName: string;
   avatar: string;
@@ -128,6 +133,7 @@ export interface GroupJoinRequest {
   created_at: string;
   user?: {
     userId: number;
+    username: string;
     firstName: string;
     lastName: string;
     avatar?: string;
@@ -163,6 +169,7 @@ export interface GroupDetailResponse {
     owner?: {
       userId: number;
       email: string;
+      username: string;
       firstName: string;
       lastName: string;
       nickname?: string;
@@ -231,6 +238,7 @@ export interface GroupChatMessage {
   created_at: string;
   user?: {
     ID: number;
+    Username: string;
     FirstName: string;
     LastName: string;
     Avatar: string;

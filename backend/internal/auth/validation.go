@@ -63,8 +63,11 @@ func ValidateFirstName(firstName string) *ValidationError {
 		return &ValidationError{Field: "firstName", Message: "First name is too short"}
 	}
 
-	if len(firstName) > 50 {
+	if len(firstName) > 20 {
 		return &ValidationError{Field: "firstName", Message: "First name is too long"}
+	}
+	if len(strings.Split(firstName, " ")) > 1 {
+		return &ValidationError{Field: "firstName", Message: "First name cannot contain spaces or multiple words"}
 	}
 
 	nameRegex := regexp.MustCompile(`^[a-zA-Z\s'\-]+$`)
@@ -85,8 +88,12 @@ func ValidateLastName(lastName string) *ValidationError {
 		return &ValidationError{Field: "lastName", Message: "Last name is too short"}
 	}
 
-	if len(lastName) > 50 {
+	if len(lastName) > 20 {
 		return &ValidationError{Field: "lastName", Message: "Last name is too long"}
+	}
+
+	if len(strings.Split(lastName, " ")) > 1 {
+		return &ValidationError{Field: "lastName", Message: "Last name cannot contain spaces or multiple words"}
 	}
 
 	nameRegex := regexp.MustCompile(`^[a-zA-Z\s'\-]+$`)
@@ -124,18 +131,52 @@ func ValidateDateOfBirth(dateOfBirth string) *ValidationError {
 	}
 
 	if !parsed {
-		return &ValidationError{Field: "dateOfBirth", Message: "Invalid date format"}
+		return &ValidationError{Field: "dateOfBirth", Message: "Invalid date format (use YYYY-MM-DD)"}
 	}
 
+	now := time.Now()
+
 	// Check if date is not in the future
-	if date.After(time.Now()) {
+	if date.After(now) {
 		return &ValidationError{Field: "dateOfBirth", Message: "Date of birth cannot be in the future"}
 	}
 
-	// Check if date is reasonable (not before 1900)
-	minDate := time.Date(1900, 1, 1, 0, 0, 0, 0, time.UTC)
-	if date.Before(minDate) {
-		return &ValidationError{Field: "dateOfBirth", Message: "Invalid date of birth"}
+	// Calculate age
+	age := now.Year() - date.Year()
+	if now.YearDay() < date.YearDay() {
+		age--
+	}
+
+	// Check minimum age (13 years)
+	if age < 13 {
+		return &ValidationError{Field: "dateOfBirth", Message: "You must be at least 13 years old to register"}
+	}
+
+	// Check maximum age (100 years)
+	if age > 100 {
+		return &ValidationError{Field: "dateOfBirth", Message: "Invalid date of birth (maximum age is 100 years)"}
+	}
+
+	return nil
+}
+
+// Username validation
+func ValidateUsername(username string) *ValidationError {
+	if username == "" {
+		return &ValidationError{Field: "username", Message: "Username is required"}
+	}
+
+	if len(username) < 3 {
+		return &ValidationError{Field: "username", Message: "Username is too short"}
+	}
+
+	if len(username) > 30 {
+		return &ValidationError{Field: "username", Message: "Username is too long"}
+	}
+
+	usernameRegex := regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
+	if !usernameRegex.MatchString(username) {
+		return &ValidationError{Field: "username", Message: "Username can only contain letters, numbers, underscores, and hyphens"}
 	}
 
 	return nil
@@ -156,9 +197,14 @@ func ValidateNickname(nickname string) *ValidationError {
 		return &ValidationError{Field: "nickname", Message: "Nickname is too long"}
 	}
 
-	nicknameRegex := regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
+	if len(strings.Split(nickname, " ")) > 1 {
+		return &ValidationError{Field: "nickname", Message: "Nickname cannot contain spaces or multiple words"}
+	}
+
+	// Relaxed regex: allow letters, numbers, underscores, hyphens, and spaces
+	nicknameRegex := regexp.MustCompile(`^[a-zA-Z0-9_\-\s]+$`)
 	if !nicknameRegex.MatchString(nickname) {
-		return &ValidationError{Field: "nickname", Message: "Nickname can only contain letters, numbers, underscores, and hyphens"}
+		return &ValidationError{Field: "nickname", Message: "Nickname can only contain letters, numbers, underscores, hyphens, and spaces"}
 	}
 
 	return nil
@@ -171,7 +217,7 @@ func ValidateAboutMe(aboutMe string) *ValidationError {
 		return nil
 	}
 
-	if len(aboutMe) > 500 {
+	if len(aboutMe) > 300 {
 		return &ValidationError{Field: "aboutMe", Message: "About me is too long (max 500 characters)"}
 	}
 
@@ -200,12 +246,16 @@ func ValidateStrongPassword(password string) *ValidationError {
 }
 
 // ValidateRegistrationRequest validates all registration fields
-// Accepts email, password, firstName, lastName, dateOfBirth, nickname, aboutMe as parameters
-func ValidateRegistrationRequest(email, password, firstName, lastName, dateOfBirth, nickname, aboutMe string) ValidationResult {
+// Accepts email, username, password, firstName, lastName, dateOfBirth, nickname, aboutMe as parameters
+func ValidateRegistrationRequest(email, username, password, firstName, lastName, dateOfBirth, nickname, aboutMe string) ValidationResult {
 	var errors []ValidationError
 
 	// Validate required fields
 	if err := ValidateEmail(email); err != nil {
+		errors = append(errors, *err)
+	}
+
+	if err := ValidateUsername(username); err != nil {
 		errors = append(errors, *err)
 	}
 
@@ -241,11 +291,11 @@ func ValidateRegistrationRequest(email, password, firstName, lastName, dateOfBir
 }
 
 // ValidateLoginRequest validates login fields
-func ValidateLoginRequest(email, password string) ValidationResult {
+func ValidateLoginRequest(identifier, password string) ValidationResult {
 	var errors []ValidationError
 
-	if err := ValidateEmail(email); err != nil {
-		errors = append(errors, *err)
+	if identifier == "" {
+		errors = append(errors, ValidationError{Field: "identifier", Message: "Email or Username is required"})
 	}
 
 	if password == "" {

@@ -1,5 +1,7 @@
-// API base URL - adjust this to match your backend URL
-const API_BASE_URL = 'http://localhost:8080';
+import { API_URL } from "@/lib/config";
+
+// API base URL - uses the same config as the rest of the app
+const API_BASE_URL = API_URL;
 
 export interface LikePostResponse {
   success: boolean;

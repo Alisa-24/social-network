@@ -9,7 +9,8 @@ func GetGroupPosts(groupID int64) ([]models.Post, error) {
 	rows, err := DB.Query(`
 		SELECT 
 			id, 
-			user_id, 
+			user_id,
+			group_id, 
 			content, 
 			COALESCE(image_path, '') as image_path,
 			COALESCE(privacy, '') as privacy,
@@ -30,6 +31,7 @@ func GetGroupPosts(groupID int64) ([]models.Post, error) {
 		err := rows.Scan(
 			&post.ID,
 			&post.UserID,
+			&post.GroupID,
 			&post.Content,
 			&post.ImagePath,
 			&post.Privacy,

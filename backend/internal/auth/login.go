@@ -34,21 +34,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Email == "" || req.Password == "" {
+	if req.Identifier == "" || req.Password == "" {
 		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
-			Message: "Email and password are required",
+			Message: "Identifier and password are required",
 		})
 		return
 	}
 
-	// Get user by email
-	dbUser, err := queries.GetUserByEmail(req.Email)
+	// Get user by email or username
+	dbUser, err := queries.GetUserByIdentifier(req.Identifier)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
-				Message: "Invalid email or password",
+				Message: "Invalid identifier or password",
 			})
 			return
 		}
@@ -66,7 +66,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	); err != nil {
 		utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 			Success: false,
-			Message: "Invalid email or password",
+			Message: "Invalid identifier or password",
 		})
 		return
 	}
@@ -106,6 +106,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			Email:       dbUser.Email,
 			FirstName:   dbUser.FirstName,
 			LastName:    dbUser.LastName,
+			Username:    dbUser.Username,
 			DateOfBirth: dbUser.DateOfBirth,
 			Nickname:    dbUser.Nickname,
 			Avatar:      dbUser.Avatar,
