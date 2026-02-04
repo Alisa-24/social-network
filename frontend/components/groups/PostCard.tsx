@@ -84,13 +84,13 @@ export default function PostCard({
 
   const getAuthorFullName = () => {
     // Handle both old (capitalized) and new (lowercase) field names
-    const firstName = post.author?.FirstName || post.author?.FirstName || 'User';
-    const lastName = post.author?.LastName || post.author?.LastName || '';
+    const firstName = post.author?.firstName || post.author?.FirstName || 'User';
+    const lastName = post.author?.lastName || post.author?.LastName || '';
     return `${firstName} ${lastName}`.trim();
   };
 
   const getAuthorUsername = () => {
-    return post.author?.Username || post.author?.Username || 'user';
+    return post.author?.username || post.author?.Username || 'user';
   };
 
   const handleImageLoad = () => {
@@ -107,7 +107,7 @@ export default function PostCard({
   };
 
   const getAuthorAvatar = () => {
-    return post.author?.Avatar || post.author?.Avatar || '';
+    return post.author?.avatar || post.author?.Avatar || '';
   };
 
   const handleLike = async () => {
