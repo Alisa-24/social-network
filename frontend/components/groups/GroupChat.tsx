@@ -5,6 +5,7 @@ import { GroupChatMessage } from "@/lib/groups/interface";
 import { fetchGroupMessages } from "@/lib/groups/api";
 import { send, on, off } from "@/lib/ws/ws";
 import { API_URL } from "@/lib/config";
+import { extractImageUrls, renderMessageContent } from "@/lib/utils/message-utils";
 
 interface GroupChatProps {
   groupId: number;
@@ -142,6 +143,10 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
             const user = msg.user as any;
             const avatar = user?.Avatar || user?.avatar;
             const firstName = user?.FirstName || user?.firstName || 'User';
+            
+            // Extract image URLs from message
+            const imageUrls = extractImageUrls(msg.content);
+            const hasImages = imageUrls.some(item => item.isImage);
 
             return (
               <div key={msg.id || index} className={`flex gap-3 max-w-[85%] ${isMe ? "flex-row-reverse ml-auto" : ""}`}>
@@ -158,7 +163,7 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                     </div>
                   )}
                 </div>
-                <div className={`flex flex-col ${isMe ? "items-end" : ""}`}>
+                <div className={`flex flex-col ${isMe ? "items-end" : ""} max-w-full`}>
                   {showDetails && (
                     <div className="flex items-baseline gap-2 mb-1">
                       {isMe ? (
@@ -179,13 +184,39 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                     </div>
                   )}
                   <div 
-                    className={`p-4 text-sm leading-relaxed ${
+                    className={`${hasImages ? 'p-2' : 'p-4'} text-sm leading-relaxed ${
                       isMe 
                         ? "bg-primary text-black font-semibold rounded-2xl rounded-tr-none shadow-lg shadow-primary/20" 
                         : "bg-muted/10 text-foreground rounded-2xl rounded-tl-none border border-border"
                     }`}
                   >
-                    {msg.content}
+                    <div className={`break-words ${hasImages ? 'px-2 pt-2' : ''}`}>{renderMessageContent(msg.content, imageUrls)}</div>
+                    
+                    {/* Render images inline */}
+                    {hasImages && (
+                      <div className="mt-2 space-y-2">
+                        {imageUrls
+                          .filter(item => item.isImage)
+                          .map((item, idx) => (
+                            <div 
+                              key={idx} 
+                              className={`rounded-xl overflow-hidden inline-block ${isMe ? 'bg-black/10' : 'bg-surface/50'}`}
+                            >
+                              <img 
+                                src={item.url} 
+                                alt="Shared image"
+                                className="max-w-[120px] max-h-[120px] object-cover rounded-xl"
+                                loading="lazy"
+                                onError={(e) => {
+                                  // Hide image if it fails to load
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            </div>
+                          ))
+                        }
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

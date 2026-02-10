@@ -7,7 +7,7 @@ interface CreatePostProps {
 }
 
 export default function CreatePost({ 
-  onSubmit, 
+  onSubmit,   
   placeholder = "Share something with the group..." 
 }: CreatePostProps) {
   const [content, setContent] = useState("");

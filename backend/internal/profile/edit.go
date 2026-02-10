@@ -57,7 +57,6 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 	isPublicStr := r.FormValue("isPublic")
 	isPublic := isPublicStr == "true"
 
-	println("Form values - firstName:", firstName, "lastName:", lastName, "username:", username, "email:", email)
 
 	// Validate required fields
 	var validationErrors []auth.ValidationError

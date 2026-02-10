@@ -19,13 +19,13 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "POST /api/auth/logout", auth.LogoutHandler)
 
 	// ===== PROFILE =====
-	authHandle(mux, "PUT /api/profile/edit", profile.EditProfile)
-	authHandle(mux, "DELETE /api/profile/delete", profile.DeleteProfile)
+	authHandle(mux, "PUT /api/profile", profile.ProfileHandler)
+	authHandle(mux, "DELETE /api/profile", profile.ProfileHandler)
 
 	// ===== GROUPS =====
 	// List & Create
-	authHandle(mux, "GET /api/groups", groups.GetGroups)
 	authHandle(mux, "POST /api/groups", groups.CreateGroup)
+	authHandle(mux, "GET /api/groups", groups.GetGroups)
 
 	// Group Member Actions
 	authHandle(mux, "POST /api/groups/invite", groups.InviteUser)

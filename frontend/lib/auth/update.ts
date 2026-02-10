@@ -42,7 +42,7 @@ export async function updateProfile(
       formData.append("avatar", data.avatar);
     }
 
-    const response = await fetch(`${API_URL}/api/profile/edit`, {
+    const response = await fetch(`${API_URL}/api/profile`, {
       method: "PUT",
       credentials: "include",
       body: formData,
@@ -62,7 +62,7 @@ export async function updateProfile(
 
 export async function deleteAccount(): Promise<UpdateProfileResponse> {
   try {
-    const response = await fetch(`${API_URL}/api/profile/delete`, {
+    const response = await fetch(`${API_URL}/api/profile`, {
       method: "DELETE",
       credentials: "include",
       headers: {

@@ -8,16 +8,23 @@ import (
 	"strings"
 )
 
-func CreateGroup(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	if r.Method != http.MethodPost {
+func GroupHandler(w http.ResponseWriter, r *http.Request) {
+	method := r.Method
+	switch method {
+	case http.MethodPost:
+		CreateGroup(w, r)
+	case http.MethodGet:
+		GetGroups(w, r)
+	default:
 		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.GenericResponse{
 			Success: false,
 			Message: "Method not allowed",
 		})
-		return
 	}
+}
+
+func CreateGroup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 
 	// Get session cookie to identify the user
 	cookie, err := r.Cookie("session_id")
@@ -116,14 +123,6 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 
 func GetGroups(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	if r.Method != http.MethodGet {
-		utils.RespondJSON(w, http.StatusMethodNotAllowed, models.GenericResponse{
-			Success: false,
-			Message: "Method not allowed",
-		})
-		return
-	}
 
 	// Get session cookie to identify the user
 	cookie, err := r.Cookie("session_id")

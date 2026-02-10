@@ -171,9 +171,41 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto py-4 px-4 md:px-8 animate-in fade-in duration-700 zoom-in-95 leading-none">
+    <div className="max-w-[1400px] mx-auto py-4 px-4 md:px-8 leading-none">
+      <style jsx>{`
+        @keyframes smoothFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-smooth-in {
+          animation: smoothFadeIn 0.5s ease-out forwards;
+        }
+
+        .delay-100 {
+          animation-delay: 0.1s;
+          opacity: 0;
+        }
+
+        .delay-200 {
+          animation-delay: 0.2s;
+          opacity: 0;
+        }
+
+        .delay-300 {
+          animation-delay: 0.3s;
+          opacity: 0;
+        }
+      `}</style>
+
       {/* Header Section */}
-      <div className="flex flex-wrap items-center justify-between gap-6 mb-12">
+      <div className="flex flex-wrap items-center justify-between gap-6 mb-12 animate-smooth-in">
         <div className="space-y-1.5 focus:outline-none" tabIndex={0}>
           <h2 className="text-3xl font-bold tracking-tight text-foreground">Profile Settings</h2>
           <p className="text-muted-foreground text-sm font-medium opacity-60 uppercase tracking-[0.2em]">Manage your presence and account</p>
@@ -210,7 +242,7 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           {/* General Info */}
-          <section className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-sm relative overflow-hidden group">
+          <section className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-sm relative overflow-hidden group animate-smooth-in delay-100">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
             <h3 className="text-base font-bold mb-8 flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg">
@@ -312,7 +344,7 @@ export default function SettingsPage() {
           </section>
 
             {/* Privacy Toggle */}
-            <section className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex items-center justify-between group overflow-hidden relative transition-all hover:bg-surface/80">
+            <section className="bg-surface rounded-2xl border border-border p-5 shadow-sm flex items-center justify-between group overflow-hidden relative transition-all hover:bg-surface/80 animate-smooth-in delay-200">
               <div className="flex flex-col gap-1">
                 <h3 className="text-base font-bold flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
@@ -335,7 +367,7 @@ export default function SettingsPage() {
             </section>
 
             {/* About You */}
-            <section className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-sm">
+            <section className="bg-surface rounded-2xl border border-border p-6 md:p-8 shadow-sm animate-smooth-in delay-300">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-bold flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
@@ -360,7 +392,7 @@ export default function SettingsPage() {
 
         <div className="lg:col-span-1 space-y-6">
           {/* Avatar Section */}
-          <section className="bg-surface rounded-2xl border border-border p-6 shadow-sm text-center group">
+          <section className="bg-surface rounded-2xl border border-border p-6 shadow-sm text-center group animate-smooth-in delay-100">
             <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-6 px-1">Avatar</h3>
             <div className="relative inline-block group mb-6">
               <div className="h-36 w-36 rounded-full bg-background flex items-center justify-center border-4 border-primary/20 group-hover:border-primary transition-all duration-500 overflow-hidden shadow-2xl">
@@ -417,7 +449,7 @@ export default function SettingsPage() {
           </section>
 
           {/* Danger Zone */}
-          <section className="bg-destructive/5 rounded-2xl border border-destructive/20 overflow-hidden shadow-sm">
+          <section className="bg-destructive/5 rounded-2xl border border-destructive/20 overflow-hidden shadow-sm animate-smooth-in delay-200">
             <div className="p-3 border-b border-destructive/10 bg-destructive/5">
               <h4 className="text-[10px] font-black text-destructive uppercase tracking-widest px-1">Danger Zone</h4>
             </div>
@@ -427,7 +459,7 @@ export default function SettingsPage() {
               </p>
               <button 
                 onClick={() => setShowDeleteConfirm(true)}
-                className="w-full py-2.5 rounded-xl bg-destructive/10 text-destructive text-xs font-bold hover:bg-destructive hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                className="w-full py-2.5 rounded-xl border-destructive/50 bg-destructive/20 text-destructive text-xs font-bold hover:bg-destructive hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2 group"
               >
                 <UserX className="h-4 w-4 group-hover:animate-pulse" />
                 Delete Account
@@ -437,7 +469,7 @@ export default function SettingsPage() {
         </div>
       </div>
       
-      <div className="mt-4 pb-4 text-center">
+      <div className="mt-4 pb-4 text-center animate-smooth-in delay-300">
         <p className="text-[10px] text-muted-foreground font-medium italic opacity-40">
           Profile: {formData.isPublic ? 'Public' : 'Private'} • Last updated: Just now
         </p>
