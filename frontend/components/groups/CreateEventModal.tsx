@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { X, Calendar, Clock, MapPin, Image as ImageIcon, Loader2 } from "lucide-react";
+import { X, Calendar, Clock, MapPin, Image as ImageIcon, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { createGroupEvent } from "@/lib/groups/events";
 
 interface CreateEventModalProps {
@@ -9,6 +9,143 @@ interface CreateEventModalProps {
   onClose: () => void;
   groupId: number;
   onSuccess: () => void;
+}
+
+// Simple inline calendar component
+function CalendarPicker({ 
+  selectedDate, 
+  onDateSelect, 
+  onClose 
+}: { 
+  selectedDate: Date | null; 
+  onDateSelect: (date: Date) => void;
+  onClose: () => void;
+}) {
+  const [currentMonth, setCurrentMonth] = useState(selectedDate || new Date());
+  
+  const daysInMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth() + 1,
+    0
+  ).getDate();
+  
+  const firstDayOfMonth = new Date(
+    currentMonth.getFullYear(),
+    currentMonth.getMonth(),
+    1
+  ).getDay();
+  
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const goToPreviousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
+  };
+  
+  const goToNextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
+  };
+  
+  const handleDateClick = (day: number) => {
+    const selected = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    if (selected >= today) {
+      onDateSelect(selected);
+      onClose();
+    }
+  };
+  
+  const renderCalendarDays = () => {
+    const days = [];
+    
+    // Empty cells for days before month starts
+    for (let i = 0; i < firstDayOfMonth; i++) {
+      days.push(
+        <div key={`empty-${i}`} className="aspect-square" />
+      );
+    }
+    
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+      date.setHours(0, 0, 0, 0);
+      const isToday = date.getTime() === today.getTime();
+      const isSelected = selectedDate && 
+        date.getDate() === selectedDate.getDate() &&
+        date.getMonth() === selectedDate.getMonth() &&
+        date.getFullYear() === selectedDate.getFullYear();
+      const isPast = date < today;
+      
+      days.push(
+        <button
+          key={day}
+          type="button"
+          onClick={() => handleDateClick(day)}
+          disabled={isPast}
+          className={`
+            aspect-square rounded-lg flex items-center justify-center text-sm font-medium transition-all
+            ${isSelected 
+              ? 'bg-primary text-black font-bold shadow-md' 
+              : isToday
+              ? 'border-2 border-primary text-primary hover:bg-primary/10'
+              : isPast
+              ? 'text-muted/30 cursor-not-allowed'
+              : 'text-foreground hover:bg-background hover:border hover:border-border'
+            }
+          `}
+        >
+          {day}
+        </button>
+      );
+    }
+    
+    return days;
+  };
+  
+  return (
+    <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-border rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          type="button"
+          onClick={goToPreviousMonth}
+          className="p-2 hover:bg-background rounded-lg transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div className="font-bold text-foreground">
+          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+        </div>
+        <button
+          type="button"
+          onClick={goToNextMonth}
+          className="p-2 hover:bg-background rounded-lg transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+      
+      {/* Day names */}
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {dayNames.map(day => (
+          <div key={day} className="text-center text-xs font-bold text-muted py-2">
+            {day}
+          </div>
+        ))}
+      </div>
+      
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7 gap-1">
+        {renderCalendarDays()}
+      </div>
+    </div>
+  );
 }
 
 export default function CreateEventModal({
@@ -19,12 +156,13 @@ export default function CreateEventModal({
 }: CreateEventModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [time, setTime] = useState("");
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -49,17 +187,39 @@ export default function CreateEventModal({
     }
   };
 
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDisplayDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short',
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+
+    if (!selectedDate) {
+      setError("Please select a date");
+      setLoading(false);
+      return;
+    }
 
     try {
       const result = await createGroupEvent({
         groupId,
         title,
         description,
-        date,
+        date: formatDate(selectedDate),
         time,
         imageFile: selectedImage || undefined,
       });
@@ -68,7 +228,7 @@ export default function CreateEventModal({
         // Reset form
         setTitle("");
         setDescription("");
-        setDate("");
+        setSelectedDate(null);
         setTime("");
         removeImage();
         onSuccess();
@@ -147,15 +307,21 @@ export default function CreateEventModal({
                 Date
               </label>
               <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-foreground focus:ring-1 focus:ring-primary outline-none"
-                  required
-                  min={new Date().toISOString().split("T")[0]}
-                />
+                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none z-10" />
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                  className="w-full bg-background border border-border rounded-lg pl-10 pr-4 py-2 text-left text-foreground focus:ring-1 focus:ring-primary outline-none hover:bg-background/80 transition-colors"
+                >
+                  {selectedDate ? formatDisplayDate(selectedDate) : "Select date"}
+                </button>
+                {showCalendar && (
+                  <CalendarPicker
+                    selectedDate={selectedDate}
+                    onDateSelect={setSelectedDate}
+                    onClose={() => setShowCalendar(false)}
+                  />
+                )}
               </div>
             </div>
             <div>
