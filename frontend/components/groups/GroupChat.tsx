@@ -122,7 +122,7 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
       <div 
         ref={chatContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto p-6 space-y-6"
+        className="flex-1 overflow-y-auto p-6 space-y-1"
       >
         {loadingMore && (
           <div className="flex justify-center p-2">
@@ -149,7 +149,10 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
             const hasImages = imageUrls.some(item => item.isImage);
 
             return (
-              <div key={msg.id || index} className={`flex gap-3 max-w-[85%] ${isMe ? "flex-row-reverse ml-auto" : ""}`}>
+              <div 
+                key={msg.id || index} 
+                className={`flex gap-3 max-w-[85%] ${isMe ? "flex-row-reverse ml-auto" : ""} ${showDetails ? "mt-4" : "mt-1"}`}
+              >
                 <div className={`shrink-0 ${!showDetails ? "w-10" : ""}`}>
                   {showDetails && (
                     <div className="w-10 h-10 rounded-xl bg-muted/20 border border-border flex items-center justify-center overflow-hidden">
@@ -186,8 +189,8 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                   <div 
                     className={`${hasImages ? 'p-2' : 'p-4'} text-sm leading-relaxed ${
                       isMe 
-                        ? "bg-primary text-black font-semibold rounded-2xl rounded-tr-none shadow-lg shadow-primary/20" 
-                        : "bg-muted/10 text-foreground rounded-2xl rounded-tl-none border border-border"
+                        ? `bg-primary text-black font-semibold shadow-lg shadow-primary/20 ${showDetails ? 'rounded-2xl rounded-tr-none' : 'rounded-2xl'}` 
+                        : `bg-muted/10 text-foreground border border-border ${showDetails ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'}`
                     }`}
                   >
                     <div className={`break-words ${hasImages ? 'px-2 pt-2' : ''}`}>{renderMessageContent(msg.content, imageUrls)}</div>
