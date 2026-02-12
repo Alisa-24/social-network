@@ -22,24 +22,24 @@ export default function GroupsPage() {
   const [joiningGroupId, setJoiningGroupId] = useState<number | null>(null);
 
   useEffect(() => {
-      async function checkAuth() {
-        try {
-          const currentUser = await getCurrentUser();
-          if (!currentUser) {
-            router.push("/login");
-            return;
-          }
-          setLoading(false);
-        } catch (error) {
-          if (error instanceof ServerError) {
-            router.push("/error/500");
-            return;
-          }
+    async function checkAuth() {
+      try {
+        const currentUser = await getCurrentUser();
+        if (!currentUser) {
           router.push("/login");
+          return;
         }
+        setLoading(false);
+      } catch (error) {
+        if (error instanceof ServerError) {
+          router.push("/error/500");
+          return;
+        }
+        router.push("/login");
       }
-      checkAuth();
-    }, [router]);
+    }
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     loadGroups();
@@ -97,7 +97,7 @@ export default function GroupsPage() {
       }
     } else {
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+         id: crypto.randomUUID(),
         title: "Error",
         message: result.message || "Failed to create group",
         type: "error",
@@ -111,36 +111,36 @@ export default function GroupsPage() {
   const handleJoinGroup = async (groupId: number) => {
     setJoiningGroupId(groupId);
     const result = await requestToJoin({ groupId });
-    
+
     if (result.success) {
       // Check if user was auto-accepted due to pending invitation
       const wasAutoAccepted = result.message?.includes("added to the group");
-      
+
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: wasAutoAccepted ? "🎉 Welcome to the Group!" : "Request Sent",
-        message: wasAutoAccepted 
+        message: wasAutoAccepted
           ? "You had a pending invitation and were automatically added to the group!"
           : "Your join request has been sent to the group owner",
         type: "success",
         duration: 5000,
       });
       loadGroups();
-      
+
       // Trigger a custom event to refresh invitations if auto-joined
       if (wasAutoAccepted) {
         window.dispatchEvent(new CustomEvent("groupInvitationAccepted"));
       }
     } else {
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: "Error",
         message: result.message || "Failed to send join request",
         type: "error",
         duration: 5000,
       });
     }
-    
+
     setJoiningGroupId(null);
   };
 
@@ -149,8 +149,12 @@ export default function GroupsPage() {
       {/* Page Header */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border px-8 py-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter uppercase italic text-foreground">Groups</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage your communities and discover new ones.</p>
+          <h1 className="text-3xl font-black tracking-tighter uppercase italic text-foreground">
+            Groups
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Manage your communities and discover new ones.
+          </p>
         </div>
         <div className="flex gap-4">
           <div className="relative w-72">
@@ -184,7 +188,10 @@ export default function GroupsPage() {
               <span className="w-2 h-6 bg-primary rounded-full"></span>
               Your Groups
             </h2>
-            <a className="text-primary text-xs font-bold uppercase tracking-widest hover:underline" href="#">
+            <a
+              className="text-primary text-xs font-bold uppercase tracking-widest hover:underline"
+              href="#"
+            >
               View All
             </a>
           </div>
@@ -192,7 +199,9 @@ export default function GroupsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {userGroups.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground text-sm">You haven't joined any groups yet.</p>
+                <p className="text-muted-foreground text-sm">
+                  You haven't joined any groups yet.
+                </p>
               </div>
             ) : (
               userGroups.map((group) => (
@@ -211,8 +220,12 @@ export default function GroupsPage() {
                     )}
                   </div>
                   <div className="p-5">
-                    <h3 className="font-bold text-base text-foreground mb-2 line-clamp-1">{group.name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{group.description}</p>
+                    <h3 className="font-bold text-base text-foreground mb-2 line-clamp-1">
+                      {group.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {group.description}
+                    </p>
                   </div>
                 </div>
               ))
@@ -239,23 +252,33 @@ export default function GroupsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {loading ? (
               <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground text-sm">Loading groups...</p>
+                <p className="text-muted-foreground text-sm">
+                  Loading groups...
+                </p>
               </div>
             ) : allGroups.length === 0 ? (
               <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground text-sm">No groups to discover yet.</p>
+                <p className="text-muted-foreground text-sm">
+                  No groups to discover yet.
+                </p>
               </div>
             ) : (
               allGroups
                 .filter((group) => {
                   // Exclude groups the user has already joined
-                  const isJoined = userGroups.some((userGroup) => userGroup.id === group.id);
+                  const isJoined = userGroups.some(
+                    (userGroup) => userGroup.id === group.id,
+                  );
                   if (isJoined) return false;
-                  
+
                   // Apply search filter
                   return (
-                    group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    group.description.toLowerCase().includes(searchQuery.toLowerCase())
+                    group.name
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase()) ||
+                    group.description
+                      .toLowerCase()
+                      .includes(searchQuery.toLowerCase())
                   );
                 })
                 .map((group) => (
@@ -263,9 +286,7 @@ export default function GroupsPage() {
                     key={group.id}
                     className="bg-surface border border-border rounded-xl overflow-hidden hover:border-primary/30 transition-all group"
                   >
-                    <div 
-                      className="h-48 bg-linear-to-br from-primary/20 to-primary/5 relative overflow-hidden"
-                    >
+                    <div className="h-48 bg-linear-to-br from-primary/20 to-primary/5 relative overflow-hidden">
                       {group.cover_image_path && (
                         <img
                           src={`${API_URL}${group.cover_image_path}`}
@@ -275,30 +296,34 @@ export default function GroupsPage() {
                       )}
                     </div>
                     <div className="p-6">
-                      <h3 
-                        className="font-bold text-lg text-foreground mb-2 line-clamp-1"
-                      >
+                      <h3 className="font-bold text-lg text-foreground mb-2 line-clamp-1">
                         {group.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mb-5">{group.description}</p>
-                      <button 
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-5">
+                        {group.description}
+                      </p>
+                      <button
                         onClick={() => handleJoinGroup(group.id)}
-                        disabled={joiningGroupId === group.id || group.has_pending_request || group.has_pending_invitation}
+                        disabled={
+                          joiningGroupId === group.id ||
+                          group.has_pending_request ||
+                          group.has_pending_invitation
+                        }
                         className={`w-full font-bold py-2.5 rounded-lg text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                           group.has_pending_invitation
                             ? "bg-blue-500/10 text-blue-500 border border-blue-500/50"
                             : group.has_pending_request
-                            ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/50"
-                            : "bg-primary/10 hover:bg-primary text-primary hover:text-black"
+                              ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/50"
+                              : "bg-primary/10 hover:bg-primary text-primary hover:text-black"
                         }`}
                       >
-                        {joiningGroupId === group.id 
-                          ? "Requesting..." 
+                        {joiningGroupId === group.id
+                          ? "Requesting..."
                           : group.has_pending_invitation
                             ? "Invitation Pending"
-                            : group.has_pending_request 
-                            ? "Request Pending" 
-                            : "Request to Join"}
+                            : group.has_pending_request
+                              ? "Request Pending"
+                              : "Request to Join"}
                       </button>
                     </div>
                   </div>
@@ -313,7 +338,9 @@ export default function GroupsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-surface text-foreground border border-border w-full max-w-lg rounded-xl shadow-2xl p-8 transform transition-all">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-black italic tracking-tight uppercase">Create New Group</h2>
+              <h2 className="text-2xl font-black italic tracking-tight uppercase">
+                Create New Group
+              </h2>
               <button
                 onClick={() => setShowCreateModal(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors"

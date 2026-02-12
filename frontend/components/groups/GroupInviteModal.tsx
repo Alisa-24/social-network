@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { MoreHorizontal, X, Search, UserIcon } from "lucide-react"; // Added missing imports
-import { fetchPotentialInvitees, inviteUserToGroup, type PotentialInvitee } from "@/lib/groups/api";
+import {
+  fetchPotentialInvitees,
+  inviteUserToGroup,
+  type PotentialInvitee,
+} from "@/lib/groups/api";
 import { Group } from "@/lib/groups/interface";
 import { API_URL } from "@/lib/config";
 
@@ -27,10 +31,10 @@ export default function GroupInviteModal({
     if (!isOpen || !group?.id) return;
     const id = group.id;
     if (id <= 0) return;
-    
+
     setSelectedInvitees([]);
     setInviteSearchQuery("");
-    
+
     const loadInvitees = async () => {
       setInviteesLoading(true);
       try {
@@ -53,13 +57,13 @@ export default function GroupInviteModal({
     if (selectedInvitees.length === 0 || !group) return;
     const groupIdNum = group.id;
     if (!groupIdNum || groupIdNum <= 0) return;
-    
+
     setIsInviting(true);
     try {
       let lastError: string | null = null;
       let autoAcceptedCount = 0;
       let invitedCount = 0;
-      
+
       for (const id of selectedInvitees) {
         const result = await inviteUserToGroup(groupIdNum, id);
         if (!result.success) {
@@ -70,24 +74,28 @@ export default function GroupInviteModal({
           invitedCount++;
         }
       }
-      
+
       if (lastError) {
         alert(lastError);
         return;
       }
-      
+
       // Trigger event to refresh join requests list if any were auto-accepted
       if (autoAcceptedCount > 0) {
-        console.log("Dispatching joinRequestAutoAccepted event for", autoAcceptedCount, "users");
+        console.log(
+          "Dispatching joinRequestAutoAccepted event for",
+          autoAcceptedCount,
+          "users",
+        );
         window.dispatchEvent(new CustomEvent("joinRequestAutoAccepted"));
         // Small delay to ensure event is processed
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      
+
       // Show success message
       if (autoAcceptedCount > 0 && invitedCount > 0) {
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           title: "Success",
           message: `${autoAcceptedCount} user(s) automatically added (had pending requests), ${invitedCount} invitation(s) sent`,
           type: "success",
@@ -95,7 +103,7 @@ export default function GroupInviteModal({
         });
       } else if (autoAcceptedCount > 0) {
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           title: "Users Automatically Added",
           message: `${autoAcceptedCount} user(s) had pending join requests and were automatically added to the group`,
           type: "success",
@@ -103,14 +111,14 @@ export default function GroupInviteModal({
         });
       } else {
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           title: "Invitations Sent",
           message: `${invitedCount} invitation(s) sent successfully`,
           type: "success",
           duration: 5000,
         });
       }
-      
+
       setSelectedInvitees([]);
       onClose();
       onSuccess();
@@ -126,14 +134,12 @@ export default function GroupInviteModal({
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-surface border border-border rounded-xl max-w-md w-full p-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-foreground">
-            Invite Users
-          </h3>
+          <h3 className="text-xl font-bold text-foreground">Invite Users</h3>
           <button
             onClick={onClose}
             className="text-muted hover:text-foreground"
           >
-            <X className="w-5 h-5" /> 
+            <X className="w-5 h-5" />
           </button>
         </div>
         <p className="text-sm text-muted mb-4">

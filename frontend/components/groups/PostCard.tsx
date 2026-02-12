@@ -1,4 +1,11 @@
-import { Heart, MessageSquare, Share2, MoreHorizontal, Trash2, UserIcon } from "lucide-react";
+import {
+  Heart,
+  MessageSquare,
+  Share2,
+  MoreHorizontal,
+  Trash2,
+  UserIcon,
+} from "lucide-react";
 import { GroupPost } from "@/lib/groups/interface";
 import { useState, useEffect, useRef } from "react";
 import { togglePostLike, deletePost } from "@/lib/groups/posts";
@@ -16,14 +23,14 @@ interface PostCardProps {
   groupOwnerId?: number; // To check if user is group owner
 }
 
-export default function PostCard({ 
-  post, 
-  onLike, 
-  onComment, 
+export default function PostCard({
+  post,
+  onLike,
+  onComment,
   onShare,
   onDelete,
   currentUserId,
-  groupOwnerId
+  groupOwnerId,
 }: PostCardProps) {
   const [imageError, setImageError] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -45,34 +52,33 @@ export default function PostCard({
     };
 
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         setShowMenu(false);
       }
     };
 
     if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [showMenu]);
-
 
   const getAuthorFullName = () => {
     // Handle both old (capitalized) and new (lowercase) field names
     const author = post.author as any;
-    const firstName = author?.FirstName || author?.firstName || 'User';
-    const lastName = author?.LastName || author?.lastName || '';
+    const firstName = author?.FirstName || author?.firstName || "User";
+    const lastName = author?.LastName || author?.lastName || "";
     return `${firstName} ${lastName}`.trim();
   };
 
   const getAuthorUsername = () => {
     const author = post.author as any;
-    return author?.Username || author?.username || 'user';
+    return author?.Username || author?.username || "user";
   };
 
   const handleImageLoad = () => {
@@ -90,7 +96,7 @@ export default function PostCard({
 
   const getAuthorAvatar = () => {
     const author = post.author as any;
-    return author?.Avatar || author?.avatar || '';
+    return author?.Avatar || author?.avatar || "";
   };
 
   const handleLike = async () => {
@@ -99,7 +105,7 @@ export default function PostCard({
     // Optimistic update
     const previousLiked = isLiked;
     const previousCount = likesCount;
-    
+
     setIsLiked(!previousLiked);
     setLikesCount(previousLiked ? previousCount - 1 : previousCount + 1);
     setIsLiking(true);
@@ -107,12 +113,15 @@ export default function PostCard({
     try {
       // Send to server
       const response = await togglePostLike(post.id);
-      
+
       if (response.success) {
         // Update with server response
         setIsLiked(response.is_liked ?? !previousLiked);
-        setLikesCount(response.likes ?? (previousLiked ? previousCount - 1 : previousCount + 1));
-        
+        setLikesCount(
+          response.likes ??
+            (previousLiked ? previousCount - 1 : previousCount + 1),
+        );
+
         // Call parent callback if provided
         onLike?.(post.id);
       } else {
@@ -122,10 +131,10 @@ export default function PostCard({
       }
     } catch (error) {
       // Revert on error
-      console.error('Failed to like post:', error);
+      console.error("Failed to like post:", error);
       setIsLiked(previousLiked);
       setLikesCount(previousCount);
-      
+
       // Optional: Show error notification
       // toast.error('Failed to like post');
     } finally {
@@ -136,8 +145,10 @@ export default function PostCard({
   const handleShare = async () => {
     const shareData = {
       title: `Post by ${getAuthorFullName()}`,
-      text: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : ''),
-      url: `${window.location.origin}/groups/${post.group_id}/posts/${post.id}`
+      text:
+        post.content.substring(0, 100) +
+        (post.content.length > 100 ? "..." : ""),
+      url: `${window.location.origin}/groups/${post.group_id}/posts/${post.id}`,
     };
 
     try {
@@ -149,10 +160,10 @@ export default function PostCard({
         // Fallback to copying link to clipboard
         await navigator.clipboard.writeText(shareData.url);
         onShare?.(post.id);
-        
+
         // Show success notification
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           title: "Link Copied",
           message: "Post link copied to clipboard",
           type: "success",
@@ -161,8 +172,8 @@ export default function PostCard({
       }
     } catch (error) {
       // User cancelled share or clipboard failed
-      if (error instanceof Error && error.name !== 'AbortError') {
-        console.error('Error sharing:', error);
+      if (error instanceof Error && error.name !== "AbortError") {
+        console.error("Error sharing:", error);
       }
     }
   };
@@ -176,11 +187,11 @@ export default function PostCard({
     setIsDeleting(true);
     try {
       const response = await deletePost(post.id);
-      
+
       if (response.success) {
         onDelete?.(post.id);
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           title: "Post Deleted",
           message: "The post has been deleted successfully",
           type: "success",
@@ -188,7 +199,7 @@ export default function PostCard({
         });
       } else {
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           title: "Error",
           message: "Failed to delete post. Please try again.",
           type: "error",
@@ -196,9 +207,9 @@ export default function PostCard({
         });
       }
     } catch (error) {
-      console.error('Failed to delete post:', error);
+      console.error("Failed to delete post:", error);
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: "Error",
         message: "Failed to delete post. Please try again.",
         type: "error",
@@ -211,11 +222,11 @@ export default function PostCard({
   };
 
   // Check if current user can delete this post (post author or group owner)
-  const canDelete = currentUserId && (
-    currentUserId === post.user_id || 
-    currentUserId === post.author?.ID ||
-    (groupOwnerId && currentUserId === groupOwnerId)
-  );
+  const canDelete =
+    currentUserId &&
+    (currentUserId === post.user_id ||
+      currentUserId === post.author?.ID ||
+      (groupOwnerId && currentUserId === groupOwnerId));
 
   return (
     <article className="bg-surface border border-border rounded-xl overflow-hidden hover:border-border/80 transition-colors">
@@ -249,7 +260,7 @@ export default function PostCard({
         </div>
         {canDelete && (
           <div className="relative" ref={menuRef}>
-            <button 
+            <button
               onClick={() => setShowMenu(!showMenu)}
               aria-label="More options"
               className="text-muted hover:text-foreground transition-colors shrink-0 p-1 rounded-lg hover:bg-surface-hover"
@@ -264,7 +275,7 @@ export default function PostCard({
                   className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
-                  {isDeleting ? 'Deleting...' : 'Delete Post'}
+                  {isDeleting ? "Deleting..." : "Delete Post"}
                 </button>
               </div>
             )}
@@ -287,10 +298,10 @@ export default function PostCard({
               </div>
             )}
             <img
-              src={`${ API_URL }${post.image_path}`}
+              src={`${API_URL}${post.image_path}`}
               alt="Post image"
               className={`w-full h-auto max-h-125 object-cover transition-opacity ${
-                imageLoading ? 'opacity-0' : 'opacity-100'
+                imageLoading ? "opacity-0" : "opacity-100"
               }`}
               onLoad={handleImageLoad}
               onError={handleImageError}
@@ -302,35 +313,33 @@ export default function PostCard({
 
       {/* Post Actions */}
       <footer className="border-t border-border p-3 flex gap-4">
-        <button 
+        <button
           onClick={handleLike}
           disabled={isLiking}
           aria-label={isLiked ? "Unlike post" : "Like post"}
           aria-pressed={isLiked}
           className="flex items-center gap-2 text-muted hover:text-primary transition-colors group disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Heart 
+          <Heart
             className={`w-5 h-5 transition-all ${
-              isLiked 
-                ? 'fill-primary text-primary' 
-                : 'group-hover:scale-110'
-            }`} 
+              isLiked ? "fill-primary text-primary" : "group-hover:scale-110"
+            }`}
           />
           <span className="text-xs font-bold">
-            {likesCount > 0 ? likesCount : ''}
+            {likesCount > 0 ? likesCount : ""}
           </span>
         </button>
-        <button 
+        <button
           onClick={() => onComment?.(post.id)}
           aria-label={`View ${post.comments ?? 0} comments`}
           className="flex items-center gap-2 text-muted hover:text-primary transition-colors group"
         >
           <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
           <span className="text-xs font-bold">
-            {(post.comments ?? 0) > 0 ? `${post.comments ?? 0}` : '0'}
+            {(post.comments ?? 0) > 0 ? `${post.comments ?? 0}` : "0"}
           </span>
         </button>
-        <button 
+        <button
           onClick={handleShare}
           aria-label="Share post"
           className="ml-auto flex items-center gap-2 text-muted hover:text-foreground transition-colors group"

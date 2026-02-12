@@ -13,7 +13,11 @@ interface JoinRequestsProps {
   onRequestHandled?: () => void;
 }
 
-export default function JoinRequests({ groupId, isOwner, onRequestHandled }: JoinRequestsProps) {
+export default function JoinRequests({
+  groupId,
+  isOwner,
+  onRequestHandled,
+}: JoinRequestsProps) {
   const [requests, setRequests] = useState<GroupJoinRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [processingId, setProcessingId] = useState<number | null>(null);
@@ -25,16 +29,19 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
       // Listen for new join requests via WebSocket
       const handleNewRequest = (data: any) => {
         console.log("Received WebSocket message:", data);
-        if (data.type === "group_join_request" && data.data.group_id === groupId) {
+        if (
+          data.type === "group_join_request" &&
+          data.data.group_id === groupId
+        ) {
           // Show notification toast
           (globalThis as any).addToast({
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             title: "New Join Request",
             message: `${data.data.user?.firstName || "Someone"} wants to join ${data.data.group_name}`,
             type: "info",
             duration: 6000,
           });
-          
+
           // Reload requests when a new one arrives
           loadRequests();
         }
@@ -42,21 +49,27 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
 
       // Listen for when users are auto-accepted (e.g., when owner invites someone with a pending request)
       const handleAutoAccept = async () => {
-        console.log("joinRequestAutoAccepted event received! Refreshing join requests...");
+        console.log(
+          "joinRequestAutoAccepted event received! Refreshing join requests...",
+        );
         // Small delay to ensure backend has completed the deletion
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
         onRequestHandled?.();
         loadRequests();
       };
 
       on("group_join_request", handleNewRequest);
       window.addEventListener("joinRequestAutoAccepted", handleAutoAccept);
-      console.log("JoinRequests: Added event listener for joinRequestAutoAccepted");
+      console.log(
+        "JoinRequests: Added event listener for joinRequestAutoAccepted",
+      );
 
       return () => {
         off("group_join_request", handleNewRequest);
         window.removeEventListener("joinRequestAutoAccepted", handleAutoAccept);
-        console.log("JoinRequests: Removed event listener for joinRequestAutoAccepted");
+        console.log(
+          "JoinRequests: Removed event listener for joinRequestAutoAccepted",
+        );
       };
     }
   }, [groupId, isOwner, onRequestHandled]);
@@ -78,31 +91,34 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
     }
   };
 
-  const handleRequest = async (requestId: number, action: "approve" | "reject") => {
+  const handleRequest = async (
+    requestId: number,
+    action: "approve" | "reject",
+  ) => {
     console.log(`Handling request ${requestId} with action: ${action}`);
     setProcessingId(requestId);
     try {
       const result = await handleJoinRequest(requestId, action);
       console.log("Handle request result:", result);
-      
+
       if (result.success) {
         // Show success toast
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           message: result.message || `Request ${action}d successfully`,
           type: "success",
         });
-        
+
         // Refresh group data if callback provided
         onRequestHandled?.();
-        
+
         // Reload requests to ensure we're in sync with backend
         console.log("Reloading join requests...");
         await loadRequests();
         console.log("Join requests reloaded");
       } else {
         (globalThis as any).addToast({
-          id: Date.now().toString(),
+          id: crypto.randomUUID(),
           message: result.message || `Failed to ${action} request`,
           type: "error",
         });
@@ -110,7 +126,7 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
     } catch (error) {
       console.error(`Error ${action}ing request:`, error);
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         message: `Failed to ${action} request`,
         type: "error",
       });
@@ -148,7 +164,7 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
               <div className="w-10 h-10 rounded-full bg-foreground/10 flex items-center justify-center border border-border shrink-0 overflow-hidden">
                 {request.user?.avatar ? (
                   <img
-                    src={`${ API_URL }${request.user.avatar}`}
+                    src={`${API_URL}${request.user.avatar}`}
                     alt={`${request.user.firstName}'s avatar`}
                     className="w-full h-full object-cover"
                   />
@@ -161,7 +177,10 @@ export default function JoinRequests({ groupId, isOwner, onRequestHandled }: Joi
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">
                   {request.user?.firstName} {request.user?.lastName} (
-                  <span className="font-normal text-muted">@{request.user?.username}</span>)
+                  <span className="font-normal text-muted">
+                    @{request.user?.username}
+                  </span>
+                  )
                 </p>
                 <p className="text-xs text-muted">
                   {new Date(request.created_at).toLocaleDateString()}

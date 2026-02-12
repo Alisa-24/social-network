@@ -57,7 +57,7 @@ export default function GroupInvitations() {
 
     if (result.success) {
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: "Invitation Accepted",
         message: "You have joined the group!",
         type: "success",
@@ -66,7 +66,7 @@ export default function GroupInvitations() {
       loadInvitations(); // Refresh list
     } else {
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: "Error",
         message: result.message || "Failed to accept invitation",
         type: "error",
@@ -82,7 +82,7 @@ export default function GroupInvitations() {
 
     if (result.success) {
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: "Invitation Declined",
         message: "The invitation has been declined",
         type: "info",
@@ -91,7 +91,7 @@ export default function GroupInvitations() {
       loadInvitations(); // Refresh list
     } else {
       (globalThis as any).addToast({
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         title: "Error",
         message: result.message || "Failed to decline invitation",
         type: "error",

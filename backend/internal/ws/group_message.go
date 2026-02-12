@@ -25,6 +25,16 @@ func HandleGroupMessage(session *models.Session, msg map[string]interface{}) {
 		return
 	}
 
+	// Check if user is a member of the group
+	isMember, err := queries.IsUserGroupMember(int(groupID), session.UserID)
+	if err != nil {
+		return
+	}
+
+	if !isMember {
+		return
+	}
+
 	// Save to database
 	msgID, err := queries.CreateGroupChatMessage(int(groupID), session.UserID, content)
 	if err != nil {
