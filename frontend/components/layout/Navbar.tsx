@@ -18,6 +18,7 @@ import {
   MessagesSquare,
   ChevronLeft,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 
@@ -43,7 +44,7 @@ export default function Navbar({
   onLogout?: () => void;
 }) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(true);
@@ -87,6 +88,7 @@ export default function Navbar({
   const items: NavItem[] = useMemo(
     () => [
       { label: "Feed", href: "/feed", icon: House },
+      { label: "Search", href: "/search", icon: Search },
       { label: "Profile", href: "/profile/me", icon: CircleUserRound },
       { label: "Groups", href: "/groups", icon: UsersRound },
       { label: "Chat", href: "/chat", icon: MessagesSquare },
@@ -241,7 +243,7 @@ export default function Navbar({
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row">
+    <div className="h-screen bg-background text-foreground flex flex-col md:flex-row overflow-hidden">
       {/* Mobile Header */}
       <header className="md:hidden sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl px-4 py-3 flex items-center justify-between">
         <button
@@ -322,7 +324,7 @@ export default function Navbar({
         </div>
       )}
 
-      <main className="flex-1 min-w-0 h-full">{children}</main>
+      <main className="flex-1 min-w-0 flex flex-col">{children}</main>
     </div>
   );
 }
