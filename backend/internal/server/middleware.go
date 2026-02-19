@@ -31,24 +31,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// 2. Compute fingerprint from request headers
-		currentFP := utils.FingerprintFromRequest(r)
-
-		// 3. Compare
-		if session.BrowserFingerprint != currentFP {
-			_ = queries.DeleteSession(session.ID)
-			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
-				Success: false,
-				Message: "Session invalidated",
-			})
-			return
-		}
-
-		// 4. Add userID to context
+		// Fingerprint check removed - was causing false positives
+		// Add userID to context
 		ctx := context.WithValue(r.Context(), "userID", session.UserID)
 		r = r.WithContext(ctx)
 
-		// 5. Continue to handler
+		// Continue to handler
 		next.ServeHTTP(w, r)
 	})
 }

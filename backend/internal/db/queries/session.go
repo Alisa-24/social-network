@@ -31,7 +31,7 @@ func GetValidSessionByUserID(userID int) (string, error) {
 
 func CreateSession(userID int, browserFingerprint string) (string, error) {
 	sessionID := utils.GenerateSessionID()
-	expiresAt := time.Now().Add(30 * 24 * time.Hour)
+	expiresAt := time.Now().Add(365 * 24 * time.Hour) // 1 year
 
 	_, err := DB.Exec(`
 		INSERT INTO sessions (id, user_id, expires_at, browser_fingerprint, created_at)

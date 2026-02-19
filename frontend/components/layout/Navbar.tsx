@@ -5,18 +5,19 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
-  Home,
   LogOut,
   Menu,
-  MessageSquare,
-  Users,
   X,
-  User,
   Moon,
   Sun,
-  Zap,
   LayoutGrid,
   Settings,
+  House,
+  CircleUserRound,
+  UsersRound,
+  MessagesSquare,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 
@@ -48,7 +49,6 @@ export default function Navbar({
   const [isDark, setIsDark] = useState(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
-  // Theme and User Persistence
   useEffect(() => {
     setMounted(true);
     const storedTheme = localStorage.getItem("theme");
@@ -63,24 +63,18 @@ export default function Navbar({
       const userStr = localStorage.getItem("currentUser");
       if (userStr) {
         const user = JSON.parse(userStr);
-        console.log("Navbar loaded user from localStorage:", user);
         setCurrentUser(user);
       }
     } catch (error) {
       console.error("Error loading user data:", error);
     }
 
-    // Listen for user updates
     const handleUserUpdate = (event: any) => {
-      console.log("Navbar received userUpdated event:", event.detail);
       setCurrentUser(event.detail);
     };
 
     window.addEventListener("userUpdated", handleUserUpdate);
-
-    return () => {
-      window.removeEventListener("userUpdated", handleUserUpdate);
-    };
+    return () => window.removeEventListener("userUpdated", handleUserUpdate);
   }, []);
 
   const toggleTheme = () => {
@@ -92,10 +86,10 @@ export default function Navbar({
 
   const items: NavItem[] = useMemo(
     () => [
-      { label: "Feed", href: "/feed", icon: Home },
-      { label: "Profile", href: "/profile/me", icon: User },
-      { label: "Groups", href: "/groups", icon: Users },
-      { label: "Chat", href: "/chat", icon: MessageSquare },
+      { label: "Feed", href: "/feed", icon: House },
+      { label: "Profile", href: "/profile/me", icon: CircleUserRound },
+      { label: "Groups", href: "/groups", icon: UsersRound },
+      { label: "Chat", href: "/chat", icon: MessagesSquare },
       { label: "Notifications", href: "/notifications", icon: Bell },
       { label: "Settings", href: "/settings", icon: Settings },
     ],
@@ -113,9 +107,7 @@ export default function Navbar({
 
   const getUsername = () => {
     if (!currentUser) return "user";
-    // Handle both old (capitalized) and new (lowercase) field names
     const username = currentUser.username || (currentUser as any).Username || "";
-    console.log("getUsername called, currentUser:", currentUser, "username:", username);
     return username || "user";
   };
 
@@ -123,7 +115,7 @@ export default function Navbar({
     if (currentUser?.avatar) {
       return (
         <img
-          src={`${ API_URL }${currentUser.avatar}`}
+          src={`${API_URL}${currentUser.avatar}`}
           alt={getFullName()}
           className="h-8 w-8 rounded-full object-cover shrink-0"
         />
@@ -131,51 +123,41 @@ export default function Navbar({
     }
     return (
       <div className="h-8 w-8 rounded-full bg-foreground/10 flex items-center justify-center border border-border shrink-0">
-        <User className="h-4 w-4 text-foreground/60" />
+        <CircleUserRound className="h-4 w-4 text-foreground/60" />
       </div>
     );
   };
 
   const SidebarContent = (
     <aside
-      className={`h-full border-r border-border bg-background text-foreground flex flex-col transition-all duration-300 ease-in-out ${open ? "w-64" : "w-20"}`}
+      className={`h-full border-r border-border bg-background text-foreground flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${open ? "w-64" : "w-[72px]"}`}
     >
-      {/* 1. TOP SECTION: Branding (Nexus) */}
-      <div className="h-20 flex items-center px-4 shrink-0 overflow-hidden">
-        <div
-          className={`flex items-center gap-3 transition-all duration-300 ${!open ? "mx-auto" : ""}`}
-        >
-          <div className="flex items-center gap-2">
-            <LayoutGrid className="w-5 h-5 text-green-200" strokeWidth={2.5} />
-            {open && (
-              <h2 className="text-sm font-bold tracking-tight whitespace-nowrap">
-                SocialNet
-              </h2>
-            )}
-          </div>
-        </div>
-        {open && (
+      {/* TOP: Branding + collapse toggle */}
+      <div className={`h-16 flex items-center shrink-0 px-4 ${open ? "justify-between" : "justify-center"}`}>
+        {open ? (
+          <>
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="w-5 h-5 text-green-400" strokeWidth={2.5} />
+              <h2 className="text-sm font-bold tracking-tight whitespace-nowrap">SocialNet</h2>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="p-1.5 hover:bg-foreground/5 rounded-lg hidden md:flex items-center justify-center"
+            >
+              <ChevronLeft className="h-4 w-4 text-foreground/40" />
+            </button>
+          </>
+        ) : (
           <button
-            onClick={() => setOpen(false)}
-            className="ml-auto p-1.5 hover:bg-foreground/5 rounded-lg hidden md:block"
+            onClick={() => setOpen(true)}
+            className="p-2 hover:bg-foreground/5 rounded-lg hidden md:flex items-center justify-center"
           >
-            <X className="h-4 w-4 text-foreground/40" />
+            <ChevronRight className="h-5 w-5 text-foreground/40" />
           </button>
         )}
       </div>
 
-      {!open && (
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={() => setOpen(true)}
-            className="p-2 hover:bg-foreground/5 rounded-lg hidden md:block"
-          >
-            <Menu className="h-5 w-5 text-foreground/40" />
-          </button>
-        </div>
-      )}
-
-      {/* 2. MIDDLE SECTION: Navigation */}
+      {/* MIDDLE: Navigation */}
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto overflow-x-hidden">
         {items.map((it) => {
           const active =
@@ -185,76 +167,74 @@ export default function Navbar({
             <Link
               key={it.href}
               href={it.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all group ${
+              title={!open ? it.label : undefined}
+              className={`flex items-center rounded-xl px-3 py-2.5 transition-all group ${
                 active
-                  ? "bg-primary/10 text-primary border-r-2 border-primary"
+                  ? "bg-primary/10 text-primary"
                   : "text-foreground/60 hover:bg-foreground/5 hover:text-primary"
-              } ${!open ? "justify-center" : ""}`}
+              } ${open ? "gap-3" : "justify-center"}`}
             >
               <it.icon
                 className={`h-5 w-5 shrink-0 ${active ? "text-primary" : "group-hover:text-primary"}`}
               />
-              <div
-                className={`transition-all duration-300 ${open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}
-              >
+              {open && (
                 <span className="text-sm font-medium whitespace-nowrap">
                   {it.label}
                 </span>
-              </div>
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* 3. BOTTOM SECTION: User & Settings */}
+      {/* BOTTOM: User & Settings */}
       <div className="p-3 border-t border-border space-y-1 bg-background/50 backdrop-blur-sm">
+        {/* User info */}
         <div
-          className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-2 transition-all ${open ? "bg-surface" : "justify-center"}`}
+          className={`flex items-center px-3 py-2 rounded-lg mb-2 ${open ? "gap-3 bg-foreground/5" : "justify-center"}`}
         >
           <AvatarComponent />
-          <div
-            className={`transition-all duration-300 flex-1 min-w-0 ${open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}
-          >
-            <p className="text-sm font-semibold truncate">{getFullName()}</p>
-            <p className="text-[10px] text-foreground/40 truncate">@{getUsername()}</p>
-            <p className="text-[10px] text-primary truncate uppercase tracking-widest font-bold">
-              Active Now
-            </p>
-          </div>
+          {open && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold truncate">{getFullName()}</p>
+              <p className="text-[10px] text-foreground/40 truncate">@{getUsername()}</p>
+              <p className="text-[10px] text-primary truncate uppercase tracking-widest font-bold">
+                Active Now
+              </p>
+            </div>
+          )}
         </div>
 
+        {/* Theme toggle */}
         {mounted && (
           <button
             onClick={toggleTheme}
-            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-foreground/60 hover:bg-foreground/5 hover:text-primary transition-all ${!open ? "justify-center" : ""}`}
+            title={!open ? (isDark ? "Dark Mode" : "Light Mode") : undefined}
+            className={`w-full flex items-center rounded-xl px-3 py-2 text-foreground/60 hover:bg-foreground/5 hover:text-primary transition-all ${open ? "gap-3" : "justify-center"}`}
           >
             {isDark ? (
-              <Moon className="h-5 w-5" />
+              <Moon className="h-5 w-5 shrink-0" />
             ) : (
-              <Sun className="h-5 w-5" />
+              <Sun className="h-5 w-5 shrink-0" />
             )}
-            <div
-              className={`transition-all duration-300 ${open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}
-            >
+            {open && (
               <span className="text-sm font-medium whitespace-nowrap">
                 {isDark ? "Dark Mode" : "Light Mode"}
               </span>
-            </div>
+            )}
           </button>
         )}
 
+        {/* Logout */}
         <button
           onClick={onLogout}
-          className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all ${!open ? "justify-center" : ""}`}
+          title={!open ? "Logout" : undefined}
+          className={`w-full flex items-center rounded-xl px-3 py-2 text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-all ${open ? "gap-3" : "justify-center"}`}
         >
-          <LogOut className="h-5 w-5" />
-          <div
-            className={`transition-all duration-300 ${open ? "opacity-100 w-auto" : "opacity-0 w-0 overflow-hidden"}`}
-          >
-            <span className="text-sm font-medium whitespace-nowrap">
-              Logout
-            </span>
-          </div>
+          <LogOut className="h-5 w-5 shrink-0" />
+          {open && (
+            <span className="text-sm font-medium whitespace-nowrap">Logout</span>
+          )}
         </button>
       </div>
     </aside>
@@ -271,14 +251,10 @@ export default function Navbar({
           <Menu className="h-5 w-5" />
         </button>
         <div className="flex items-center gap-2">
-          <LayoutGrid className="w-5 h-5 text-green-200" strokeWidth={2.5} />
+          <LayoutGrid className="w-5 h-5 text-green-400" strokeWidth={2.5} />
           <h2 className="text-sm font-bold tracking-tight">SocialNet</h2>
         </div>
-
-        <Link
-          href="/notifications"
-          className="p-2 hover:bg-foreground/5 rounded-lg"
-        >
+        <Link href="/notifications" className="p-2 hover:bg-foreground/5 rounded-lg">
           <Bell className="h-5 w-5" />
         </Link>
       </header>
@@ -292,23 +268,16 @@ export default function Navbar({
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity"
+            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative w-70 h-full shadow-2xl animate-in slide-in-from-left duration-300">
-            {/* Direct Mobile Content */}
+          <div className="relative w-72 h-full shadow-2xl animate-in slide-in-from-left duration-300">
             <div className="h-full bg-background border-r border-border flex flex-col">
-              <div className="h-20 flex items-center px-6 justify-between border-b border-border">
+              <div className="h-16 flex items-center px-6 justify-between border-b border-border">
                 <div className="flex items-center gap-2">
-                  <LayoutGrid
-                    className="w-6 h-6 text-green-200"
-                    strokeWidth={2.5}
-                  />
-                  <h2 className="text-lg font-bold tracking-tight">
-                    SocialNet
-                  </h2>
+                  <LayoutGrid className="w-6 h-6 text-green-400" strokeWidth={2.5} />
+                  <h2 className="text-lg font-bold tracking-tight">SocialNet</h2>
                 </div>
-
                 <button onClick={() => setMobileOpen(false)} className="p-2">
                   <X className="h-5 w-5" />
                 </button>
@@ -330,24 +299,22 @@ export default function Navbar({
                   <AvatarComponent />
                   <div>
                     <p className="text-base font-bold">{getFullName()}</p>
+                    <p className="text-xs text-foreground/40">@{getUsername()}</p>
                   </div>
                 </div>
                 <button
                   onClick={toggleTheme}
                   className="w-full flex items-center gap-4 px-2 py-2 text-foreground/70 hover:text-foreground"
                 >
-                  {isDark ? (
-                    <Moon className="h-6 w-6" />
-                  ) : (
-                    <Sun className="h-6 w-6" />
-                  )}{" "}
-                  Theme
+                  {isDark ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
+                  <span>Theme</span>
                 </button>
                 <button
                   onClick={onLogout}
                   className="w-full flex items-center gap-4 px-2 py-2 text-destructive"
                 >
-                  <LogOut className="h-6 w-6" /> Logout
+                  <LogOut className="h-6 w-6" />
+                  <span>Logout</span>
                 </button>
               </div>
             </div>
@@ -355,7 +322,6 @@ export default function Navbar({
         </div>
       )}
 
-      {/* Page Content */}
       <main className="flex-1 min-w-0 h-full">{children}</main>
     </div>
   );

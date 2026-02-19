@@ -91,10 +91,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		Value:    sessionID,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   false, // Set to true in production with HTTPS
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   30 * 24 * 60 * 60, // 30 days in seconds
-		Expires:  time.Now().Add(30 * 24 * time.Hour),
+		Secure:   false,                // Set to true in production with HTTPS
+		SameSite: http.SameSiteLaxMode, // Lax works for localhost/same-origin
+		MaxAge:   365 * 24 * 60 * 60,   // 1 year
+		Expires:  time.Now().Add(365 * 24 * time.Hour),
 	})
 
 	// Respond WITHOUT sensitive fields
