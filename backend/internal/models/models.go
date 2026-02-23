@@ -226,6 +226,23 @@ type GroupChatMessage struct {
 	User      User      `json:"user,omitempty"` // For displaying author details
 }
 
+// UserSearchResult is returned by GET /api/users/search
+type UserSearchResult struct {
+	UserID    int    `json:"userId"`
+	Username  string `json:"username"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Nickname  string `json:"nickname,omitempty"`
+	Avatar    string `json:"avatar,omitempty"`
+	AboutMe   string `json:"aboutMe,omitempty"`
+	IsPublic  bool   `json:"isPublic"`
+}
+
+type SearchUsersResponse struct {
+	Success bool               `json:"success"`
+	Users   []UserSearchResult `json:"users"`
+}
+
 type UpdateUserRequest struct {
 	FirstName   string `json:"first_name"`
 	LastName    string `json:"last_name"`
