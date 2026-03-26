@@ -3,6 +3,7 @@ package server
 import (
 	"backend/internal/auth"
 	"backend/internal/groups"
+	"backend/internal/notifications"
 	"backend/internal/profile"
 	"backend/internal/users"
 	"backend/internal/ws"
@@ -63,6 +64,11 @@ func SetupRoutes(mux *http.ServeMux) {
 	// ===== POSTS =====
 	authHandle(mux, "POST /posts/{id}/like", groups.PostLike)
 	authHandle(mux, "DELETE /posts/{id}", groups.DeletePost)
+
+	// ===== NOTIFICATIONS =====
+	authHandle(mux, "GET /api/notifications", notifications.ListNotifications)
+	authHandle(mux, "POST /api/notifications/read", notifications.MarkNotificationRead)
+	authHandle(mux, "POST /api/notifications/read-all", notifications.MarkAllNotificationsRead)
 
 	// ===== FILES =====
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))
