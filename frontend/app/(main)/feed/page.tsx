@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User as UserIcon } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth/auth";
@@ -9,6 +9,9 @@ import { User, OnlineUser } from "@/lib/interfaces";
 import { API_URL } from "@/lib/config";
 import * as ws from "@/lib/ws/ws";
 import WebSocketErrorPage from "@/components/layout/WebSocketErrorPage";
+import CreatePost from "@/components/feed/CreatePost";
+import FeedPostCard from "@/components/feed/FeedPostCard";
+import { getFeedPosts, type FeedPost } from "@/lib/posts";
 
 export default function FeedPage() {
   const router = useRouter();
@@ -18,6 +21,20 @@ export default function FeedPage() {
   const [wsConnected, setWsConnected] = useState(false);
   const [showErrorPage, setShowErrorPage] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [posts, setPosts] = useState<FeedPost[]>([]);
+  const [postsLoading, setPostsLoading] = useState(false);
+
+  const loadPosts = useCallback(async () => {
+    setPostsLoading(true);
+    try {
+      const data = await getFeedPosts();
+      setPosts(data);
+    } catch {
+      // silently fail — posts section will just be empty
+    } finally {
+      setPostsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     async function checkAuth() {
@@ -39,6 +56,10 @@ export default function FeedPage() {
     }
     checkAuth();
   }, [router]);
+
+  useEffect(() => {
+    if (user) loadPosts();
+  }, [user, loadPosts]);
 
   useEffect(() => {
     if (!user) return;
@@ -116,13 +137,40 @@ export default function FeedPage() {
     <div className="max-w-7xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Feed */}
-        <div className="lg:col-span-2">
-          <div className="border border-border rounded-lg bg-background p-8 text-center">
-            <h2 className="text-2xl font-semibold text-foreground mb-4">
-              Welcome, {user.firstName}!
-            </h2>
-            <p className="text-foreground/60">Your feed will appear here.</p>
-          </div>
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          <CreatePost user={user} onPostCreated={loadPosts} />
+
+          {postsLoading ? (
+            <div className="text-center py-10 text-sm text-foreground/40">
+              Loading posts...
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="border border-border rounded-lg bg-background p-8 text-center">
+              <p className="text-foreground/60 text-sm">
+                No posts yet. Be the first to post something!
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {posts.map((post) => (
+                <FeedPostCard
+                  key={post.id}
+                  post={post}
+                  currentUserId={user.userId ?? 0}
+                  onDeleted={(id) =>
+                    setPosts((prev) => prev.filter((p) => p.id !== id))
+                  }
+                  onUpdated={(id, content, privacy) =>
+                    setPosts((prev) =>
+                      prev.map((p) =>
+                        p.id === id ? { ...p, content, privacy: privacy as FeedPost["privacy"] } : p
+                      )
+                    )
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Online Users Sidebar */}

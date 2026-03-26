@@ -3,6 +3,7 @@ package server
 import (
 	"backend/internal/auth"
 	"backend/internal/groups"
+	"backend/internal/posts"
 	"backend/internal/profile"
 	"backend/internal/users"
 	"backend/internal/ws"
@@ -61,6 +62,11 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "DELETE /api/groups/events/{id}", groups.DeleteAnEvent)
 
 	// ===== POSTS =====
+	authHandle(mux, "GET /api/posts", posts.GetFeedPosts)
+	authHandle(mux, "POST /api/posts", posts.CreatePost)
+	authHandle(mux, "PUT /api/posts/{id}", posts.UpdatePost)
+	authHandle(mux, "GET /api/posts/{id}/comments", posts.GetComments)
+	authHandle(mux, "POST /api/posts/{id}/comments", posts.AddComment)
 	authHandle(mux, "POST /posts/{id}/like", groups.PostLike)
 	authHandle(mux, "DELETE /posts/{id}", groups.DeletePost)
 
