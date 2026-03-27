@@ -47,25 +47,28 @@ func GetFeedPosts(w http.ResponseWriter, r *http.Request) {
 
 	for _, post := range allPosts {
 		// 3. Apply privacy rules in Go
-		switch post.Privacy {
-		case "public":
-			// visible to everyone — always include
+		// Authors always see their own posts regardless of privacy
+		if post.UserID != viewerID {
+			switch post.Privacy {
+			case "public":
+				// visible to everyone — always include
 
-		case "followers":
-			// visible only to accepted followers of the author
-			if !followingSet[post.UserID] {
+			case "followers":
+				// visible only to accepted followers of the author
+				if !followingSet[post.UserID] {
+					continue
+				}
+
+			case "selected":
+				// visible only to users in the post's selected-followers list
+				ok, _ := queries.IsInSelectedFollowers(post.ID, viewerID)
+				if !ok {
+					continue
+				}
+
+			default:
 				continue
 			}
-
-		case "selected":
-			// visible only to users in the post's selected-followers list
-			ok, _ := queries.IsInSelectedFollowers(post.ID, viewerID)
-			if !ok {
-				continue
-			}
-
-		default:
-			continue
 		}
 
 		// 4. Attach author, likes, comment count
@@ -119,10 +122,10 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	content := r.FormValue("content")
-	if len(content) == 0 || len(content) > 500 {
+	if len(content) > 500 {
 		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
 			Success: false,
-			Message: "Content must be between 1 and 500 characters",
+			Message: "Content must be at most 500 characters",
 		})
 		return
 	}
@@ -146,6 +149,14 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		imagePath = &path
+	}
+
+	if len(content) == 0 && imagePath == nil {
+		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{
+			Success: false,
+			Message: "Post must have content or an image",
+		})
+		return
 	}
 
 	postID, err := queries.CreatePost(userID, content, imagePath, privacy)

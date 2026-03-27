@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Image as ImageIcon, X, Globe, Users, Lock, ChevronDown } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { createPost } from "@/lib/posts";
@@ -26,6 +26,14 @@ export default function CreatePost({ user, onPostCreated }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [privacyOpen, setPrivacyOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [content]);
 
   const currentPrivacy = PRIVACY_OPTIONS.find((o) => o.value === privacy)!;
   const PrivacyIcon = currentPrivacy.icon;
@@ -45,7 +53,7 @@ export default function CreatePost({ user, onPostCreated }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!content.trim() && !image) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -82,12 +90,13 @@ export default function CreatePost({ user, onPostCreated }: Props) {
           {/* Input area */}
           <div className="flex-1 min-w-0">
             <textarea
+              ref={textareaRef}
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={`What's on your mind, ${user.firstName}?`}
               rows={2}
               maxLength={500}
-              className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-foreground/40 border-none focus:outline-none focus:ring-0"
+              className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-foreground/40 border-none focus:outline-none focus:ring-0 overflow-hidden"
             />
 
             {/* Image preview */}
@@ -176,7 +185,7 @@ export default function CreatePost({ user, onPostCreated }: Props) {
               {/* Post button */}
               <button
                 type="submit"
-                disabled={!content.trim() || submitting}
+                disabled={(!content.trim() && !image) || submitting}
                 className="bg-primary text-white px-5 py-1.5 rounded-full text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 {submitting ? "Posting..." : "Post"}

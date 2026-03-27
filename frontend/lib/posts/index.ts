@@ -87,7 +87,7 @@ export async function deletePost(postId: number): Promise<void> {
 
 export async function toggleLike(
   postId: number
-): Promise<{ liked: boolean; likes: number }> {
+): Promise<{ is_liked: boolean; likes: number }> {
   const res = await fetch(`${API_URL}/posts/${postId}/like`, {
     method: "POST",
     credentials: "include",
