@@ -29,6 +29,8 @@ export interface PostComment {
   content: string;
   created_at: string;
   author?: PostAuthor;
+  replies_count: number;
+  parent_id?: number | null;
 }
 
 export async function getPost(postId: number): Promise<FeedPost> {
@@ -125,6 +127,64 @@ export async function addComment(
   if (!res.ok) {
     const data = await res.json();
     throw new Error(data.message ?? "Failed to add comment");
+  }
+  return res.json();
+}
+
+export async function deleteComment(
+  postId: number,
+  commentId: number
+): Promise<void> {
+  const res = await fetch(`${API_URL}/api/posts/${postId}/comments/${commentId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Failed to delete comment");
+}
+
+export async function updateComment(
+  postId: number,
+  commentId: number,
+  content: string
+): Promise<void> {
+  const res = await fetch(`${API_URL}/api/posts/${postId}/comments/${commentId}`, {
+    method: "PUT",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message ?? "Failed to update comment");
+  }
+}
+
+export async function getReplies(
+  postId: number,
+  commentId: number
+): Promise<PostComment[]> {
+  const res = await fetch(`${API_URL}/api/posts/${postId}/comments/${commentId}/replies`, {
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Failed to fetch replies");
+  const data = await res.json();
+  return data.replies ?? [];
+}
+
+export async function addReply(
+  postId: number,
+  commentId: number,
+  content: string
+): Promise<{ reply_id: number }> {
+  const res = await fetch(`${API_URL}/api/posts/${postId}/comments/${commentId}/replies`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.message ?? "Failed to add reply");
   }
   return res.json();
 }

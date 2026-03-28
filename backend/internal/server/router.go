@@ -69,6 +69,10 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "PUT /api/posts/{id}", posts.UpdatePost)
 	authHandle(mux, "GET /api/posts/{id}/comments", posts.GetComments)
 	authHandle(mux, "POST /api/posts/{id}/comments", posts.AddComment)
+	authHandle(mux, "DELETE /api/posts/{id}/comments/{commentId}", posts.DeleteComment)
+	authHandle(mux, "PUT /api/posts/{id}/comments/{commentId}", posts.UpdateComment)
+	authHandle(mux, "GET /api/posts/{id}/comments/{commentId}/replies", posts.GetReplies)
+	authHandle(mux, "POST /api/posts/{id}/comments/{commentId}/replies", posts.AddReply)
 	authHandle(mux, "POST /posts/{id}/like", groups.PostLike)
 	authHandle(mux, "DELETE /posts/{id}", groups.DeletePost)
 
