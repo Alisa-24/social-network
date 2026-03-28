@@ -18,6 +18,19 @@ func GetFeedPosts(w http.ResponseWriter, r *http.Request) {
 
 	viewerID, _ := utils.GetUserIDFromContext(r)
 
+	limit := 5
+	offset := 0
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if v, err := strconv.Atoi(l); err == nil && v > 0 && v <= 20 {
+			limit = v
+		}
+	}
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if v, err := strconv.Atoi(o); err == nil && v >= 0 {
+			offset = v
+		}
+	}
+
 	// 1. Fetch all personal posts (no privacy filter in SQL)
 	allPosts, err := queries.GetAllPersonalPosts()
 	if err != nil {
@@ -93,9 +106,24 @@ func GetFeedPosts(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// Paginate the privacy-filtered result
+	total := len(result)
+	if offset >= total {
+		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+			"success":  true,
+			"posts":    []interface{}{},
+			"has_more": false,
+		})
+		return
+	}
+	end := offset + limit
+	if end > total {
+		end = total
+	}
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"success": true,
-		"posts":   result,
+		"success":  true,
+		"posts":    result[offset:end],
+		"has_more": end < total,
 	})
 }
 

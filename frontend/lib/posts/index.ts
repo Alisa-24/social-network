@@ -38,11 +38,11 @@ export async function getPost(postId: number): Promise<FeedPost> {
   return data.post;
 }
 
-export async function getFeedPosts(): Promise<FeedPost[]> {
-  const res = await fetch(`${API_URL}/api/posts`, { credentials: "include" });
+export async function getFeedPosts(offset = 0, limit = 5): Promise<{ posts: FeedPost[]; has_more: boolean }> {
+  const res = await fetch(`${API_URL}/api/posts?offset=${offset}&limit=${limit}`, { credentials: "include" });
   if (!res.ok) throw new Error("Failed to fetch posts");
   const data = await res.json();
-  return data.posts ?? [];
+  return { posts: data.posts ?? [], has_more: data.has_more ?? false };
 }
 
 export async function createPost(

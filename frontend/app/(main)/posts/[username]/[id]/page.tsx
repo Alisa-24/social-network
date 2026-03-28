@@ -31,7 +31,7 @@ function timeAgo(dateStr: string) {
 }
 
 export default function PostDetailPage() {
-  const { id } = useParams<{ id: string; username: string }>();
+  const { id, username } = useParams<{ id: string; username: string }>();
   const router = useRouter();
 
   const [currentUserId, setCurrentUserId] = useState(0);
@@ -56,6 +56,11 @@ export default function PostDetailPage() {
 
     getPost(Number(id))
       .then((p) => {
+        // Validate that the username in the URL matches the post's author
+        if (p.author?.username && p.author.username !== username) {
+          setNotFound(true);
+          return;
+        }
         setPost(p);
         setLikes(p.likes);
         setIsLiked(p.is_liked);
@@ -128,7 +133,7 @@ export default function PostDetailPage() {
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-foreground/40">
           <p className="text-lg font-semibold">Post not found</p>
-          <button onClick={() => router.back()} className="text-primary text-sm hover:underline">Go back</button>
+          <button onClick={() => router.push("/feed")} className="text-primary text-sm hover:underline">Go back</button>
         </div>
         <FeedSidebar currentUserId={currentUserId} />
       </div>
@@ -147,7 +152,7 @@ export default function PostDetailPage() {
 
           {/* Back */}
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/feed")}
             className="flex items-center gap-2 text-sm text-foreground/50 hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -211,21 +216,38 @@ export default function PostDetailPage() {
             </div>
 
             {/* Comment input */}
-            <div className="border-t border-border px-4 py-3">
+            <div className="border-t border-border px-4 py-3 space-y-1.5">
               <form onSubmit={handleAddComment} className="flex gap-2">
                 <input
                   ref={commentInputRef}
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Write a comment..."
-                  maxLength={300}
-                  className="flex-1 bg-background border border-border rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-primary/50 transition-colors"
+                  className={`flex-1 bg-background border rounded-full px-4 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none transition-colors ${
+                    newComment.length > 300
+                      ? "border-red-500 focus:border-red-500"
+                      : "border-border focus:border-primary/50"
+                  }`}
                 />
-                <button type="submit" disabled={!newComment.trim() || commentLoading}
+                <button type="submit" disabled={!newComment.trim() || newComment.length > 300 || commentLoading}
                   className="px-5 py-2 rounded-full bg-primary text-black text-sm font-bold disabled:opacity-40 hover:opacity-90 transition-opacity">
                   Post
                 </button>
               </form>
+              <div className="flex items-center justify-between px-1">
+                {newComment.length > 300 ? (
+                  <p className="text-xs text-red-500">Content must be at most 300 characters</p>
+                ) : newComment.length >= 250 ? (
+                  <p className="text-xs text-foreground/40">{300 - newComment.length} characters remaining</p>
+                ) : (
+                  <span />
+                )}
+                {newComment.length > 0 && (
+                  <p className={`text-xs ml-auto ${newComment.length > 300 ? "text-red-500" : "text-foreground/30"}`}>
+                    {newComment.length}/300
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

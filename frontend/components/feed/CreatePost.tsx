@@ -51,7 +51,7 @@ export default function CreatePost({ user, onPostCreated }: Props) {
   };
 
   const handleSubmit = async () => {
-    if ((!content.trim() && !image) || submitting) return;
+    if ((!content.trim() && !image) || content.length > 500 || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -82,10 +82,29 @@ export default function CreatePost({ user, onPostCreated }: Props) {
         onKeyDown={handleKeyDown}
         placeholder={`What's on your mind, ${user.firstName}?`}
         rows={3}
-        maxLength={500}
         disabled={submitting}
-        className="w-full bg-background text-foreground border border-border rounded-lg p-3 text-sm resize-none overflow-hidden focus:ring-1 focus:ring-primary outline-none placeholder:text-muted"
+        className={`w-full bg-background text-foreground border rounded-lg p-3 text-sm resize-none overflow-hidden outline-none placeholder:text-muted transition-colors ${
+          content.length > 500
+            ? "border-red-500 focus:ring-1 focus:ring-red-500"
+            : "border-border focus:ring-1 focus:ring-primary"
+        }`}
       />
+
+      {/* Char counter + error for post */}
+      {content.length > 0 && (
+        <div className="flex items-center justify-between mt-1 px-1">
+          {content.length > 500 ? (
+            <p className="text-xs text-red-500">Content must be at most 500 characters</p>
+          ) : content.length >= 400 ? (
+            <p className="text-xs text-foreground/40">{500 - content.length} characters remaining</p>
+          ) : (
+            <span />
+          )}
+          <p className={`text-xs ml-auto ${content.length > 500 ? "text-red-500" : "text-foreground/30"}`}>
+            {content.length}/500
+          </p>
+        </div>
+      )}
 
       {/* Image preview */}
       {preview && (
@@ -164,7 +183,7 @@ export default function CreatePost({ user, onPostCreated }: Props) {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={(!content.trim() && !image) || submitting}
+          disabled={(!content.trim() && !image) || content.length > 500 || submitting}
           className="ml-auto bg-primary hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed text-black px-6 py-2 rounded-lg font-bold text-sm transition-all flex items-center gap-2"
         >
           {submitting ? (
