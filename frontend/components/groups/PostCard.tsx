@@ -12,6 +12,7 @@ import { togglePostLike, deletePost } from "@/lib/groups/posts";
 import ConfirmModal from "@/components/ui/confirm";
 import { API_URL } from "@/lib/config";
 import { formatTimeAgo } from "@/lib/utils/format";
+import GroupCommentsSection from "@/components/groups/GroupCommentsSection";
 
 interface PostCardProps {
   post: GroupPost;
@@ -41,6 +42,8 @@ export default function PostCard({
   const [showMenu, setShowMenu] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(post.comments ?? 0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close menu on click outside or ESC key
@@ -330,14 +333,12 @@ export default function PostCard({
           </span>
         </button>
         <button
-          onClick={() => onComment?.(post.id)}
-          aria-label={`View ${post.comments ?? 0} comments`}
-          className="flex items-center gap-2 text-muted hover:text-primary transition-colors group"
+          onClick={() => setCommentsOpen(o => !o)}
+          aria-label={`${commentsCount} comments`}
+          className={`flex items-center gap-2 transition-colors group ${commentsOpen ? "text-primary" : "text-muted hover:text-primary"}`}
         >
           <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <span className="text-xs font-bold">
-            {(post.comments ?? 0) > 0 ? `${post.comments ?? 0}` : "0"}
-          </span>
+          <span className="text-xs font-bold">{commentsCount > 0 ? commentsCount : "0"}</span>
         </button>
         <button
           onClick={handleShare}
@@ -360,6 +361,16 @@ export default function PostCard({
         confirmVariant="danger"
         isLoading={isDeleting}
       />
+
+      {/* Inline comments section */}
+      {commentsOpen && currentUserId && (
+        <GroupCommentsSection
+          postId={post.id}
+          currentUserId={currentUserId}
+          onInitialLoad={(total) => setCommentsCount(total)}
+          onCountChange={(delta) => setCommentsCount(prev => Math.max(0, prev + delta))}
+        />
+      )}
     </article>
   );
 }

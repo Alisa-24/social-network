@@ -169,12 +169,14 @@ func GetGroupPosts(w http.ResponseWriter, r *http.Request) {
 			isLiked, _ = queries.IsPostLikedByUser(post.ID, userID)
 		}
 
+		commentsCount, _ := queries.GetCommentCount(post.ID)
+
 		postsWithAuthors = append(postsWithAuthors, PostWithAuthor{
 			Post:     post,
 			Author:   &user,
 			Likes:    likesCount,
 			IsLiked:  isLiked,
-			Comments: 0, // TODO: Implement comments count
+			Comments: commentsCount,
 		})
 	}
 
