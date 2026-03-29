@@ -63,7 +63,7 @@ export default function FeedSidebar({ currentUserId }: { currentUserId: number }
   const onlineFriends = allOnlineUsers.filter((u) => followingIDs.has(u.userId));
 
   return (
-    <aside className="hidden lg:flex flex-col w-72 shrink-0 border-l border-border overflow-y-auto p-4 space-y-8 bg-background">
+    <aside className="hidden lg:flex flex-col w-96 shrink-0 border-l border-border overflow-y-auto p-6 space-y-8 bg-background">
 
       {/* Online Friends */}
       <div>

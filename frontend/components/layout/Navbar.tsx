@@ -132,7 +132,7 @@ export default function Navbar({
 
   const SidebarContent = (
     <aside
-      className={`h-full border-r border-border bg-background text-foreground flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${open ? "w-64" : "w-[72px]"}`}
+      className={`h-full border-r border-border bg-background text-foreground flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${open ? "w-72" : "w-[72px]"}`}
     >
       {/* TOP: Branding + collapse toggle */}
       <div className={`h-16 flex items-center shrink-0 px-4 ${open ? "justify-between" : "justify-center"}`}>
