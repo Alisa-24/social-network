@@ -178,7 +178,7 @@ export default function FeedCommentsPanel({ post, currentUserId, onClose }: Prop
   const authorName = post.author ? `${post.author.firstName} ${post.author.lastName}` : "Post";
 
   return (
-    <div className="w-[440px] shrink-0 flex flex-col border-l border-border bg-background h-full">
+    <div className="w-[440px] shrink-0 flex flex-col border-l border-border bg-background h-full animate-in slide-in-from-right duration-300">
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="min-w-0">

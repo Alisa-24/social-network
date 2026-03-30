@@ -182,7 +182,7 @@ export default function GroupCommentsSection({ postId, currentUserId, onCountCha
   };
 
   return (
-    <div className="border-t border-border">
+    <div className="border-t border-border animate-in slide-in-from-top duration-200">
       {/* Comments list */}
       <div className="max-h-96 overflow-y-auto">
         {loading ? (

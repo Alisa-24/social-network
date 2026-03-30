@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Heart, MessageSquare, Share2, Trash2, Pencil,
-  Globe, Users, Lock, X, MoreHorizontal, ChevronDown, AlertTriangle,
+  Globe, Users, Lock, X, MoreHorizontal, AlertTriangle,
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
 import { toggleLike, deletePost, updatePost, type FeedPost } from "@/lib/posts";
@@ -18,12 +18,6 @@ interface Props {
   onToggleComments: () => void;
   onNavBlock?: (blocked: boolean) => void;
 }
-
-const PRIVACY_OPTIONS = [
-  { value: "public",    label: "Public",        icon: Globe  },
-  { value: "followers", label: "Private",       icon: Users  },
-  { value: "selected",  label: "Close Friends", icon: Lock   },
-];
 
 const PRIVACY_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
   public:    { label: "Public",        icon: <Globe  className="w-3 h-3" /> },
@@ -73,11 +67,7 @@ export default function FeedPostFull({
 
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
-  const [editPrivacy, setEditPrivacy] = useState<"public" | "followers" | "selected">(post.privacy);
-  const [editPrivacyOpen, setEditPrivacyOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
-  const privacyBtnRef = useRef<HTMLButtonElement>(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -87,24 +77,6 @@ export default function FeedPostFull({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-
-  useEffect(() => {
-    if (!editPrivacyOpen) return;
-    const handler = (e: MouseEvent) => {
-      if (privacyBtnRef.current && !privacyBtnRef.current.contains(e.target as Node))
-        setEditPrivacyOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [editPrivacyOpen]);
-
-  const openPrivacyDropdown = () => {
-    if (privacyBtnRef.current) {
-      const r = privacyBtnRef.current.getBoundingClientRect();
-      setDropdownPos({ top: r.bottom + 6, left: r.left });
-    }
-    setEditPrivacyOpen((o) => !o);
-  };
 
   const handleLike = async () => {
     if (likeLoading) return;
@@ -128,8 +100,8 @@ export default function FeedPostFull({
     if (!editContent.trim()) return;
     setEditLoading(true);
     try {
-      await updatePost(post.id, editContent.trim(), editPrivacy);
-      onUpdated(post.id, editContent.trim(), editPrivacy);
+      await updatePost(post.id, editContent.trim(), post.privacy);
+      onUpdated(post.id, editContent.trim(), post.privacy);
       setEditing(false); onNavBlock?.(false);
     } catch { } finally { setEditLoading(false); }
   };
@@ -143,8 +115,6 @@ export default function FeedPostFull({
   const author = post.author;
   const authorName = author ? `${author.firstName} ${author.lastName}` : "Unknown";
   const privacy = PRIVACY_LABELS[post.privacy] ?? PRIVACY_LABELS.public;
-  const currentEditPrivacy = PRIVACY_OPTIONS.find((o) => o.value === editPrivacy)!;
-  const EditPrivacyIcon = currentEditPrivacy.icon;
 
   return (
     <>
@@ -220,19 +190,9 @@ export default function FeedPostFull({
                   {editContent.length}/500
                 </span>
               </div>
-              <button
-                ref={privacyBtnRef}
-                type="button"
-                onClick={openPrivacyDropdown}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-foreground/5 border border-border text-sm text-foreground/70 hover:bg-foreground/10 transition-colors"
-              >
-                <EditPrivacyIcon className="w-4 h-4" />
-                <span>{currentEditPrivacy.label}</span>
-                <ChevronDown className="w-3.5 h-3.5 ml-1 text-foreground/40" />
-              </button>
               <div className="flex justify-end gap-2 pt-1">
                 <button
-                  onClick={() => { setEditContent(post.content); setEditPrivacy(post.privacy); setEditing(false); onNavBlock?.(false); }}
+                  onClick={() => { setEditContent(post.content); setEditing(false); onNavBlock?.(false); }}
                   className="px-4 py-2 rounded-lg text-sm text-foreground/60 hover:bg-foreground/5 transition-colors"
                 >
                   Cancel
@@ -314,30 +274,6 @@ export default function FeedPostFull({
           </div>
         )}
       </div>
-
-      {/* ── Privacy dropdown portal ── */}
-      {editPrivacyOpen && typeof window !== "undefined" && createPortal(
-        <div
-          style={{ position: "fixed", top: dropdownPos.top, left: dropdownPos.left, minWidth: 176, zIndex: 9999 }}
-          className="bg-background border border-border rounded-xl shadow-2xl overflow-hidden py-1"
-        >
-          {PRIVACY_OPTIONS.map((opt) => {
-            const Icon = opt.icon;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => { setEditPrivacy(opt.value as typeof editPrivacy); setEditPrivacyOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-foreground/5 ${
-                  editPrivacy === opt.value ? "text-primary font-medium" : "text-foreground/70"
-                }`}
-              >
-                <Icon className="w-4 h-4" /> {opt.label}
-              </button>
-            );
-          })}
-        </div>,
-        document.body
-      )}
 
       {/* ── Delete modal (portal to escape transformed ancestor) ── */}
       {showDeleteModal && typeof window !== "undefined" && createPortal(
