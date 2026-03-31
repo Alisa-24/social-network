@@ -5,9 +5,11 @@ import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
 	"backend/internal/utils"
+	"backend/internal/ws"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -175,6 +177,13 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// If account switched from private → public, auto-accept all pending requests
+	if isPublic && !currentUser.IsPublic {
+		if err := queries.AcceptAllPendingFollowers(userID); err != nil {
+			println("AcceptAllPendingFollowers failed:", err.Error())
+		}
+	}
+
 	println("Profile updated successfully for user:", userID)
 
 	// Update password if provided
@@ -214,6 +223,20 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	// Broadcast privacy change to all connected users in real-time
+	go func() {
+		notification := models.NotificationMessage{
+			Type: "privacy_changed",
+			Data: map[string]interface{}{
+				"userId":   updatedUser.ID,
+				"username": updatedUser.Username,
+				"isPublic": updatedUser.IsPublic,
+			},
+			Timestamp: time.Now(),
+		}
+		ws.BroadcastToAll(notification)
+	}()
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,

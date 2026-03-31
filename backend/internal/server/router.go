@@ -2,6 +2,7 @@ package server
 
 import (
 	"backend/internal/auth"
+	"backend/internal/follow"
 	"backend/internal/groups"
 	"backend/internal/posts"
 	"backend/internal/profile"
@@ -25,8 +26,16 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "DELETE /api/profile", profile.ProfileHandler)
 
 	// ===== USERS =====
+	// Exact routes must come before the wildcard {username} route
 	authHandle(mux, "GET /api/users/search", users.SearchUsersHandler)
 	authHandle(mux, "GET /api/users/following", users.GetFollowingHandler)
+	authHandle(mux, "GET /api/users/{username}", users.GetPublicProfileHandler)
+	authHandle(mux, "GET /api/users/{username}/followers", follow.GetFollowersHandler)
+	authHandle(mux, "GET /api/users/{username}/following", follow.GetFollowingListHandler)
+
+	// ===== FOLLOW =====
+	authHandle(mux, "POST /api/follow/{username}", follow.FollowHandler)
+	authHandle(mux, "DELETE /api/follow/{username}", follow.UnfollowHandler)
 
 	// ===== GROUPS =====
 	// List & Create

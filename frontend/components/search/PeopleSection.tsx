@@ -7,12 +7,14 @@ interface PeopleSectionProps {
   query: string;
   loadingUsers: boolean;
   userResults: UserSearchResult[];
+  currentUserId?: number;
 }
 
 export default function PeopleSection({
   query,
   loadingUsers,
   userResults,
+  currentUserId,
 }: PeopleSectionProps) {
   return (
     <section>
@@ -38,7 +40,7 @@ export default function PeopleSection({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {userResults.map((u) => (
-            <UserCard key={u.userId} user={u} />
+            <UserCard key={u.userId} user={u} currentUserId={currentUserId} />
           ))}
         </div>
       )}

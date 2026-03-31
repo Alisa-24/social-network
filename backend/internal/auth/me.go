@@ -70,6 +70,7 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 			Nickname:    user.Nickname,
 			Avatar:      user.Avatar,
 			AboutMe:     user.AboutMe,
+			IsPublic:    user.IsPublic,
 			CreatedAt:   user.CreatedAt,
 		},
 	})

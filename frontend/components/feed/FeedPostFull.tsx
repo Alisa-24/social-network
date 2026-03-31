@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import {
   Heart, MessageSquare, Share2, Trash2, Pencil,
   Globe, Users, Lock, X, MoreHorizontal, AlertTriangle,
@@ -40,6 +41,7 @@ function timeAgo(dateStr: string) {
 export default function FeedPostFull({
   post, currentUserId, commentsOpen, onDeleted, onUpdated, onToggleComments, onNavBlock,
 }: Props) {
+  const router = useRouter();
   const isOwner = Number(post.user_id) === Number(currentUserId);
 
   const [likes, setLikes] = useState(post.likes);
@@ -124,16 +126,24 @@ export default function FeedPostFull({
         {/* Header */}
         <div className="shrink-0 p-5 flex items-center justify-between border-b border-border">
           <div className="flex items-center gap-3">
-            {author?.avatar ? (
-              <img src={`${API_URL}${author.avatar}`} alt={authorName}
-                className="w-11 h-11 rounded-full object-cover" />
-            ) : (
-              <div className="w-11 h-11 rounded-full bg-foreground/10 flex items-center justify-center border border-border font-semibold text-foreground/60">
-                {authorName[0]}
-              </div>
-            )}
+            <button
+              onClick={() => author?.username && router.push(`/profile/${author.username}`)}
+              className="shrink-0 focus:outline-none"
+            >
+              {author?.avatar ? (
+                <img src={`${API_URL}${author.avatar}`} alt={authorName}
+                  className="w-11 h-11 rounded-full object-cover hover:opacity-80 transition-opacity cursor-pointer" />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-foreground/10 flex items-center justify-center border border-border font-semibold text-foreground/60 hover:opacity-80 transition-opacity cursor-pointer">
+                  {authorName[0]}
+                </div>
+              )}
+            </button>
             <div>
-              <p className="font-semibold text-foreground">{authorName}</p>
+              <p
+                className="font-semibold text-foreground hover:text-primary cursor-pointer transition-colors"
+                onClick={() => author?.username && router.push(`/profile/${author.username}`)}
+              >{authorName}</p>
               <div className="flex items-center gap-1.5 text-[11px] text-foreground/40 font-semibold uppercase tracking-wider mt-0.5">
                 <span>{timeAgo(post.created_at)}</span>
                 <span>·</span>

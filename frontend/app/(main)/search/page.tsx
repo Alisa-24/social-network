@@ -112,6 +112,7 @@ export default function SearchPage() {
   const [suggestedUsers, setSuggestedUsers] = useState<UserSearchResult[]>([]);
   const [userResults, setUserResults] = useState<UserSearchResult[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<number | undefined>();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* ── auth guard ── */
@@ -120,6 +121,7 @@ export default function SearchPage() {
       try {
         const u = await getCurrentUser();
         if (!u) router.push("/login");
+        else setCurrentUserId(u.userId);
       } catch (e) {
         if (e instanceof ServerError) router.push("/error/500");
         else router.push("/login");
@@ -267,6 +269,7 @@ export default function SearchPage() {
             query={query}
             loadingUsers={loadingUsers}
             userResults={userResults}
+            currentUserId={currentUserId}
           />
         )}
 
