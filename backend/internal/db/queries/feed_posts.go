@@ -85,6 +85,41 @@ func CreatePost(userID int, content string, imagePath *string, privacy string) (
 	return result.LastInsertId()
 }
 
+// GetPostsByUserID fetches all non-group posts by a specific user, newest first.
+// Privacy filtering is handled in the application layer.
+func GetPostsByUserID(authorID int) ([]models.Post, error) {
+	rows, err := DB.Query(`
+		SELECT
+			p.id,
+			p.user_id,
+			p.group_id,
+			p.content,
+			COALESCE(p.image_path, '') AS image_path,
+			COALESCE(p.privacy, 'public') AS privacy,
+			p.created_at
+		FROM posts p
+		WHERE p.user_id = ? AND p.group_id IS NULL
+		ORDER BY p.created_at DESC
+	`, authorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var p models.Post
+		if err := rows.Scan(
+			&p.ID, &p.UserID, &p.GroupID,
+			&p.Content, &p.ImagePath, &p.Privacy, &p.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, rows.Err()
+}
+
 // UpdatePost updates content and privacy of a post.
 func UpdatePost(postID int64, content string, privacy string) error {
 	_, err := DB.Exec(

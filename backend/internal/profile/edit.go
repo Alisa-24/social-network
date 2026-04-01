@@ -5,9 +5,11 @@ import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
 	"backend/internal/utils"
+	"backend/internal/ws"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -214,6 +216,20 @@ func EditProfile(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	// Broadcast privacy change to all connected users in real-time
+	go func() {
+		notification := models.NotificationMessage{
+			Type: "privacy_changed",
+			Data: map[string]interface{}{
+				"userId":   updatedUser.ID,
+				"username": updatedUser.Username,
+				"isPublic": updatedUser.IsPublic,
+			},
+			Timestamp: time.Now(),
+		}
+		ws.BroadcastToAll(notification)
+	}()
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,

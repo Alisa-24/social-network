@@ -20,8 +20,9 @@ func GetUserByEmail(email string) (models.User, error) {
 			date_of_birth, 
 			COALESCE(nickname, '') as nickname, 
 			COALESCE(avatar, '') as avatar, 
-			COALESCE(about_me, '') as about_me, 
-			is_public, 
+			COALESCE(about_me, '') as about_me,
+			is_public,
+			is_verified,
 			created_at
 		FROM users WHERE LOWER(email) = LOWER(?)`, email).Scan(
 		&user.ID,
@@ -35,6 +36,7 @@ func GetUserByEmail(email string) (models.User, error) {
 		&user.Avatar,
 		&user.AboutMe,
 		&user.IsPublic,
+		&user.IsVerified,
 		&user.CreatedAt,
 	)
 	return user, err
@@ -53,8 +55,9 @@ func GetUserByIdentifier(identifier string) (models.User, error) {
 			date_of_birth, 
 			COALESCE(nickname, '') as nickname, 
 			COALESCE(avatar, '') as avatar, 
-			COALESCE(about_me, '') as about_me, 
-			is_public, 
+			COALESCE(about_me, '') as about_me,
+			is_public,
+			is_verified,
 			created_at
 		FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)`, identifier, identifier).Scan(
 		&user.ID,
@@ -68,6 +71,7 @@ func GetUserByIdentifier(identifier string) (models.User, error) {
 		&user.Avatar,
 		&user.AboutMe,
 		&user.IsPublic,
+		&user.IsVerified,
 		&user.CreatedAt,
 	)
 	return user, err
@@ -133,8 +137,9 @@ func GetUserByID(id int) (models.User, error) {
 			date_of_birth, 
 			COALESCE(nickname, '') as nickname, 
 			COALESCE(avatar, '') as avatar, 
-			COALESCE(about_me, '') as about_me, 
-			is_public, 
+			COALESCE(about_me, '') as about_me,
+			is_public,
+			is_verified,
 			created_at
 		FROM users WHERE id = ?`, id).Scan(
 		&user.ID,
@@ -148,6 +153,7 @@ func GetUserByID(id int) (models.User, error) {
 		&user.Avatar,
 		&user.AboutMe,
 		&user.IsPublic,
+		&user.IsVerified,
 		&user.CreatedAt,
 	)
 	return user, err
@@ -230,5 +236,10 @@ func UpdateUser(userID int, p models.UpdateUserRequest) error {
 
 func UpdateUserPassword(userID int, passwordHash string) error {
 	_, err := DB.Exec(`UPDATE users SET password_hash = ? WHERE id = ?`, passwordHash, userID)
+	return err
+}
+
+func UpdateUserPrivacy(userID int, isPublic bool) error {
+	_, err := DB.Exec(`UPDATE users SET is_public = ? WHERE id = ?`, isPublic, userID)
 	return err
 }

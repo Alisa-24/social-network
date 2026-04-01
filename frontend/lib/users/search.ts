@@ -9,6 +9,8 @@ export interface UserSearchResult {
   avatar?: string;
   aboutMe?: string;
   isPublic: boolean;
+  followStatus: "none" | "pending" | "accepted";
+  followsMe: boolean;
 }
 
 export interface SearchUsersResponse {

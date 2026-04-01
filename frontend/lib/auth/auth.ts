@@ -217,6 +217,12 @@ function StoreUserInLocalStorage(user: User) {
   localStorage.setItem("currentUser", JSON.stringify(user));
 }
 
+export function invalidateUserCache(): void {
+  currentUserCache = undefined;
+  currentUserPromise = null;
+  cacheTimestamp = 0;
+}
+
 export function getUserFromLocalStorage(): User | null {
   try {
     const userStr = localStorage.getItem("currentUser");

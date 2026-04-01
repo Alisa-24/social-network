@@ -2,7 +2,9 @@ package server
 
 import (
 	"backend/internal/auth"
+	"backend/internal/follow"
 	"backend/internal/groups"
+	"backend/internal/otp"
 	"backend/internal/posts"
 	"backend/internal/profile"
 	"backend/internal/users"
@@ -21,12 +23,25 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "POST /api/auth/logout", auth.LogoutHandler)
 
 	// ===== PROFILE =====
+	authHandle(mux, "PATCH /api/profile/privacy", profile.TogglePrivacyHandler)
 	authHandle(mux, "PUT /api/profile", profile.ProfileHandler)
 	authHandle(mux, "DELETE /api/profile", profile.ProfileHandler)
 
 	// ===== USERS =====
+	// Exact routes must come before the wildcard {username} route
 	authHandle(mux, "GET /api/users/search", users.SearchUsersHandler)
 	authHandle(mux, "GET /api/users/following", users.GetFollowingHandler)
+	authHandle(mux, "GET /api/users/{username}", users.GetPublicProfileHandler)
+	authHandle(mux, "GET /api/users/{username}/followers", follow.GetFollowersHandler)
+	authHandle(mux, "GET /api/users/{username}/following", follow.GetFollowingListHandler)
+	authHandle(mux, "GET /api/users/{username}/posts", posts.GetUserPostsHandler)
+	authHandle(mux, "GET /api/users/{username}/stats", users.GetUserStatsHandler)
+
+	// ===== FOLLOW =====
+	authHandle(mux, "POST /api/follow/{username}", follow.FollowHandler)
+	authHandle(mux, "DELETE /api/follow/{username}", follow.UnfollowHandler)
+	authHandle(mux, "GET /api/follow/requests", follow.GetFollowRequestsHandler)
+	authHandle(mux, "POST /api/follow/requests/handle", follow.HandleFollowRequestHandler)
 
 	// ===== GROUPS =====
 	// List & Create
@@ -61,6 +76,10 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "POST /api/groups/events/respond", groups.RespondToEvent)
 	authHandle(mux, "GET /api/groups/events/responses", groups.GetEventResponsesHandler)
 	authHandle(mux, "DELETE /api/groups/events/{id}", groups.DeleteAnEvent)
+
+	// ===== OTP VERIFICATION =====
+	authHandle(mux, "POST /api/otp/send", otp.SendOTPHandler)
+	authHandle(mux, "POST /api/otp/verify", otp.VerifyOTPHandler)
 
 	// ===== POSTS =====
 	authHandle(mux, "GET /api/posts", posts.GetFeedPosts)

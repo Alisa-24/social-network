@@ -40,6 +40,13 @@ export async function getPost(postId: number): Promise<FeedPost> {
   return data.post;
 }
 
+export async function getUserPosts(username: string, offset = 0, limit = 10): Promise<{ posts: FeedPost[]; has_more: boolean }> {
+  const res = await fetch(`${API_URL}/api/users/${username}/posts?offset=${offset}&limit=${limit}`, { credentials: "include" });
+  if (!res.ok) throw new Error("Failed to fetch user posts");
+  const data = await res.json();
+  return { posts: data.posts ?? [], has_more: data.has_more ?? false };
+}
+
 export async function getFeedPosts(offset = 0, limit = 5): Promise<{ posts: FeedPost[]; has_more: boolean }> {
   const res = await fetch(`${API_URL}/api/posts?offset=${offset}&limit=${limit}`, { credentials: "include" });
   if (!res.ok) throw new Error("Failed to fetch posts");

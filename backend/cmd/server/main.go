@@ -1,17 +1,42 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"backend/internal/db"
 	"backend/internal/server"
 )
 
+// loadEnv reads a .env file and sets environment variables.
+func loadEnv(path string) {
+	f, err := os.Open(path)
+	if err != nil {
+		return
+	}
+	defer f.Close()
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		parts := strings.SplitN(line, "=", 2)
+		if len(parts) == 2 {
+			os.Setenv(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
+		}
+	}
+}
+
 func main() {
+	// Load environment variables
+	loadEnv(".env")
+
 	// Initialize database
 	if err := db.InitDB("./social-network.db"); err != nil {
 		panic(fmt.Sprintf("Failed to initialize database: %v", err))

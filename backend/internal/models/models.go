@@ -16,6 +16,7 @@ type User struct {
 	Avatar      string    `json:"avatar"`
 	AboutMe     string    `json:"aboutMe"`
 	IsPublic    bool      `json:"isPublic"`
+	IsVerified  bool      `json:"isVerified"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
@@ -63,6 +64,8 @@ type UserPublic struct {
 	Nickname    string    `json:"nickname,omitempty"`
 	Avatar      string    `json:"avatar,omitempty"`
 	AboutMe     string    `json:"aboutMe,omitempty"`
+	IsPublic    bool      `json:"isPublic"`
+	IsVerified  bool      `json:"isVerified"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
@@ -237,16 +240,19 @@ type Comment struct {
 	Author       *User  `json:"author,omitempty"`
 }
 
-// UserSearchResult is returned by GET /api/users/search
+// UserSearchResult is returned by GET /api/users/search and follow list endpoints.
+// FollowStatus is "none" | "pending" | "accepted" from the perspective of the requesting user.
 type UserSearchResult struct {
-	UserID    int    `json:"userId"`
-	Username  string `json:"username"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Nickname  string `json:"nickname,omitempty"`
-	Avatar    string `json:"avatar,omitempty"`
-	AboutMe   string `json:"aboutMe,omitempty"`
-	IsPublic  bool   `json:"isPublic"`
+	UserID       int    `json:"userId"`
+	Username     string `json:"username"`
+	FirstName    string `json:"firstName"`
+	LastName     string `json:"lastName"`
+	Nickname     string `json:"nickname,omitempty"`
+	Avatar       string `json:"avatar,omitempty"`
+	AboutMe      string `json:"aboutMe,omitempty"`
+	IsPublic     bool   `json:"isPublic"`
+	FollowStatus string `json:"followStatus"` // "none", "pending", "accepted"
+	FollowsMe    bool   `json:"followsMe"`    // true if this user follows the viewer
 }
 
 type SearchUsersResponse struct {

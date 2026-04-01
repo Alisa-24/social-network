@@ -8,6 +8,119 @@ import (
 	"strconv"
 )
 
+// GetUserPostsHandler handles GET /api/users/{username}/posts
+// Returns privacy-filtered, paginated posts for a specific user.
+func GetUserPostsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	viewerID, _ := utils.GetUserIDFromContext(r)
+	username := r.PathValue("username")
+
+	target, err := queries.GetUserByIdentifier(username)
+	if err != nil {
+		utils.RespondJSON(w, http.StatusNotFound, models.GenericResponse{
+			Success: false, Message: "User not found",
+		})
+		return
+	}
+
+	limit := 10
+	offset := 0
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if v, err2 := strconv.Atoi(l); err2 == nil && v > 0 && v <= 20 {
+			limit = v
+		}
+	}
+	if o := r.URL.Query().Get("offset"); o != "" {
+		if v, err2 := strconv.Atoi(o); err2 == nil && v >= 0 {
+			offset = v
+		}
+	}
+
+	isOwner := viewerID == target.ID
+	followStatus, _ := queries.GetFollowStatus(viewerID, target.ID)
+	isFollower := followStatus == "accepted"
+
+	allPosts, err := queries.GetPostsByUserID(target.ID)
+	if err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+			Success: false, Message: "Failed to fetch posts",
+		})
+		return
+	}
+
+	author, err := queries.GetUserByID(target.ID)
+	if err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+			Success: false, Message: "Failed to fetch author",
+		})
+		return
+	}
+
+	type PostWithMeta struct {
+		models.Post
+		Author        *models.User `json:"author"`
+		Likes         int          `json:"likes"`
+		IsLiked       bool         `json:"is_liked"`
+		CommentsCount int          `json:"comments_count"`
+	}
+
+	visible := make([]PostWithMeta, 0)
+	for _, post := range allPosts {
+		if !isOwner {
+			switch post.Privacy {
+			case "public":
+				// visible to all
+			case "followers":
+				if !isFollower {
+					continue
+				}
+			case "selected":
+				ok, _ := queries.IsInSelectedFollowers(post.ID, viewerID)
+				if !ok {
+					continue
+				}
+			default:
+				continue
+			}
+		}
+
+		likesCount, _ := queries.GetPostLikesCount(post.ID)
+		isLiked := false
+		if viewerID != 0 {
+			isLiked, _ = queries.IsPostLikedByUser(post.ID, viewerID)
+		}
+		commentsCount, _ := queries.GetCommentCount(post.ID)
+
+		visible = append(visible, PostWithMeta{
+			Post:          post,
+			Author:        &author,
+			Likes:         likesCount,
+			IsLiked:       isLiked,
+			CommentsCount: commentsCount,
+		})
+	}
+
+	total := len(visible)
+	if offset >= total {
+		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+			"success":  true,
+			"posts":    []interface{}{},
+			"has_more": false,
+		})
+		return
+	}
+	end := offset + limit
+	if end > total {
+		end = total
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		"success":  true,
+		"posts":    visible[offset:end],
+		"has_more": end < total,
+	})
+}
+
 // GetFeedPosts handles GET /api/posts
 // Privacy is enforced in Go after fetching all posts:
 //   - public    → everyone sees it

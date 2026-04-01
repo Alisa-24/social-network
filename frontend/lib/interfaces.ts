@@ -9,6 +9,7 @@ export interface User {
   avatar?: string;
   aboutMe?: string;
   isPublic?: boolean;
+  isVerified?: boolean;
   createdAt: string;
 }
 

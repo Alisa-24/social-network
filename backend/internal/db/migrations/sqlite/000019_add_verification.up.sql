@@ -1,0 +1,9 @@
+ALTER TABLE users ADD COLUMN is_verified BOOLEAN NOT NULL DEFAULT 0;
+
+CREATE TABLE otp_codes (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id  INTEGER NOT NULL,
+    code     TEXT    NOT NULL,
+    expires_at DATETIME NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);

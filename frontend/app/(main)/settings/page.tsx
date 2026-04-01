@@ -1,25 +1,28 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { 
-  Info, 
-  Shield, 
-  StickyNote, 
-  Camera, 
-  Edit3, 
-  UserX, 
-  Loader2, 
-  CheckCircle2, 
-  Eye, 
-  EyeOff 
+import { useRouter } from "next/navigation";
+import {
+  Info,
+  Shield,
+  StickyNote,
+  Camera,
+  Edit3,
+  UserX,
+  Loader2,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  ArrowLeft,
 } from "lucide-react";
-import { getCurrentUser } from "@/lib/auth/auth";
+import { getCurrentUser, invalidateUserCache } from "@/lib/auth/auth";
 import { updateProfile, deleteAccount } from "@/lib/auth/update";
 import { API_URL } from "@/lib/config";
 import { User } from "@/lib/interfaces";
 import ConfirmModal from "@/components/ui/confirm";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -114,19 +117,17 @@ export default function SettingsPage() {
         setSuccessMessage("Profile updated successfully!");
         setAvatarFile(null);
         setAvatarPreview(null);
-        
-        // Reload user data
-        const updatedUser = await getCurrentUser();
+
+        // Use the user returned directly from the API (has all fields including isPublic)
+        const updatedUser = result.user ?? await getCurrentUser();
         if (updatedUser) {
           setUser(updatedUser);
-          
-          // Update localStorage for navbar
           localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-          
-          // Dispatch event to notify navbar of user update
+          // Invalidate cache so next getCurrentUser() fetches fresh data
+          invalidateUserCache();
           window.dispatchEvent(new CustomEvent("userUpdated", { detail: updatedUser }));
         }
-        
+
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         setErrorMessage(result.message || "Failed to update profile");
@@ -206,9 +207,18 @@ export default function SettingsPage() {
 
       {/* Header Section */}
       <div className="flex flex-wrap items-center justify-between gap-6 mb-12 animate-smooth-in">
-        <div className="space-y-1.5 focus:outline-none" tabIndex={0}>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Profile Settings</h2>
-          <p className="text-muted-foreground text-sm font-medium opacity-60 uppercase tracking-[0.2em]">Manage your presence and account</p>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-2 text-sm font-semibold text-muted hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </button>
+          <div className="space-y-1.5 focus:outline-none" tabIndex={0}>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">Profile Settings</h2>
+            <p className="text-muted-foreground text-sm font-medium opacity-60 uppercase tracking-[0.2em]">Manage your presence and account</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {errorMessage && (
@@ -222,13 +232,13 @@ export default function SettingsPage() {
               {successMessage}
             </div>
           )}
-          <button 
-            onClick={() => window.location.reload()}
+          <button
+            onClick={() => router.back()}
             className="px-5 py-2.5 rounded-xl border border-border text-sm font-bold hover:bg-foreground/5 transition-all active:scale-95"
           >
             Cancel
           </button>
-          <button 
+          <button
             disabled={saving}
             onClick={handleSave}
             className="px-6 py-2.5 rounded-xl bg-primary text-black text-sm font-bold hover:brightness-110 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 active:scale-95 flex items-center gap-2"
