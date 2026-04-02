@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: ./backend
+    container_name: social_network_backend
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: social_network_frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.docker
+    depends_on:
+      - backend

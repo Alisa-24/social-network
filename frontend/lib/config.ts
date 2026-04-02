@@ -1,6 +1,16 @@
-// Check if we're running in the browser
-const isBrowser = typeof window !== 'undefined';
-const hostname = isBrowser ? window.location.hostname : 'localhost';
+const isBrowser = typeof window !== "undefined";
 
-export const API_URL = `http://${hostname}:8080`;
-export const WS_URL = `ws://${hostname}:8080/ws`;
+// Get API URL from environment or use defaults
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (isBrowser
+    ? `http://${window.location.hostname}:8080`
+    : "http://backend:8080");
+
+const WS_URL =
+  process.env.NEXT_PUBLIC_WS_URL ||
+  (isBrowser
+    ? `ws://${window.location.hostname}:8080/ws`
+    : "ws://backend:8080/ws");
+
+export { API_URL, WS_URL };
