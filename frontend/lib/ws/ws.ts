@@ -49,6 +49,10 @@ export const connect = () => {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (!data || typeof data.type !== "string") {
+          console.warn("Ignoring invalid WebSocket payload", data);
+          return;
+        }
         const handlers = messageHandlers.get(data.type) || [];
         handlers.forEach((handler) => handler(data));
       } catch (error) {
@@ -116,7 +120,7 @@ export const onMaxRetriesReached = (callback: MaxRetriesCallback) => {
 };
 
 export const send = (data: any) => {
-  if (ws?.readyState === WebSocket.OPEN) {
+  if (ws?.readyState === WebSocket.OPEN && data && typeof data === "object") {
     ws.send(JSON.stringify(data));
   }
 };

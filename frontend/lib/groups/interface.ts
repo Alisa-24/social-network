@@ -237,12 +237,12 @@ export interface GroupChatMessage {
   content: string;
   created_at: string;
   user?: {
-    ID: number;
-    Username: string;
-    FirstName: string;
-    LastName: string;
-    Avatar: string;
-    Nickname: string;
+    userId: number;
+    username: string;
+    firstName: string;
+    lastName: string;
+    avatar: string;
+    nickname: string;
   };
 }
 

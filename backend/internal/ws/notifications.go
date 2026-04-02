@@ -34,6 +34,39 @@ func BroadcastToGroup(groupID int64, messageType string, data interface{}) {
 	}()
 }
 
+// BroadcastRawToGroup sends a pre-shaped WebSocket payload to online group members.
+func BroadcastRawToGroup(groupID int64, message interface{}) {
+	go func() {
+		members, err := queries.GetGroupMembersWithDetails(groupID)
+		if err != nil {
+			fmt.Printf("Error fetching group members for broadcast: %v\n", err)
+			return
+		}
+
+		payload, err := json.Marshal(message)
+		if err != nil {
+			fmt.Printf("Error marshaling group broadcast payload: %v\n", err)
+			return
+		}
+
+		for _, member := range members {
+			mu.Lock()
+			sConn, ok := OnlineUsers[member.UserID]
+			mu.Unlock()
+			if !ok {
+				continue
+			}
+
+			if err := sConn.WriteMessage(websocket.TextMessage, payload); err != nil {
+				fmt.Printf("Failed group broadcast to user %d: %v\n", member.UserID, err)
+				mu.Lock()
+				delete(OnlineUsers, member.UserID)
+				mu.Unlock()
+			}
+		}
+	}()
+}
+
 // SendNotificationToUser sends a notification to a specific user via WebSocket
 func SendNotificationToUser(userID int, notification models.NotificationMessage) {
 	mu.Lock()

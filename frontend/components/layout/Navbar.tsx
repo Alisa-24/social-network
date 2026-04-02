@@ -21,8 +21,9 @@ import {
   Search,
 } from "lucide-react";
 import { API_URL } from "@/lib/config";
+import * as ws from "@/lib/ws/ws";
 
-type NavItem = {
+type NavItem = { 
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -49,6 +50,7 @@ export default function Navbar({
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(true);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     setMounted(true);
@@ -101,6 +103,47 @@ export default function Navbar({
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, [pathname]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/notifications`, {
+        credentials: "include",
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      const notifications = data.notifications || [];
+      const count = notifications.filter((n: any) => Number(n.read) === 0).length;
+      setUnreadCount(count);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+
+    const handleNotificationUpdate = () => {
+      fetchUnreadCount();
+    };
+
+    ws.on("group_invitation", handleNotificationUpdate);
+    ws.on("join_request_approved", handleNotificationUpdate);
+    ws.on("join_request_rejected", handleNotificationUpdate);
+    ws.on("group_join_request", handleNotificationUpdate);
+    ws.on("new_event", handleNotificationUpdate);
+
+    return () => {
+      ws.off("group_invitation", handleNotificationUpdate);
+      ws.off("join_request_approved", handleNotificationUpdate);
+      ws.off("join_request_rejected", handleNotificationUpdate);
+      ws.off("group_join_request", handleNotificationUpdate);
+      ws.off("new_event", handleNotificationUpdate);
+    };
+  }, []);
 
   const getFullName = () =>
     currentUser
@@ -165,20 +208,28 @@ export default function Navbar({
           const active =
             pathname === it.href ||
             (it.href !== "/" && pathname?.startsWith(it.href));
+          const showBadge = it.label === "Notifications" && unreadCount > 0;
           return (
             <Link
               key={it.href}
               href={it.href}
               title={!open ? it.label : undefined}
-              className={`flex items-center rounded-xl px-3 py-2.5 transition-all group ${
+              className={`flex items-center rounded-xl px-3 py-2.5 transition-all group relative ${
                 active
                   ? "bg-primary/10 text-primary"
                   : "text-foreground/60 hover:bg-foreground/5 hover:text-primary"
               } ${open ? "gap-3" : "justify-center"}`}
             >
-              <it.icon
-                className={`h-5 w-5 shrink-0 ${active ? "text-primary" : "group-hover:text-primary"}`}
-              />
+              <div className="relative">
+                <it.icon
+                  className={`h-5 w-5 shrink-0 ${active ? "text-primary" : "group-hover:text-primary"}`}
+                />
+                {showBadge && (
+                  <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-lg border border-red-600">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </div>
+                )}
+              </div>
               {open && (
                 <span className="text-sm font-medium whitespace-nowrap">
                   {it.label}
@@ -256,8 +307,13 @@ export default function Navbar({
           <LayoutGrid className="w-5 h-5 text-green-400" strokeWidth={2.5} />
           <h2 className="text-sm font-bold tracking-tight">SocialNet</h2>
         </div>
-        <Link href="/notifications" className="p-2 hover:bg-foreground/5 rounded-lg">
+        <Link href="/notifications" className="p-2 hover:bg-foreground/5 rounded-lg relative">
           <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <div className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-lg border border-red-600">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </div>
+          )}
         </Link>
       </header>
 
@@ -285,16 +341,26 @@ export default function Navbar({
                 </button>
               </div>
               <nav className="flex-1 px-4 py-6 space-y-2">
-                {items.map((it) => (
-                  <Link
-                    key={it.href}
-                    href={it.href}
-                    className="flex items-center gap-4 rounded-2xl px-4 py-3 hover:bg-foreground/5 transition-colors"
-                  >
-                    <it.icon className="h-6 w-6" />
-                    <span className="text-lg font-medium">{it.label}</span>
-                  </Link>
-                ))}
+                {items.map((it) => {
+                  const showBadge = it.label === "Notifications" && unreadCount > 0;
+                  return (
+                    <Link
+                      key={it.href}
+                      href={it.href}
+                      className="flex items-center gap-4 rounded-2xl px-4 py-3 hover:bg-foreground/5 transition-colors relative"
+                    >
+                      <div className="relative">
+                        <it.icon className="h-6 w-6" />
+                        {showBadge && (
+                          <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-lg border border-red-600">
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-lg font-medium">{it.label}</span>
+                    </Link>
+                  );
+                })}
               </nav>
               <div className="p-6 border-t border-border space-y-4">
                 <div className="flex items-center gap-4 px-2">

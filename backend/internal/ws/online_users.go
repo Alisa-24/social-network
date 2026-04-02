@@ -54,6 +54,36 @@ func BroadcastToAll(message interface{}) {
 	}
 }
 
+// BroadcastToConversationParticipants sends message only to users in the conversation
+func BroadcastToConversationParticipants(conversationID int, message interface{}) {
+	// Get all participants
+	participants, err := queries.GetConversationParticipants(conversationID)
+	if err != nil {
+		fmt.Printf("Failed to get participants for conversation %d: %v\n", conversationID, err)
+		return
+	}
+
+	data, err := json.Marshal(message)
+	if err != nil {
+		fmt.Printf("Error marshaling message: %v\n", err)
+		return
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	for _, userID := range participants {
+		if sConn, exists := OnlineUsers[userID]; exists && sConn != nil {
+			err := sConn.WriteMessage(websocket.TextMessage, data)
+			if err != nil {
+				fmt.Printf("Failed to send to user %d: %v\n", userID, err)
+				sConn.Conn.Close()
+				delete(OnlineUsers, userID)
+			}
+		}
+	}
+}
+
 // SendOnlineUsersToClient fetches and sends the current online users list to a specific client
 func SendOnlineUsersToClient(sConn *SafeConn, currentUserID int) {
 	mu.Lock()

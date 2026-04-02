@@ -39,7 +39,7 @@ export const renderMessageContent = (content: string, imageUrls: { url: string; 
           href={part} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="underline hover:text-primary-foreground break-all"
+          className="underline hover:text-primary-foreground break-all [overflow-wrap:anywhere]"
         >
           {part}
         </a>

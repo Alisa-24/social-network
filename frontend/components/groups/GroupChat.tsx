@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Loader2, UserIcon } from "lucide-react";
+import { Send, Loader2, UserIcon, Smile, X } from "lucide-react";
 import { User } from "@/lib/interfaces";
 import { GroupChatMessage } from "@/lib/groups/interface";
 import { fetchGroupMessages } from "@/lib/groups/api";
@@ -19,10 +19,22 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [offset, setOffset] = useState(0);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const LIMIT = 10;
+
+  // Emoji categories
+  const EMOJI_LIST = [
+    "😀","😂","😍","🥰","😎","🤔","😅","😭","😊","🤩",
+    "👋","👍","👎","❤️","🔥","✨","🎉","💯","🙏","💪",
+    "😤","🥲","🤣","😬","🫡","🫶","🤗","😇","🥳","😴",
+    "🐶","🐱","🦊","🐻","🦁","🐸","🐧","🦋","🌸","⭐",
+    "🍕","🍔","🍦","☕","🍺","🎂","🍟","🌮","🍜","🍣",
+    "🏠","🚀","🎵","🎮","📱","💻","🎬","📚","🎨","🏆",
+  ];
 
   useEffect(() => {
     loadInitialMessages();
@@ -31,8 +43,8 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
   useEffect(() => {
     // Listen for new messages
     const handleNewMessage = (data: any) => {
-      if (data.type === "new_group_message" && data.data && data.data.group_id === groupId) {
-        setMessages((prev) => [...prev, data.data]);
+      if (data.type === "new_group_message" && data.group_id === groupId) {
+        setMessages((prev) => [...prev, data]);
         scrollToBottom();
       }
     };
@@ -109,6 +121,10 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
         loadMoreMessages();
       }
     }
+  };
+
+  const handleEmojiClick = (emoji: string) => {
+    setNewMessage((prev) => prev + emoji);
   };
 
   return (
@@ -238,22 +254,65 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
           }}
           className="relative"
         >
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="w-full bg-muted/5 border border-border rounded-2xl py-4 pl-6 pr-16 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder-muted-foreground text-sm transition-all text-foreground"
-          />
-          <div className="absolute inset-y-0 right-3 flex items-center">
+          <div className="relative">
             <button
-              type="submit"
-              disabled={!newMessage.trim()}
-              className="w-10 h-10 bg-primary text-black rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-md shadow-primary/10"
+              type="button"
+              onClick={() => setShowEmojiPicker((v) => !v)}
+              className={`absolute inset-y-0 left-4 flex items-center text-muted-foreground hover:text-primary transition-colors ${showEmojiPicker ? "text-primary" : ""}`}
+              title="Add emoji"
             >
-              <Send className="w-4 h-4" />
+              <Smile className="w-5 h-5" />
             </button>
+            
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="w-full bg-muted/5 border border-border rounded-2xl py-4 pl-14 pr-16 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary placeholder-muted-foreground text-sm transition-all text-foreground"
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center">
+              <button
+                type="submit"
+                disabled={!newMessage.trim()}
+                className="w-10 h-10 bg-primary text-black rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 shadow-md shadow-primary/10"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
           </div>
+
+          {/* Emoji picker */}
+          {showEmojiPicker && (
+            <div
+              ref={emojiPickerRef}
+              className="absolute bottom-full left-0 mb-3 w-72 bg-surface border border-border rounded-xl shadow-xl p-3 z-50"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-muted-foreground">Emojis</span>
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(false)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-10 gap-1 max-h-36 overflow-y-auto">
+                {EMOJI_LIST.map((emoji, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleEmojiClick(emoji)}
+                    className="text-xl w-7 h-7 flex items-center justify-center rounded hover:bg-muted/30 transition-colors"
+                    title={emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
       </div>
     </div>

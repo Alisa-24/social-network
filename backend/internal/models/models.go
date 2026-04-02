@@ -229,6 +229,33 @@ type GroupChatMessage struct {
 	User      User      `json:"user,omitempty"` // For displaying author details
 }
 
+// Conversation represents either a group chat or a private 1-to-1 chat
+type Conversation struct {
+	ID        int       `json:"id"`
+	Type      string    `json:"type"` // "group" or "private"
+	GroupID   *int      `json:"group_id,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// Participant represents a user in a conversation
+type Participant struct {
+	ID             int       `json:"id"`
+	ConversationID int       `json:"conversation_id"`
+	UserID         int       `json:"user_id"`
+	JoinedAt       time.Time `json:"joined_at"`
+}
+
+// PrivateChatMessage represents a message in a private 1-to-1 chat
+type PrivateChatMessage struct {
+	ID             int       `json:"id"`
+	ConversationID int       `json:"conversation_id"`
+	UserID         int       `json:"user_id"`
+	Content        string    `json:"content"`
+	CreatedAt      time.Time `json:"created_at"`
+	User           User      `json:"user,omitempty"` // For displaying author details
+}
+
+// UserSearchResult is returned by GET /api/users/search
 type Comment struct {
 	ID           int64  `json:"id"`
 	PostID       int64  `json:"post_id"`

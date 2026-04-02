@@ -29,10 +29,11 @@ func GetGroupChatMessages(w http.ResponseWriter, r *http.Request) {
 
 	limit := 50
 	offset := 0
+	const maxLimit = 100
 
 	if limitStr != "" {
 		l, err := strconv.Atoi(limitStr)
-		if err == nil && l > 0 {
+		if err == nil && l > 0 && l <= maxLimit {
 			limit = l
 		}
 	}
@@ -42,6 +43,23 @@ func GetGroupChatMessages(w http.ResponseWriter, r *http.Request) {
 		if err == nil && o >= 0 {
 			offset = o
 		}
+	}
+
+	userID, ok := r.Context().Value("userID").(int)
+	if !ok || userID <= 0 {
+		utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{Success: false, Message: "Unauthorized"})
+		return
+	}
+
+	isMember, err := queries.IsUserGroupMember(groupID, userID)
+	if err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{Success: false, Message: "Failed to validate group access"})
+		return
+	}
+
+	if !isMember {
+		utils.RespondJSON(w, http.StatusForbidden, models.GenericResponse{Success: false, Message: "Forbidden"})
+		return
 	}
 
 	messages, err := queries.GetGroupChatMessages(groupID, limit, offset)

@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -50,6 +51,14 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Printf("WebSocket: Session verified for user %d\n", session.UserID)
+	if time.Now().After(session.ExpiresAt) {
+		fmt.Printf("WebSocket error: Session expired for user %d\n", session.UserID)
+		utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
+			Success: false,
+			Message: "Session expired",
+		})
+		return
+	}
 
 	// Upgrade HTTP connection to WebSocket
 	wsConn, err := upgrader.Upgrade(w, r, nil)
@@ -57,6 +66,8 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("WebSocket error: Upgrade failed: %v\n", err)
 		return
 	}
+	wsConn.SetReadLimit(16 * 1024)
+	_ = wsConn.SetReadDeadline(time.Time{})
 
 	sConn := &SafeConn{Conn: wsConn}
 
@@ -81,6 +92,7 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 			delete(OnlineUsers, session.UserID)
 		}
 		mu.Unlock()
+		clearUserRateLimits(session.UserID)
 		sConn.Conn.Close()
 		fmt.Printf("WebSocket disconnected for user %d\n", session.UserID)
 		// Update online users for all clients
@@ -98,12 +110,14 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 		var msg map[string]interface{}
 		if err := json.Unmarshal(data, &msg); err != nil {
 			fmt.Printf("Error unmarshaling message: %v\n", err)
+			sendWSError(sConn, "invalid_json", "Malformed JSON payload")
 			continue
 		}
 
-		msgType, ok := msg["type"].(string)
-		if !ok {
-			fmt.Println("Message type is not a string")
+		msgType, err := getStringField(msg, "type")
+		if err != nil {
+			fmt.Printf("Invalid message type: %v\n", err)
+			sendWSError(sConn, "invalid_message", "Missing or invalid message type")
 			continue
 		}
 
@@ -114,10 +128,20 @@ func WSHandler(w http.ResponseWriter, r *http.Request) {
 			HandleGetOnlineUsers(sConn, session.UserID)
 
 		case "group_message":
-			HandleGroupMessage(&session, msg)
+			HandleGroupMessage(sConn, &session, msg)
+
+		case "private_message":
+			HandlePrivateMessage(sConn, &session, msg)
+
+		case "typing":
+			HandleTyping(sConn, &session, msg)
+
+		case "stop_typing":
+			HandleStopTyping(sConn, &session, msg)
 
 		default:
 			fmt.Printf("Unknown message type from user %d: %s\n", session.UserID, msgType)
+			sendWSError(sConn, "unsupported_type", "Unsupported message type")
 		}
 	}
 }

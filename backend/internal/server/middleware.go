@@ -6,6 +6,7 @@ import (
 	"backend/internal/utils"
 	"context"
 	"net/http"
+	"time"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -27,6 +28,14 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
 				Success: false,
 				Message: "Invalid session",
+			})
+			return
+		}
+
+		if time.Now().After(session.ExpiresAt) {
+			utils.RespondJSON(w, http.StatusUnauthorized, models.GenericResponse{
+				Success: false,
+				Message: "Session expired",
 			})
 			return
 		}

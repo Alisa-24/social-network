@@ -2,10 +2,9 @@ package server
 
 import (
 	"backend/internal/auth"
-	"backend/internal/follow"
+	"backend/internal/chat"
 	"backend/internal/groups"
-	"backend/internal/otp"
-	"backend/internal/posts"
+	"backend/internal/notifications"
 	"backend/internal/profile"
 	"backend/internal/users"
 	"backend/internal/ws"
@@ -30,6 +29,7 @@ func SetupRoutes(mux *http.ServeMux) {
 	// ===== USERS =====
 	// Exact routes must come before the wildcard {username} route
 	authHandle(mux, "GET /api/users/search", users.SearchUsersHandler)
+	authHandle(mux, "GET /api/users/contacts", users.GetContactsHandler)
 	authHandle(mux, "GET /api/users/following", users.GetFollowingHandler)
 	authHandle(mux, "GET /api/users/{username}", users.GetPublicProfileHandler)
 	authHandle(mux, "GET /api/users/{username}/followers", follow.GetFollowersHandler)
@@ -94,6 +94,16 @@ func SetupRoutes(mux *http.ServeMux) {
 	authHandle(mux, "POST /api/posts/{id}/comments/{commentId}/replies", posts.AddReply)
 	authHandle(mux, "POST /posts/{id}/like", groups.PostLike)
 	authHandle(mux, "DELETE /posts/{id}", groups.DeletePost)
+
+	// ===== NOTIFICATIONS =====
+	authHandle(mux, "GET /api/notifications", notifications.ListNotifications)
+	authHandle(mux, "POST /api/notifications/read", notifications.MarkNotificationRead)
+	authHandle(mux, "POST /api/notifications/read-all", notifications.MarkAllNotificationsRead)
+
+	// ===== PRIVATE CHAT =====
+	authHandle(mux, "GET /api/chats/private", chat.GetPrivateConversations)
+	authHandle(mux, "POST /api/chats/private/start/{userID}", chat.GetOrCreatePrivateChat)
+	authHandle(mux, "GET /api/chats/private/{conversationID}/messages", chat.GetPrivateChatMessages)
 
 	// ===== FILES =====
 	mux.Handle("/uploads/", http.StripPrefix("/uploads/", http.FileServer(http.Dir("uploads"))))

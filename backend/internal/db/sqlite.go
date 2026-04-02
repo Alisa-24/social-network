@@ -16,7 +16,7 @@ var DB *sql.DB
 // InitDB initializes the SQLite database connection
 func InitDB(dbPath string) error {
 	var err error
-	DB, err = sql.Open("sqlite3", dbPath+"?_foreign_keys=on")
+	DB, err = sql.Open("sqlite3", dbPath+"?_foreign_keys=on&_busy_timeout=5000")
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
@@ -27,6 +27,14 @@ func InitDB(dbPath string) error {
 
 	if err := DB.Ping(); err != nil {
 		return fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	if _, err := DB.Exec(`PRAGMA journal_mode = WAL;`); err != nil {
+		return fmt.Errorf("failed to enable WAL mode: %w", err)
+	}
+
+	if _, err := DB.Exec(`PRAGMA synchronous = NORMAL;`); err != nil {
+		return fmt.Errorf("failed to set synchronous mode: %w", err)
 	}
 
 	// Set the DB for queries package
