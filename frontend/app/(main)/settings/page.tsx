@@ -172,7 +172,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto py-4 px-4 md:px-8 leading-none">
+    <div className="flex-1 overflow-y-auto bg-background">
+      <div className="max-w-[1400px] mx-auto py-4 px-4 md:px-8 leading-none w-full">
       <style jsx>{`
         @keyframes smoothFadeIn {
           from {
@@ -233,7 +234,25 @@ export default function SettingsPage() {
             </div>
           )}
           <button
-            onClick={() => router.back()}
+            onClick={() => {
+              if (user) {
+                setFormData({
+                  firstName: user.firstName || "",
+                  lastName: user.lastName || "",
+                  username: user.username || "",
+                  nickname: user.nickname || "",
+                  email: user.email || "",
+                  dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : "",
+                  password: "",
+                  isPublic: (user as any).isPublic !== false,
+                  aboutMe: user.aboutMe || ""
+                });
+                setAvatarFile(null);
+                setAvatarPreview(null);
+                setErrorMessage("");
+                setSuccessMessage("");
+              }
+            }}
             className="px-5 py-2.5 rounded-xl border border-border text-sm font-bold hover:bg-foreground/5 transition-all active:scale-95"
           >
             Cancel
@@ -497,6 +516,7 @@ export default function SettingsPage() {
         confirmVariant="danger"
         isLoading={deleting}
       />
+      </div>
     </div>
   );
 }

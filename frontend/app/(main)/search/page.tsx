@@ -16,13 +16,12 @@ import AllGroupsModal from "@/components/search/AllGroupsModal";
 import SearchSection from "@/components/search/SearchSection";
 import PeopleSection from "@/components/search/PeopleSection";
 import GroupsSection from "@/components/search/GroupsSection";
-import PostsSection from "@/components/search/PostsSection";
 
 /* ────────────────────────────────────────────────────────── */
 /*  Types                                                     */
 /* ────────────────────────────────────────────────────────── */
 
-type FilterTab = "all" | "people" | "groups" | "posts";
+type FilterTab = "all" | "people" | "groups";
 
 const PREVIEW_LIMIT = 6;
 
@@ -159,13 +158,11 @@ export default function SearchPage() {
   /* ── show/hide sections ── */
   const showGroups = activeTab === "all" || activeTab === "groups";
   const showPeople = activeTab === "all" || activeTab === "people";
-  const showPosts = activeTab === "all" || activeTab === "posts";
 
   const tabs: { key: FilterTab; label: string }[] = [
     { key: "all", label: "All" },
     { key: "people", label: "People" },
     { key: "groups", label: "Groups" },
-    { key: "posts", label: "Posts" },
   ];
 
   return (
@@ -219,7 +216,7 @@ export default function SearchPage() {
           />
         )}
 
-        {showPosts && <PostsSection posts={[]} />}
+
       </div>
     </div>
   );

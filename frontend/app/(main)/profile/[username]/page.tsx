@@ -724,8 +724,8 @@ export default function ProfilePage() {
      MAIN RENDER
   ════════════════════════════════════════════════════════════ */
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
-      <div className="w-full flex flex-col flex-1 overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-y-auto bg-background text-foreground relative">
+      <div className="w-full flex flex-col flex-1">
 
         {/* ══ COVER + HEADER ══════════════════════════════════════ */}
         <div className="relative">
@@ -936,10 +936,10 @@ export default function ProfilePage() {
         </div>
 
         {/* ══ TAB CONTENT + SIDEBAR ═══════════════════════════════ */}
-        <div className="flex-1 overflow-hidden px-6 md:px-8 py-8 flex gap-6">
+        <div className="flex-1 px-6 md:px-8 py-8 flex items-start gap-6">
 
           {/* ── Main content (left) ── */}
-          <div className="flex-1 min-w-0 overflow-y-auto pr-2">
+          <div className="flex-1 min-w-0 pr-2">
 
             {/* Posts */}
             {activeTab === "posts" && (
@@ -1079,7 +1079,7 @@ export default function ProfilePage() {
           </div>
 
           {/* ── Info sidebar (right) ── */}
-          <div className="hidden lg:flex flex-col gap-3 w-80 shrink-0 overflow-y-auto">
+          <div className="hidden lg:flex flex-col gap-3 w-80 shrink-0 sticky top-24">
 
             {/* Follow Requests — always visible on own profile */}
             {isOwnProfile && (

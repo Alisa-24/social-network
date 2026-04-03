@@ -2,7 +2,7 @@
 
 import { Search, X } from "lucide-react";
 
-type FilterTab = "all" | "people" | "groups" | "posts";
+type FilterTab = "all" | "people" | "groups";
 
 interface SearchSectionProps {
   query: string;
