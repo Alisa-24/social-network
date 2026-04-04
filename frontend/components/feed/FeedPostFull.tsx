@@ -94,8 +94,29 @@ export default function FeedPostFull({
 
   const handleDeleteConfirm = async () => {
     setDeleting(true);
-    try { await deletePost(post.id); onNavBlock?.(false); onDeleted(post.id); }
-    catch { setDeleting(false); setShowDeleteModal(false); onNavBlock?.(false); }
+    try {
+      await deletePost(post.id);
+      (globalThis as any).addToast?.({
+        id: crypto.randomUUID(),
+        title: "Post Deleted",
+        message: "The post has been deleted successfully",
+        type: "success",
+        duration: 3000,
+      });
+      onNavBlock?.(false);
+      onDeleted(post.id);
+    } catch {
+      setDeleting(false);
+      setShowDeleteModal(false);
+      onNavBlock?.(false);
+      (globalThis as any).addToast?.({
+        id: crypto.randomUUID(),
+        title: "Error",
+        message: "Failed to delete post. Please try again.",
+        type: "error",
+        duration: 5000,
+      });
+    }
   };
 
   const handleEditSave = async () => {

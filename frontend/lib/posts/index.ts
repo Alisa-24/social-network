@@ -54,15 +54,34 @@ export async function getFeedPosts(offset = 0, limit = 5): Promise<{ posts: Feed
   return { posts: data.posts ?? [], has_more: data.has_more ?? false };
 }
 
+export interface Follower {
+  id: number;
+  username: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+}
+
+export async function getMyFollowers(): Promise<Follower[]> {
+  const res = await fetch(`${API_URL}/api/follow/followers`, { credentials: "include" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.followers ?? [];
+}
+
 export async function createPost(
   content: string,
   privacy: string,
-  media: File
+  media: File,
+  selectedUserIds?: number[]
 ): Promise<{ post_id: number }> {
   const form = new FormData();
   form.append("content", content);
   form.append("privacy", privacy);
   form.append("image", media);
+  if (privacy === "selected" && selectedUserIds && selectedUserIds.length > 0) {
+    form.append("selected_users", JSON.stringify(selectedUserIds));
+  }
 
   const res = await fetch(`${API_URL}/api/posts`, {
     method: "POST",
