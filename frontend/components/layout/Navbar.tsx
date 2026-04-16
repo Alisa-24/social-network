@@ -23,7 +23,7 @@ import {
 import { API_URL } from "@/lib/config";
 import * as ws from "@/lib/ws/ws";
 
-type NavItem = { 
+type NavItem = {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -91,7 +91,6 @@ export default function Navbar({
     () => [
       { label: "Feed", href: "/feed", icon: House },
       { label: "Search", href: "/search", icon: Search },
-      { label: "Profile", href: "/profile/me", icon: CircleUserRound },
       { label: "Groups", href: "/groups", icon: UsersRound },
       { label: "Chat", href: "/chat", icon: MessagesSquare },
       { label: "Notifications", href: "/notifications", icon: Bell },
@@ -116,7 +115,9 @@ export default function Navbar({
       if (!response.ok) return;
       const data = await response.json();
       const notifications = data.notifications || [];
-      const count = notifications.filter((n: any) => Number(n.read) === 0).length;
+      const count = notifications.filter(
+        (n: any) => Number(n.read) === 0,
+      ).length;
       setUnreadCount(count);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -165,12 +166,14 @@ export default function Navbar({
 
   const getFullName = () =>
     currentUser
-      ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() || "User"
+      ? `${currentUser.firstName || ""} ${currentUser.lastName || ""}`.trim() ||
+        "User"
       : "User";
 
   const getUsername = () => {
     if (!currentUser) return "user";
-    const username = currentUser.username || (currentUser as any).Username || "";
+    const username =
+      currentUser.username || (currentUser as any).Username || "";
     return username || "user";
   };
 
@@ -196,12 +199,19 @@ export default function Navbar({
       className={`h-full border-r border-border bg-background text-foreground flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${open ? "w-72" : "w-[72px]"}`}
     >
       {/* TOP: Branding + collapse toggle */}
-      <div className={`h-16 flex items-center shrink-0 px-4 ${open ? "justify-between" : "justify-center"}`}>
+      <div
+        className={`h-16 flex items-center shrink-0 px-4 ${open ? "justify-between" : "justify-center"}`}
+      >
         {open ? (
           <>
             <div className="flex items-center gap-2">
-              <LayoutGrid className="w-5 h-5 text-green-400" strokeWidth={2.5} />
-              <h2 className="text-sm font-bold tracking-tight whitespace-nowrap">SocialNet</h2>
+              <LayoutGrid
+                className="w-5 h-5 text-green-400"
+                strokeWidth={2.5}
+              />
+              <h2 className="text-sm font-bold tracking-tight whitespace-nowrap">
+                SocialNet
+              </h2>
             </div>
             <button
               onClick={() => setOpen(false)}
@@ -261,20 +271,25 @@ export default function Navbar({
       {/* BOTTOM: User & Settings */}
       <div className="p-3 border-t border-border space-y-1 bg-background/50 backdrop-blur-sm">
         {/* User info */}
-        <div
-          className={`flex items-center px-3 py-2 rounded-lg mb-2 ${open ? "gap-3 bg-foreground/5" : "justify-center"}`}
+        <Link
+          href="/profile/me"
+          className={`flex items-center px-3 py-2 rounded-xl mb-2 transition-all hover:bg-foreground/5 cursor-pointer ${open ? "gap-3" : "justify-center"}`}
         >
           <AvatarComponent />
           {open && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{getFullName()}</p>
-              <p className="text-[10px] text-foreground/40 truncate">@{getUsername()}</p>
+              <p className="text-sm font-semibold truncate hover:text-primary transition-colors">
+                {getFullName()}
+              </p>
+              <p className="text-[10px] text-foreground/40 truncate">
+                @{getUsername()}
+              </p>
               <p className="text-[10px] text-primary truncate uppercase tracking-widest font-bold">
-                Active Now
+                Profile
               </p>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Theme toggle */}
         {mounted && (
@@ -304,7 +319,9 @@ export default function Navbar({
         >
           <LogOut className="h-5 w-5 shrink-0" />
           {open && (
-            <span className="text-sm font-medium whitespace-nowrap">Logout</span>
+            <span className="text-sm font-medium whitespace-nowrap">
+              Logout
+            </span>
           )}
         </button>
       </div>
@@ -325,7 +342,10 @@ export default function Navbar({
           <LayoutGrid className="w-5 h-5 text-green-400" strokeWidth={2.5} />
           <h2 className="text-sm font-bold tracking-tight">SocialNet</h2>
         </div>
-        <Link href="/notifications" className="p-2 hover:bg-foreground/5 rounded-lg relative">
+        <Link
+          href="/notifications"
+          className="p-2 hover:bg-foreground/5 rounded-lg relative"
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <div className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center shadow-lg border border-red-600">
@@ -351,8 +371,13 @@ export default function Navbar({
             <div className="h-full bg-background border-r border-border flex flex-col">
               <div className="h-16 flex items-center px-6 justify-between border-b border-border">
                 <div className="flex items-center gap-2">
-                  <LayoutGrid className="w-6 h-6 text-green-400" strokeWidth={2.5} />
-                  <h2 className="text-lg font-bold tracking-tight">SocialNet</h2>
+                  <LayoutGrid
+                    className="w-6 h-6 text-green-400"
+                    strokeWidth={2.5}
+                  />
+                  <h2 className="text-lg font-bold tracking-tight">
+                    SocialNet
+                  </h2>
                 </div>
                 <button onClick={() => setMobileOpen(false)} className="p-2">
                   <X className="h-5 w-5" />
@@ -360,7 +385,8 @@ export default function Navbar({
               </div>
               <nav className="flex-1 px-4 py-6 space-y-2">
                 {items.map((it) => {
-                  const showBadge = it.label === "Notifications" && unreadCount > 0;
+                  const showBadge =
+                    it.label === "Notifications" && unreadCount > 0;
                   return (
                     <Link
                       key={it.href}
@@ -381,18 +407,31 @@ export default function Navbar({
                 })}
               </nav>
               <div className="p-6 border-t border-border space-y-4">
-                <div className="flex items-center gap-4 px-2">
+                <Link
+                  href="/profile/me"
+                  className="flex items-center gap-4 px-2 hover:opacity-80 transition-opacity"
+                  onClick={() => setMobileOpen(false)}
+                >
                   <AvatarComponent />
                   <div>
                     <p className="text-base font-bold">{getFullName()}</p>
-                    <p className="text-xs text-foreground/40">@{getUsername()}</p>
+                    <p className="text-xs text-foreground/40">
+                      @{getUsername()}
+                    </p>
+                    <p className="text-[10px] text-primary uppercase font-bold mt-0.5">
+                      View Profile
+                    </p>
                   </div>
-                </div>
+                </Link>
                 <button
                   onClick={toggleTheme}
                   className="w-full flex items-center gap-4 px-2 py-2 text-foreground/70 hover:text-foreground"
                 >
-                  {isDark ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
+                  {isDark ? (
+                    <Moon className="h-6 w-6" />
+                  ) : (
+                    <Sun className="h-6 w-6" />
+                  )}
                   <span>Theme</span>
                 </button>
                 <button
