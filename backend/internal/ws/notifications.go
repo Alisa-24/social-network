@@ -132,7 +132,7 @@ func BroadcastMessageNotification(recipientID int, senderID int, senderName stri
 	go func() {
 		// Store in database
 		data := fmt.Sprintf(`{"sender_id":%d,"sender_name":"%s","content":"%s","conversation_id":%d}`, senderID, senderName, content, conversationID)
-		queries.CreateNotification(recipientID, &senderID, "new_message", data)
+		_, _ = queries.CreateNotification(recipientID, &senderID, "new_message", data)
 
 		notification := map[string]interface{}{
 			"type":            "new_message",
@@ -154,227 +154,139 @@ func BroadcastMessageNotification(recipientID int, senderID int, senderName stri
 	}()
 }
 
-// BroadcastPostLike notifies post author of a like
-func BroadcastPostLike(postAuthorID int, likerID int, likerName string, likerAvatar *string, postID int) {
+// ============================================================================
+// Real-Time Notification Event System
+// These functions emit lifecycle events (create/update/delete) for notifications
+// ============================================================================
+
+// EmitNotificationCreated sends a real-time event when a notification is created
+// This allows clients to see new notifications instantly without polling
+func EmitNotificationCreated(notificationID int64, userID int, actorID int, activityType string,
+	message string, subtitle string, payload map[string]interface{}, status string) {
 	go func() {
-		// Store in database with properly encoded JSON
-		dataMap := map[string]interface{}{
-			"liker_id":   likerID,
-			"liker_name": likerName,
-			"post_id":    postID,
+		event := models.NotificationEventMessage{
+			Type: "notification_event",
+			Event: models.NotificationEvent{
+				EventType:      "notification:create",
+				NotificationID: notificationID,
+				UserID:         userID,
+				ActorID:        actorID,
+				ActivityType:   activityType,
+				Message:        message,
+				Subtitle:       subtitle,
+				Payload:        payload,
+				Status:         status,
+				CreatedAt:      time.Now(),
+			},
 		}
-		dataBytes, _ := json.Marshal(dataMap)
-		err := queries.CreateNotification(postAuthorID, &likerID, "post_like", string(dataBytes))
+
+		data, err := json.Marshal(event)
 		if err != nil {
-			fmt.Printf("Failed to create post_like notification: %v\n", err)
-		}
-
-		notification := map[string]interface{}{
-			"type":         "post_like",
-			"liker_id":     likerID,
-			"liker_name":   likerName,
-			"liker_avatar": likerAvatar,
-			"post_id":      postID,
-			"timestamp":    time.Now(),
-		}
-
-		mu.Lock()
-		if sConn, ok := OnlineUsers[postAuthorID]; ok {
-			mu.Unlock()
-			payload, _ := json.Marshal(notification)
-			sConn.WriteMessage(websocket.TextMessage, payload)
-		} else {
-			mu.Unlock()
-		}
-	}()
-}
-
-// BroadcastPostComment notifies post author of a comment
-func BroadcastPostComment(postAuthorID int, commenterID int, commenterName string, commenterAvatar *string, postID int, commentText string) {
-	go func() {
-		// Store in database with properly encoded JSON
-		dataMap := map[string]interface{}{
-			"commenter_id":   commenterID,
-			"commenter_name": commenterName,
-			"post_id":        postID,
-			"comment":        commentText,
-		}
-		dataBytes, _ := json.Marshal(dataMap)
-		err := queries.CreateNotification(postAuthorID, &commenterID, "post_comment", string(dataBytes))
-		if err != nil {
-			fmt.Printf("Failed to create post_comment notification: %v\n", err)
-		}
-
-		notification := map[string]interface{}{
-			"type":             "post_comment",
-			"commenter_id":     commenterID,
-			"commenter_name":   commenterName,
-			"commenter_avatar": commenterAvatar,
-			"post_id":          postID,
-			"comment_text":     commentText,
-			"timestamp":        time.Now(),
-		}
-
-		mu.Lock()
-		if sConn, ok := OnlineUsers[postAuthorID]; ok {
-			mu.Unlock()
-			payload, _ := json.Marshal(notification)
-			sConn.WriteMessage(websocket.TextMessage, payload)
-		} else {
-			mu.Unlock()
-		}
-	}()
-}
-
-// BroadcastCommentReply notifies a comment author when someone replies to their comment
-func BroadcastCommentReply(commentAuthorID int, replierID int, replierName string, replierAvatar *string, postID int, replyText string, commentID int64) {
-	go func() {
-		// Store in database with properly encoded JSON
-		dataMap := map[string]interface{}{
-			"replier_id":   replierID,
-			"replier_name": replierName,
-			"post_id":      postID,
-			"comment_id":   commentID,
-			"reply":        replyText,
-		}
-		dataBytes, _ := json.Marshal(dataMap)
-		err := queries.CreateNotification(commentAuthorID, &replierID, "comment_reply", string(dataBytes))
-		if err != nil {
-			fmt.Printf("Failed to create comment_reply notification: %v\n", err)
-		}
-
-		notification := map[string]interface{}{
-			"type":           "comment_reply",
-			"replier_id":     replierID,
-			"replier_name":   replierName,
-			"replier_avatar": replierAvatar,
-			"post_id":        postID,
-			"comment_id":     commentID,
-			"reply_text":     replyText,
-			"timestamp":      time.Now(),
-		}
-
-		mu.Lock()
-		if sConn, ok := OnlineUsers[commentAuthorID]; ok {
-			mu.Unlock()
-			payload, _ := json.Marshal(notification)
-			sConn.WriteMessage(websocket.TextMessage, payload)
-		} else {
-			mu.Unlock()
-		}
-	}()
-}
-
-// BroadcastMention notifies a user they were mentioned
-func BroadcastMention(mentionedUserID int, mentionerID int, mentionerName string, mentionerAvatar *string, context string, contextType string) {
-	go func() {
-		// Store in database
-		data := fmt.Sprintf(`{"mentioner_id":%d,"mentioner_name":"%s","context":"%s","context_type":"%s"}`, mentionerID, mentionerName, context, contextType)
-		queries.CreateNotification(mentionedUserID, &mentionerID, "mention", data)
-
-		notification := map[string]interface{}{
-			"type":             "mention",
-			"mentioner_id":     mentionerID,
-			"mentioner_name":   mentionerName,
-			"mentioner_avatar": mentionerAvatar,
-			"context":          context,
-			"context_type":     contextType,
-			"timestamp":        time.Now(),
-		}
-
-		mu.Lock()
-		if sConn, ok := OnlineUsers[mentionedUserID]; ok {
-			mu.Unlock()
-			payload, _ := json.Marshal(notification)
-			sConn.WriteMessage(websocket.TextMessage, payload)
-		} else {
-			mu.Unlock()
-		}
-	}()
-}
-
-// BroadcastGroupPost notifies group members of a new post
-func BroadcastGroupPost(groupID int64, posterID int, posterName string, posterAvatar *string, postContent string) {
-	go func() {
-		members, err := queries.GetGroupMembersWithDetails(groupID)
-		if err != nil {
-			fmt.Printf("Failed to get group members: %v\n", err)
+			fmt.Printf("Error marshaling notification event: %v\n", err)
 			return
 		}
 
-		// Create database notification for each group member
-		dataMap := map[string]interface{}{
-			"poster_id":   posterID,
-			"poster_name": posterName,
-			"group_id":    groupID,
-			"content":     postContent,
-		}
-		dataBytes, _ := json.Marshal(dataMap)
-		dataStr := string(dataBytes)
+		mu.Lock()
+		conn, ok := OnlineUsers[userID]
+		mu.Unlock()
 
-		notification := map[string]interface{}{
-			"type":          "group_post",
-			"group_id":      groupID,
-			"poster_id":     posterID,
-			"poster_name":   posterName,
-			"poster_avatar": posterAvatar,
-			"post_content":  postContent,
-			"timestamp":     time.Now(),
+		if !ok {
+			fmt.Printf("[Real-Time] User %d offline; notification %d queued in DB\n", userID, notificationID)
+			return
 		}
 
-		payload, _ := json.Marshal(notification)
-
-		for _, member := range members {
-			if member.UserID == posterID {
-				continue // Don't notify the poster
-			}
-
-			// Store in database
-			err := queries.CreateNotification(member.UserID, &posterID, "group_post", dataStr)
-			if err != nil {
-				fmt.Printf("Failed to create group_post notification: %v\n", err)
-			}
-
-			// Broadcast to online users
+		if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
+			fmt.Printf("[Real-Time] Failed to emit notification:create to user %d: %v\n", userID, err)
 			mu.Lock()
-			if sConn, ok := OnlineUsers[member.UserID]; ok {
-				mu.Unlock()
-				sConn.WriteMessage(websocket.TextMessage, payload)
-			} else {
-				mu.Unlock()
-			}
+			delete(OnlineUsers, userID)
+			mu.Unlock()
+		} else {
+			fmt.Printf("[Real-Time] Notification %d emitted to user %d (type: %s)\n", notificationID, userID, activityType)
 		}
 	}()
 }
 
-// BroadcastEventReminder notifies group members of an upcoming event
-func BroadcastEventReminder(groupID int64, eventID int, eventName string, eventTime time.Time, creatorName string) {
+// EmitNotificationUpdated sends a real-time event when a notification is updated
+// Use this when a pending request changes status (e.g., accepted, rejected)
+func EmitNotificationUpdated(notificationID int64, userID int, actorID int, activityType string,
+	message string, status string, payload map[string]interface{}) {
 	go func() {
-		members, err := queries.GetGroupMembersWithDetails(groupID)
+		event := models.NotificationEventMessage{
+			Type: "notification_event",
+			Event: models.NotificationEvent{
+				EventType:      "notification:update",
+				NotificationID: notificationID,
+				UserID:         userID,
+				ActorID:        actorID,
+				ActivityType:   activityType,
+				Message:        message,
+				Status:         status,
+				Payload:        payload,
+				CreatedAt:      time.Now(),
+			},
+		}
+
+		data, err := json.Marshal(event)
 		if err != nil {
+			fmt.Printf("Error marshaling update event: %v\n", err)
 			return
 		}
 
-		notification := map[string]interface{}{
-			"type":         "event_reminder",
-			"group_id":     groupID,
-			"event_id":     eventID,
-			"event_name":   eventName,
-			"event_time":   eventTime,
-			"creator_name": creatorName,
-			"timestamp":    time.Now(),
+		mu.Lock()
+		conn, ok := OnlineUsers[userID]
+		mu.Unlock()
+
+		if !ok {
+			fmt.Printf("[Real-Time] User %d offline; cannot send update for notification %d\n", userID, notificationID)
+			return
 		}
 
-		payload, _ := json.Marshal(notification)
-
-		for _, member := range members {
+		if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
+			fmt.Printf("[Real-Time] Failed to emit notification:update to user %d: %v\n", userID, err)
 			mu.Lock()
-			if sConn, ok := OnlineUsers[member.UserID]; ok {
-				mu.Unlock()
-				sConn.WriteMessage(websocket.TextMessage, payload)
-			} else {
-				mu.Unlock()
-			}
+			delete(OnlineUsers, userID)
+			mu.Unlock()
+		} else {
+			fmt.Printf("[Real-Time] Update for notification %d sent to user %d (status: %s)\n", notificationID, userID, status)
+		}
+	}()
+}
+
+// EmitNotificationDeleted sends a real-time event when a notification is deleted/dismissed
+func EmitNotificationDeleted(notificationID int64, userID int) {
+	go func() {
+		event := models.NotificationEventMessage{
+			Type: "notification_event",
+			Event: models.NotificationEvent{
+				EventType:      "notification:delete",
+				NotificationID: notificationID,
+				UserID:         userID,
+				CreatedAt:      time.Now(),
+			},
+		}
+
+		data, err := json.Marshal(event)
+		if err != nil {
+			fmt.Printf("Error marshaling delete event: %v\n", err)
+			return
+		}
+
+		mu.Lock()
+		conn, ok := OnlineUsers[userID]
+		mu.Unlock()
+
+		if !ok {
+			fmt.Printf("[Real-Time] User %d offline; notification %d delete not sent\n", userID, notificationID)
+			return
+		}
+
+		if err := conn.WriteMessage(websocket.TextMessage, data); err != nil {
+			fmt.Printf("[Real-Time] Failed to emit notification:delete to user %d: %v\n", userID, err)
+			mu.Lock()
+			delete(OnlineUsers, userID)
+			mu.Unlock()
+		} else {
+			fmt.Printf("[Real-Time] Delete event for notification %d sent to user %d\n", notificationID, userID)
 		}
 	}()
 }

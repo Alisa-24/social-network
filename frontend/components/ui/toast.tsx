@@ -34,19 +34,9 @@ export default function ToastItem({
   const Icon =
     type === "success" ? CheckCircle : type === "error" ? AlertCircle : Info;
 
-  const styles =
-    type === "success"
-      ? "border-green-500 bg-green-950 text-green-100 shadow-green-500/20"
-      : type === "error"
-        ? "border-red-500 bg-red-950 text-red-100 shadow-red-500/20"
-        : "border-blue-500 bg-blue-950 text-blue-100 shadow-blue-500/20";
-
-  const iconStyles =
-    type === "success"
-      ? "text-green-400"
-      : type === "error"
-        ? "text-red-400"
-        : "text-blue-400";
+  // Keep a single visual language for all toasts regardless of type.
+  const styles = "border-primary/50 bg-surface text-foreground shadow-2xl shadow-black/25";
+  const iconStyles = "text-primary";
 
   const handleBodyClick = () => {
     if (href) {

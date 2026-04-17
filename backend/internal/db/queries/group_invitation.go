@@ -62,15 +62,16 @@ func DeleteGroupInvitation(invitationID int) error {
 }
 
 // GetGroupInvitationByID retrieves an invitation by its ID
-func GetGroupInvitationByID(invitationID int) (int64, int, error) {
+func GetGroupInvitationByID(invitationID int) (int64, int, int, error) {
 	var groupID int64
+	var inviterID int
 	var inviteeID int
 	err := DB.QueryRow(`
-		SELECT group_id, invited_user_id
+		SELECT group_id, inviter_id, invited_user_id
 		FROM group_invitations
 		WHERE id = ?
-	`, invitationID).Scan(&groupID, &inviteeID)
-	return groupID, inviteeID, err
+	`, invitationID).Scan(&groupID, &inviterID, &inviteeID)
+	return groupID, inviterID, inviteeID, err
 }
 
 // HasPendingInvitation checks if a user has a pending invitation to a specific group
