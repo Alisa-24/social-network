@@ -4,7 +4,6 @@ import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
 	"backend/internal/utils"
-	"backend/internal/ws"
 	"net/http"
 	"strconv"
 	"strings"
@@ -67,19 +66,6 @@ func PostLike(w http.ResponseWriter, r *http.Request) {
 			Message: "Failed to get likes count",
 		})
 		return
-	}
-
-	// Broadcast like notification if this is a new like
-	if isLiked {
-		postOwnerID, err := queries.GetPostOwnerID(postID)
-		if err == nil && postOwnerID != userID {
-			// Only notify if not liking own post
-			liker, err := queries.GetUserByID(userID)
-			if err == nil {
-				likerName := liker.FirstName + " " + liker.LastName
-				ws.BroadcastPostLike(postOwnerID, userID, likerName, &liker.Avatar, int(postID))
-			}
-		}
 	}
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{

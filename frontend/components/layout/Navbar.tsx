@@ -130,18 +130,30 @@ export default function Navbar({
       fetchUnreadCount();
     };
 
+    const handleUnreadCountChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<{ unreadCount?: number }>;
+      const nextCount = Number(customEvent.detail?.unreadCount);
+      if (!Number.isNaN(nextCount) && nextCount >= 0) {
+        setUnreadCount(nextCount);
+      }
+    };
+
     ws.on("group_invitation", handleNotificationUpdate);
     ws.on("join_request_approved", handleNotificationUpdate);
     ws.on("join_request_rejected", handleNotificationUpdate);
     ws.on("group_join_request", handleNotificationUpdate);
     ws.on("new_event", handleNotificationUpdate);
     ws.on("follow_request", handleNotificationUpdate);
+    ws.on("follow_update", handleNotificationUpdate);
     ws.on("new_message", handleNotificationUpdate);
+    ws.on("group_joined", handleNotificationUpdate);
     ws.on("post_like", handleNotificationUpdate);
     ws.on("post_comment", handleNotificationUpdate);
     ws.on("mention", handleNotificationUpdate);
     ws.on("group_post", handleNotificationUpdate);
     ws.on("event_reminder", handleNotificationUpdate);
+    ws.on("notification_event", handleNotificationUpdate);
+    window.addEventListener("notificationsUnreadCountChanged", handleUnreadCountChanged as EventListener);
 
     return () => {
       ws.off("group_invitation", handleNotificationUpdate);
@@ -150,12 +162,16 @@ export default function Navbar({
       ws.off("group_join_request", handleNotificationUpdate);
       ws.off("new_event", handleNotificationUpdate);
       ws.off("follow_request", handleNotificationUpdate);
+      ws.off("follow_update", handleNotificationUpdate);
       ws.off("new_message", handleNotificationUpdate);
+      ws.off("group_joined", handleNotificationUpdate);
       ws.off("post_like", handleNotificationUpdate);
       ws.off("post_comment", handleNotificationUpdate);
       ws.off("mention", handleNotificationUpdate);
       ws.off("group_post", handleNotificationUpdate);
       ws.off("event_reminder", handleNotificationUpdate);
+      ws.off("notification_event", handleNotificationUpdate);
+      window.removeEventListener("notificationsUnreadCountChanged", handleUnreadCountChanged as EventListener);
       ws.off("join_request_approved", handleNotificationUpdate);
       ws.off("join_request_rejected", handleNotificationUpdate);
       ws.off("group_join_request", handleNotificationUpdate);

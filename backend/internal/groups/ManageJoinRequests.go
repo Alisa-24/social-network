@@ -3,12 +3,11 @@ package groups
 import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
+	activity "backend/internal/notifications"
 	"backend/internal/utils"
-	"backend/internal/ws"
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 // GetJoinRequests retrieves all pending join requests for a group
@@ -189,34 +188,26 @@ func HandleJoinRequest(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		message = "Join request approved"
-
-		// Send notification to the user who requested
-		notification := models.NotificationMessage{
-			Type: "join_request_approved",
-			Data: map[string]interface{}{
-				"group_id":   group.ID,
-				"group_name": group.Name,
-				"message":    "Your request to join " + group.Name + " has been approved",
-			},
-			Timestamp: time.Now(),
-		}
-		ws.SendNotificationToUser(joinRequest.UserID, notification)
+		approvedText := activity.GroupJoinApproved(group.Name)
+		message = approvedText.Message
+		requester, _ := queries.GetUserByID(joinRequest.UserID)
+		_ = activity.NotifyRecentActivity(joinRequest.UserID, &userID, "join_request_approved", approvedText, map[string]interface{}{
+			"group_id":           group.ID,
+			"group_name":         group.Name,
+			"requester_username": requester.Username,
+		})
 
 	} else if action == "reject" {
 		message = "Join request rejected"
-
-		// Send notification to the user who requested
-		notification := models.NotificationMessage{
-			Type: "join_request_rejected",
-			Data: map[string]interface{}{
-				"group_id":   group.ID,
-				"group_name": group.Name,
-				"message":    "Your request to join " + group.Name + " has been rejected",
-			},
-			Timestamp: time.Now(),
+		rejectedText := activity.RecentActivityText{
+			Message:  "Your request to join '" + group.Name + "' was rejected",
+			Subtitle: "Join Request",
 		}
-		ws.SendNotificationToUser(joinRequest.UserID, notification)
+		_ = activity.NotifyRecentActivity(joinRequest.UserID, &userID, "join_request_rejected", rejectedText, map[string]interface{}{
+			"group_id":   group.ID,
+			"group_name": group.Name,
+			"status":     "rejected",
+		})
 
 	} else {
 		utils.RespondJSON(w, http.StatusBadRequest, models.GenericResponse{

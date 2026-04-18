@@ -3,12 +3,11 @@ package groups
 import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
+	activity "backend/internal/notifications"
 	"backend/internal/utils"
-	"backend/internal/ws"
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func JoinGroup(w http.ResponseWriter, r *http.Request) {
@@ -122,7 +121,7 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 
 		utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 			Success: true,
-			Message: "You have been added to the group!",
+			Message: activity.GroupInvitationAcceptedForInvitee(group.Name).Message,
 		})
 		return
 	}
@@ -140,7 +139,6 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 	// Get user details to send in notification
 	user, err := queries.GetUserByID(userID)
 	if err == nil {
-		// Send WebSocket notification to group owner
 		userPublic := &models.UserPublic{
 			UserId:    user.ID,
 			FirstName: user.FirstName,
@@ -149,22 +147,23 @@ func JoinGroup(w http.ResponseWriter, r *http.Request) {
 			Nickname:  user.Nickname,
 		}
 
-		notification := models.NotificationMessage{
-			Type: "group_join_request",
-			Data: map[string]interface{}{
-				"group_id":   group.ID,
-				"group_name": group.Name,
-				"user":       userPublic,
-			},
-			Timestamp: time.Now(),
-		}
+		requesterText := activity.GroupJoinRequestSent(group.Name)
+		ownerText := activity.GroupJoinRequestReceived(user.Username, group.Name)
 
-		fmt.Printf("Sending join request notification to owner ID %d for group %s\n", group.OwnerID, group.Name)
-		ws.SendNotificationToUser(group.OwnerID, notification)
+		_ = activity.NotifyRecentActivity(userID, &userID, "group_join_request", requesterText, map[string]interface{}{
+			"group_id":   group.ID,
+			"group_name": group.Name,
+			"user":       userPublic,
+		})
+		_ = activity.NotifyRecentActivity(group.OwnerID, &userID, "group_join_request", ownerText, map[string]interface{}{
+			"group_id":   group.ID,
+			"group_name": group.Name,
+			"user":       userPublic,
+		})
 	}
 
 	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 		Success: true,
-		Message: "Join request sent successfully",
+		Message: activity.GroupJoinRequestSent(group.Name).Message,
 	})
 }

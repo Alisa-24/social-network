@@ -3,6 +3,7 @@ package groups
 import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
+	activity "backend/internal/notifications"
 	"backend/internal/utils"
 	"backend/internal/ws"
 	"net/http"
@@ -126,7 +127,8 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 			Data: map[string]interface{}{
 				"group_id":   groupID,
 				"group_name": group.Name,
-				"message":    "You have been added to the group!",
+				"message":    activity.GroupJoinApproved(group.Name).Message,
+				"subtitle":   activity.GroupJoinApproved(group.Name).Subtitle,
 			},
 			Timestamp: time.Now(),
 		}
@@ -152,20 +154,23 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	// Get group and inviter details for notification
 	group, _ := queries.GetGroupByID(groupID)
 	inviter, _ := queries.GetUserByID(inviterID)
+	invitee, _ := queries.GetUserByID(inviteeID)
 
-	// Send WebSocket notification to invitee
-	notification := models.NotificationMessage{
-		Type: "group_invitation",
-		Data: map[string]interface{}{
-			"group_id":     groupID,
-			"group_name":   group.Name,
-			"inviter_id":   inviterID,
-			"inviter_name": inviter.FirstName + " " + inviter.LastName,
-		},
-		Timestamp: time.Now(),
-	}
+	inviterText := activity.GroupInvitationSent(invitee.Username, group.Name)
+	inviteeText := activity.GroupInvitationReceived(inviter.Username, group.Name)
 
-	ws.SendNotificationToUser(inviteeID, notification)
+	_ = activity.NotifyRecentActivity(inviterID, &inviteeID, "group_invitation", inviterText, map[string]interface{}{
+		"group_id":         groupID,
+		"group_name":       group.Name,
+		"invitee_id":       inviteeID,
+		"invitee_username": invitee.Username,
+	})
+	_ = activity.NotifyRecentActivity(inviteeID, &inviterID, "group_invitation", inviteeText, map[string]interface{}{
+		"group_id":         groupID,
+		"group_name":       group.Name,
+		"inviter_id":       inviterID,
+		"inviter_username": inviter.Username,
+	})
 
 	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
 		Success: true,
@@ -233,7 +238,7 @@ func HandleInvitation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get invitation details to verify it belongs to this user
-	groupID, inviteeID, err := queries.GetGroupInvitationByID(invitationID)
+	groupID, inviterID, inviteeID, err := queries.GetGroupInvitationByID(invitationID)
 	if err != nil {
 		utils.RespondJSON(w, http.StatusNotFound, models.GenericResponse{
 			Success: false,
@@ -275,18 +280,35 @@ func HandleInvitation(w http.ResponseWriter, r *http.Request) {
 
 	message := "Invitation declined"
 	if action == "accept" {
-		message = "You have joined the group!"
 		// Notify the user via WebSocket so the UI can refresh groups list
 		group, _ := queries.GetGroupByID(groupID)
+		message = activity.GroupInvitationAcceptedForInvitee(group.Name).Message
+		inviter, _ := queries.GetUserByID(inviterID)
+		invitee, _ := queries.GetUserByID(userID)
 		notification := models.NotificationMessage{
 			Type: "group_joined",
 			Data: map[string]interface{}{
 				"group_id":   groupID,
 				"group_name": group.Name,
+				"message":    activity.GroupInvitationAcceptedForInvitee(group.Name).Message,
+				"subtitle":   activity.GroupInvitationAcceptedForInvitee(group.Name).Subtitle,
 			},
 			Timestamp: time.Now(),
 		}
 		ws.SendNotificationToUser(userID, notification)
+
+		_ = activity.NotifyRecentActivity(userID, &inviterID, "group_invitation", activity.GroupInvitationAcceptedForInvitee(group.Name), map[string]interface{}{
+			"group_id":         groupID,
+			"group_name":       group.Name,
+			"inviter_id":       inviterID,
+			"inviter_username": inviter.Username,
+		})
+		_ = activity.NotifyRecentActivity(inviterID, &userID, "group_invitation", activity.GroupInvitationAcceptedForInviter(invitee.Username, group.Name), map[string]interface{}{
+			"group_id":         groupID,
+			"group_name":       group.Name,
+			"invitee_id":       inviteeID,
+			"invitee_username": invitee.Username,
+		})
 	}
 
 	utils.RespondJSON(w, http.StatusOK, models.GenericResponse{
