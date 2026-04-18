@@ -166,10 +166,32 @@ type GroupInvitation struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+// NotificationMessage represents a real-time WebSocket notification
 type NotificationMessage struct {
 	Type      string      `json:"type"`
 	Data      interface{} `json:"data"`
 	Timestamp time.Time   `json:"timestamp"`
+}
+
+// NotificationEvent represents a notification lifecycle event (create, update, delete)
+// for real-time delivery to clients
+type NotificationEvent struct {
+	EventType      string                 `json:"event"` // "notification:create", "notification:update", "notification:delete"
+	NotificationID int64                  `json:"notification_id"`
+	UserID         int                    `json:"user_id"`       // Who receives this notification
+	ActorID        int                    `json:"actor_id"`      // Who triggered it (optional)
+	ActivityType   string                 `json:"activity_type"` // "follow_request", "group_invitation", etc.
+	Message        string                 `json:"message"`       // Formatted message
+	Subtitle       string                 `json:"subtitle"`      // Short label
+	Payload        map[string]interface{} `json:"payload"`       // Full data payload
+	Status         string                 `json:"status"`        // "pending", "accepted", "rejected", etc.
+	CreatedAt      time.Time              `json:"created_at"`
+}
+
+// Wrapper for sending notification events via WebSocket
+type NotificationEventMessage struct {
+	Type  string            `json:"type"` // Always "notification_event"
+	Event NotificationEvent `json:"event"`
 }
 
 type OnlineUserData struct {

@@ -125,91 +125,71 @@ function safeJsonParse(data?: string): Record<string, any> {
   }
 }
 
+function emitUnreadCountChanged(unreadCount: number) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent("notificationsUnreadCountChanged", {
+      detail: { unreadCount },
+    }),
+  );
+}
+
 function buildActivityText(item: NotificationItem): { title: string; subtitle: string } {
   const payload = safeJsonParse(item.data);
   const actorName = `${item.actor?.first_name || ""} ${item.actor?.last_name || ""}`.trim() || "Someone";
+  const message = typeof payload.message === "string" && payload.message.trim() ? payload.message : "";
+  const subtitle = typeof payload.subtitle === "string" && payload.subtitle.trim()
+    ? payload.subtitle
+    : item.type?.replace(/_/g, " ").toUpperCase() || "Notification";
 
   switch (item.type) {
-    case "new_event":
-      return {
-        title: `${actorName} created a new event in ${payload.group_name || "a group"}`,
-        subtitle: "Group Update",
-      };
-
     case "join_request_approved":
       return {
-        title: payload.message || `Your request for ${payload.group_name || "a group"} was approved`,
-        subtitle: "Join Request ✓",
+        title: message || `You joined ${payload.group_name ? `'${payload.group_name}'` : "'a group'"}`,
+        subtitle,
       };
 
     case "join_request_rejected":
       return {
-        title: payload.message || `Your request for ${payload.group_name || "a group"} was rejected`,
-        subtitle: "Join Request ✗",
+        title: message || `Your request to join ${payload.group_name ? `'${payload.group_name}'` : "'a group'"} was rejected`,
+        subtitle,
       };
 
     case "group_invitation":
       return {
-        title: `${actorName} invited you to ${payload.group_name || "a group"}`,
-        subtitle: "Group Invite",
+        title: message || `${actorName} invited you to ${payload.group_name ? `'${payload.group_name}'` : "a group"}`,
+        subtitle,
       };
 
     case "group_join_request":
       return {
-        title: `${actorName} requested to join your group`,
-        subtitle: "Join Request",
+        title: message || `${actorName} requested to join your group`,
+        subtitle,
       };
 
     case "follow_request":
       return {
-        title: `${actorName} sent you a follow request`,
-        subtitle: "Follow Request",
+        title: message || `${actorName} requested to follow you`,
+        subtitle,
+      };
+
+    case "follow_update":
+      return {
+        title: message || `${actorName} updated a follow request`,
+        subtitle,
       };
 
     case "new_message":
       const msgPreview = payload.content?.substring(0, 50) || "New message";
       return {
-        title: `${actorName}: ${msgPreview}`,
-        subtitle: "Message",
-      };
-
-    case "post_like":
-      return {
-        title: `${actorName} liked your post`,
-        subtitle: "Post Like",
-      };
-
-    case "post_comment":
-      const commentPreview = payload.comment?.substring(0, 40) || "commented";
-      return {
-        title: `${actorName} ${commentPreview}`,
-        subtitle: "Post Comment",
-      };
-
-    case "mention":
-      const contextType = payload.context_type || "post";
-      return {
-        title: `${actorName} mentioned you in a ${contextType}`,
-        subtitle: "Mention",
-      };
-
-    case "group_post":
-      const contentPreview = payload.post_content?.substring(0, 40) || "posted";
-      return {
-        title: `${actorName} ${contentPreview}`,
-        subtitle: "Group Post",
-      };
-
-    case "event_reminder":
-      return {
-        title: `Upcoming: ${payload.event_name || "Event"}`,
-        subtitle: "Event Reminder",
+        title: message || `${actorName}: ${msgPreview}`,
+        subtitle,
       };
 
     default:
       return {
-        title: payload.message || `${actorName} sent an update`,
-        subtitle: item.type?.replace(/_/g, " ").toUpperCase() || "Notification",
+        title: message || `${actorName} sent an update`,
+        subtitle,
       };
   }
 }
@@ -342,28 +322,22 @@ export default function NotificationsPage() {
     ws.on("join_request_approved", refresh);
     ws.on("join_request_rejected", refresh);
     ws.on("group_join_request", refresh);
-    ws.on("new_event", refresh);
     ws.on("follow_request", refresh);
+    ws.on("follow_update", refresh);
     ws.on("new_message", refresh);
-    ws.on("post_like", refresh);
-    ws.on("post_comment", refresh);
-    ws.on("mention", refresh);
-    ws.on("group_post", refresh);
-    ws.on("event_reminder", refresh);
+    ws.on("group_joined", refresh);
+    ws.on("notification_event", refresh);
 
     return () => {
       ws.off("group_invitation", refresh);
       ws.off("join_request_approved", refresh);
       ws.off("join_request_rejected", refresh);
       ws.off("group_join_request", refresh);
-      ws.off("new_event", refresh);
       ws.off("follow_request", refresh);
+      ws.off("follow_update", refresh);
       ws.off("new_message", refresh);
-      ws.off("post_like", refresh);
-      ws.off("post_comment", refresh);
-      ws.off("mention", refresh);
-      ws.off("group_post", refresh);
-      ws.off("event_reminder", refresh);
+      ws.off("group_joined", refresh);
+      ws.off("notification_event", refresh);
     };
   }, [currentUserId]);
 
@@ -373,6 +347,7 @@ export default function NotificationsPage() {
 
     if (success) {
       setNotifications((prev: NotificationItem[]) => prev.map((notification: NotificationItem) => ({ ...notification, read: 1 })));
+      emitUnreadCountChanged(0);
       (globalThis as any).addToast({
         id: crypto.randomUUID(),
         title: "Updated",
@@ -388,38 +363,20 @@ export default function NotificationsPage() {
     const success = await markNotificationRead(notificationId);
     if (!success) return;
 
-    setNotifications((prev: NotificationItem[]) =>
-      prev.map((notification: NotificationItem) =>
+    setNotifications((prev: NotificationItem[]) => {
+      const next = prev.map((notification: NotificationItem) =>
         notification.id === notificationId ? { ...notification, read: 1 } : notification,
-      ),
-    );
+      );
+      const unread = next.filter((notification: NotificationItem) => Number(notification.read) === 0).length;
+      emitUnreadCountChanged(unread);
+      return next;
+    });
   };
 
   const getActivityNavigation = (item: NotificationItem) => {
     const payload = safeJsonParse(item.data);
 
     switch (item.type) {
-      case "post_like":
-      case "post_comment":
-      case "comment_reply":
-        // Navigate to post detail or group containing post
-        if (payload.group_id) {
-          return `/groups/${payload.group_id}`;
-        }
-        // For user feed posts, navigate to feed
-        return `/feed`;
-
-      case "mention":
-        // Navigate to where mention occurred
-        if (payload.group_id) return `/groups/${payload.group_id}`;
-        if (payload.post_id) return `/feed`;
-        return `/feed`;
-
-      case "group_post":
-        // Navigate to the group
-        if (payload.group_id) return `/groups/${payload.group_id}`;
-        break;
-
       case "new_message":
         // Navigate to chat - ideally to specific conversation
         // For now route to chat, frontend should handle selecting conversation
@@ -435,10 +392,18 @@ export default function NotificationsPage() {
       case "group_join_request":
       case "join_request_approved":
       case "join_request_rejected":
-      case "new_event":
-      case "event_reminder":
+      case "group_joined":
         // Navigate to group
         if (payload.group_id) return `/groups/${payload.group_id}`;
+        break;
+
+      case "follow_update":
+        if (item.actor?.username) {
+          return `/profile/${item.actor.username}`;
+        }
+        if (item.actor_id) {
+          return `/profile/${item.actor_id}`;
+        }
         break;
 
       case "follow_request":

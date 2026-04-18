@@ -59,19 +59,6 @@ export default function MainLayout({
           }
         };
 
-        const handleNewEvent = (data: any) => {
-          if (data.type === "new_event") {
-            (globalThis as any).addToast({
-              id: crypto.randomUUID(),
-              title: "New Group Event!",
-              message: `A new event "${data.data.group_name}" has been created.`,
-              type: "success",
-              duration: 7000,
-              href: "/notifications",
-            });
-          }
-        };
-
         const handleFollowUpdate = (data: any) => {
           if (data.type !== "follow_update") return;
           const d = data.data;
@@ -93,7 +80,6 @@ export default function MainLayout({
         ws.on("join_request_approved", handleApproved);
         ws.on("join_request_rejected", handleRejected);
         ws.on("group_invitation", handleInvitation);
-        ws.on("new_event", handleNewEvent);
         ws.on("follow_update", handleFollowUpdate);
 
         // Clean up listeners when component unmounts
@@ -101,7 +87,6 @@ export default function MainLayout({
           ws.off("join_request_approved", handleApproved);
           ws.off("join_request_rejected", handleRejected);
           ws.off("group_invitation", handleInvitation);
-          ws.off("new_event", handleNewEvent);
           ws.off("follow_update", handleFollowUpdate);
         };
       }

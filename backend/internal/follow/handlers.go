@@ -3,6 +3,7 @@ package follow
 import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
+	activity "backend/internal/notifications"
 	"backend/internal/utils"
 	"backend/internal/ws"
 	"fmt"
@@ -43,31 +44,39 @@ func FollowHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	message := "Now following"
+	message := activity.FollowAcceptedForSender(target.Username).Message
 	if status == "pending" {
-		message = "Follow request sent"
+		message = activity.FollowRequestSent(target.Username).Message
 	}
 
 	// Notify the target user in real-time
 	follower, err := queries.GetUserByID(currentUserID)
 	if err == nil {
+		var senderText activity.RecentActivityText
+		var receiverText activity.RecentActivityText
 		if status == "pending" {
-			// Broadcast follow request notification
-			ws.BroadcastFollowRequest(target.ID, follower.ID, follower.FirstName+" "+follower.LastName, &follower.Avatar)
+			senderText = activity.FollowRequestSent(target.Username)
+			receiverText = activity.FollowRequestReceived(follower.Username)
+			_ = activity.NotifyRecentActivity(currentUserID, &target.ID, "follow_request", senderText, map[string]interface{}{
+				"target_username": target.Username,
+				"status":          status,
+			})
+			_ = activity.NotifyRecentActivity(target.ID, &currentUserID, "follow_request", receiverText, map[string]interface{}{
+				"sender_username": follower.Username,
+				"status":          status,
+			})
+		} else {
+			senderText = activity.FollowAcceptedForSender(target.Username)
+			receiverText = activity.FollowAcceptedForReceiver(follower.Username)
+			_ = activity.NotifyRecentActivity(currentUserID, &target.ID, "follow_update", senderText, map[string]interface{}{
+				"target_username": target.Username,
+				"status":          status,
+			})
+			_ = activity.NotifyRecentActivity(target.ID, &currentUserID, "follow_update", receiverText, map[string]interface{}{
+				"sender_username": follower.Username,
+				"status":          status,
+			})
 		}
-
-		ws.SendNotificationToUser(target.ID, models.NotificationMessage{
-			Type: "follow_update",
-			Data: map[string]interface{}{
-				"followerId":        follower.ID,
-				"followerUsername":  follower.Username,
-				"followerFirstName": follower.FirstName,
-				"followerLastName":  follower.LastName,
-				"followerAvatar":    follower.Avatar,
-				"status":            status,
-			},
-			Timestamp: time.Now(),
-		})
 	}
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
@@ -151,15 +160,13 @@ func GetFollowRequestsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var requests []FollowRequest
-	if userRequests != nil {
-		for _, requester := range userRequests {
-			requests = append(requests, FollowRequest{
-				ID:          requester.UserID, // Use userId as the request ID (since request is identified by follower_id)
-				RequesterID: requester.UserID,
-				CreatedAt:   time.Now().Format(time.RFC3339), // Placeholder - ideally we'd get this from DB
-				Requester:   requester,
-			})
-		}
+	for _, requester := range userRequests {
+		requests = append(requests, FollowRequest{
+			ID:          requester.UserID, // Use userId as the request ID (since request is identified by follower_id)
+			RequesterID: requester.UserID,
+			CreatedAt:   time.Now().Format(time.RFC3339), // Placeholder - ideally we'd get this from DB
+			Requester:   requester,
+		})
 	}
 
 	if requests == nil {
@@ -239,6 +246,40 @@ func HandleFollowRequestHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			Timestamp: time.Now(),
 		})
+		ws.SendNotificationToUser(userID, models.NotificationMessage{
+			Type: "follow_update",
+			Data: map[string]interface{}{
+				"followerId":        requesterID,
+				"followerUsername":  requester.Username,
+				"followerFirstName": requester.FirstName,
+				"followerLastName":  requester.LastName,
+				"followerAvatar":    requester.Avatar,
+				"status":            status,
+				"message":           activity.FollowAcceptedForReceiver(requester.Username).Message,
+				"subtitle":          activity.FollowAcceptedForReceiver(requester.Username).Subtitle,
+			},
+			Timestamp: time.Now(),
+		})
+
+		if action == "accept" {
+			_ = activity.NotifyRecentActivity(requesterID, &userID, "follow_update", activity.FollowAcceptedForSender(target.Username), map[string]interface{}{
+				"target_username": target.Username,
+				"status":          "accepted",
+			})
+			_ = activity.NotifyRecentActivity(userID, &requesterID, "follow_update", activity.FollowAcceptedForReceiver(requester.Username), map[string]interface{}{
+				"sender_username": requester.Username,
+				"status":          "accepted",
+			})
+		} else {
+			declinedText := activity.RecentActivityText{
+				Message:  "Your follow request was declined",
+				Subtitle: "Follow Request",
+			}
+			_ = activity.NotifyRecentActivity(requesterID, &userID, "follow_update", declinedText, map[string]interface{}{
+				"target_username": target.Username,
+				"status":          "declined",
+			})
+		}
 	}
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{"success": true, "action": action})

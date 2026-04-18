@@ -4,7 +4,6 @@ import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
 	"backend/internal/utils"
-	"backend/internal/ws"
 	"net/http"
 	"strconv"
 )
@@ -84,13 +83,6 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 			Message: "Failed to create post",
 		})
 		return
-	}
-
-	// Broadcast group post notification to all group members
-	poster, err := queries.GetUserByID(userID)
-	if err == nil {
-		posterName := poster.FirstName + " " + poster.LastName
-		ws.BroadcastGroupPost(groupIDInt, userID, posterName, &poster.Avatar, content)
 	}
 
 	utils.RespondJSON(w, http.StatusCreated, models.GenericResponse{

@@ -99,7 +99,7 @@ func HandlePrivateMessage(sConn *SafeConn, session *models.Session, msg map[stri
 					"conversation_id": conversationID,
 				}
 				dataBytes, _ := json.Marshal(dataMap)
-				err := queries.CreateNotification(participantID, &session.UserID, "new_message", string(dataBytes))
+				_, err := queries.CreateNotification(participantID, &session.UserID, "new_message", string(dataBytes))
 				if err != nil {
 					fmt.Printf("Failed to create new_message notification: %v\n", err)
 				}

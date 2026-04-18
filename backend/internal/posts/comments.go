@@ -4,7 +4,6 @@ import (
 	"backend/internal/db/queries"
 	"backend/internal/models"
 	"backend/internal/utils"
-	"backend/internal/ws"
 	"net/http"
 	"strconv"
 )
@@ -97,17 +96,6 @@ func AddComment(w http.ResponseWriter, r *http.Request) {
 			Message: "Failed to add comment",
 		})
 		return
-	}
-
-	// Broadcast comment notification to post author
-	postOwnerID, err := queries.GetPostOwnerID(postID)
-	if err == nil && postOwnerID != userID {
-		// Only notify if not commenting on own post
-		commenter, err := queries.GetUserByID(userID)
-		if err == nil {
-			commenterName := commenter.FirstName + " " + commenter.LastName
-			ws.BroadcastPostComment(postOwnerID, userID, commenterName, &commenter.Avatar, int(postID), body.Content)
-		}
 	}
 
 	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
@@ -280,17 +268,6 @@ func AddReply(w http.ResponseWriter, r *http.Request) {
 			Message: "Failed to add reply",
 		})
 		return
-	}
-
-	// Broadcast reply notification to comment author
-	commentAuthorID, err := queries.GetCommentOwnerID(commentID)
-	if err == nil && commentAuthorID != userID {
-		// Only notify if not replying to own comment
-		replier, err := queries.GetUserByID(userID)
-		if err == nil {
-			replierName := replier.FirstName + " " + replier.LastName
-			ws.BroadcastCommentReply(commentAuthorID, userID, replierName, &replier.Avatar, int(postID), body.Content, commentID)
-		}
 	}
 
 	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
