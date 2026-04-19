@@ -87,3 +87,18 @@ body {
 .dark ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* Profile cover banner */
+.profile-cover-wrapper {
+  background: #e8f5f2;
+}
+.dark .profile-cover-wrapper {
+  background: #020c0a;
+}
+
+.profile-cover-gradient {
+  background: linear-gradient(135deg, #e8f5f2 0%, #c8ece5 40%, #dbeafe 75%, #e8f5f2 100%);
+}
+.dark .profile-cover-gradient {
+  background: linear-gradient(135deg, #000d0b 0%, #002e28 40%, #001830 75%, #000d0b 100%);
+}

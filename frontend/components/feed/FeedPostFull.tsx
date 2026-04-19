@@ -242,7 +242,7 @@ export default function FeedPostFull({
               {/* Text content */}
               {post.content && (
                 <div className="px-5 py-4">
-                  <p className="text-base text-foreground/85 leading-relaxed whitespace-pre-wrap break-words">
+                  <p className="text-base text-foreground/85 leading-relaxed whitespace-pre-wrap break-all">
                     {post.content}
                   </p>
                 </div>

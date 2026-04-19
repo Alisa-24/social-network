@@ -297,7 +297,7 @@ export default function PostCard({
       {/* Post Content */}
       <div className="px-4 pb-4">
         {post.content && (
-          <p className="text-foreground text-sm leading-relaxed mb-4 whitespace-pre-wrap wrap-break-words">
+          <p className="text-foreground text-sm leading-relaxed mb-4 whitespace-pre-wrap break-all">
             {post.content}
           </p>
         )}

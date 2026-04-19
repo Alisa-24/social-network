@@ -1011,8 +1011,7 @@ export default function ProfilePage() {
         <div className="relative">
           {/* Animated cover */}
           <div
-            className="h-44 md:h-52 w-full overflow-hidden relative"
-            style={{ background: "#020c0a" }}
+            className="profile-cover-wrapper h-44 md:h-52 w-full overflow-hidden relative"
           >
             {/* Back button — overlaid on cover for visitor profiles */}
             {!isOwnProfile && (
@@ -1027,12 +1026,8 @@ export default function ProfilePage() {
             )}
             {/* z-0: base layers */}
             <div
-              className="absolute inset-0"
-              style={{
-                zIndex: 0,
-                background:
-                  "linear-gradient(135deg, #000d0b 0%, #002e28 40%, #001830 75%, #000d0b 100%)",
-              }}
+              className="profile-cover-gradient absolute inset-0"
+              style={{ zIndex: 0 }}
             />
 
             {/* Orb 1 — teal */}
@@ -1130,7 +1125,7 @@ export default function ProfilePage() {
               className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
               style={{
                 zIndex: 3,
-                background: "linear-gradient(to bottom, transparent, #09090b)",
+                background: "linear-gradient(to bottom, transparent, var(--background))",
               }}
             />
 

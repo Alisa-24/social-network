@@ -133,7 +133,7 @@ export default function GroupEvents({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2 mb-2">
-                        <h3 className={`text-lg font-bold ${isPassed ? "text-muted" : "text-foreground"} truncate`}>
+                        <h3 className={`text-lg font-bold ${isPassed ? "text-muted" : "text-foreground"} break-all`}>
                           {event.title}
                         </h3>
                         {(group.is_owner || event.creator_id === currentUser?.userId) && (
@@ -157,7 +157,7 @@ export default function GroupEvents({
                           <span>{eventTime}</span>
                         </div>
                       </div>
-                      <p className="text-sm text-muted">{event.description}</p>
+                      <p className="text-sm text-muted break-all">{event.description}</p>
                     {event.creator && (
                       <div className="flex items-center gap-2 mt-3 p-1.5 bg-background rounded-lg border border-border w-fit">
                         <div className="w-5 h-5 rounded-full overflow-hidden bg-muted">

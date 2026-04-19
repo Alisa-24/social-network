@@ -381,7 +381,7 @@ export default function PrivateChat({
                       : `bg-muted/10 text-foreground border border-border rounded-2xl rounded-tl-none`
                   }`}
                 >
-                  <div className={`break-words ${hasImages ? "px-2 pt-2" : ""}`}>{renderMessageContent(msg.content, imageUrls)}</div>
+                  <div className={`break-all ${hasImages ? "px-2 pt-2" : ""}`}>{renderMessageContent(msg.content, imageUrls)}</div>
 
                   {/* Render images inline */}
                   {hasImages && (

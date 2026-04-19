@@ -182,7 +182,7 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                     </div>
                   )}
                 </div>
-                <div className={`flex flex-col ${isMe ? "items-end" : ""} max-w-full`}>
+                <div className={`flex flex-col min-w-0 ${isMe ? "items-end" : ""} max-w-full`}>
                   {showDetails && (
                     <div className="flex items-baseline gap-2 mb-1">
                       {isMe ? (
@@ -209,7 +209,7 @@ export default function GroupChat({ groupId, currentUser }: GroupChatProps) {
                         : `bg-muted/10 text-foreground border border-border ${showDetails ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl'}`
                     }`}
                   >
-                    <div className={`break-words ${hasImages ? 'px-2 pt-2' : ''}`}>{renderMessageContent(msg.content, imageUrls)}</div>
+                    <div className={`break-all ${hasImages ? 'px-2 pt-2' : ''}`}>{renderMessageContent(msg.content, imageUrls)}</div>
                     
                     {/* Render images inline */}
                     {hasImages && (

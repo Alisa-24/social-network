@@ -34,7 +34,7 @@ export default function EventCard({ event, onResponseChange }: EventCardProps) {
 
           {/* Event Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2">
+            <h3 className="text-lg font-bold text-foreground mb-2 line-clamp-2 break-all">
               {event.title}
             </h3>
             <div className="flex items-center gap-3 text-muted text-xs mb-2">
@@ -43,7 +43,7 @@ export default function EventCard({ event, onResponseChange }: EventCardProps) {
                 <span>{eventTime}</span>
               </div>
             </div>
-            <p className="text-sm text-muted line-clamp-2">{event.description}</p>
+            <p className="text-sm text-muted line-clamp-2 break-all">{event.description}</p>
           </div>
         </div>
 
