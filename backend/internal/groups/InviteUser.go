@@ -100,6 +100,24 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if invitee already has a pending invitation
+	hasPendingInvitation, err := queries.HasPendingInvitation(groupID, inviteeID)
+	if err != nil {
+		utils.RespondJSON(w, http.StatusInternalServerError, models.GenericResponse{
+			Success: false,
+			Message: "Error checking pending invitations",
+		})
+		return
+	}
+
+	if hasPendingInvitation {
+		utils.RespondJSON(w, http.StatusConflict, models.GenericResponse{
+			Success: false,
+			Message: "User already has a pending invitation",
+		})
+		return
+	}
+
 	// Check if invitee has a pending join request - if so, auto-accept them
 	hasPendingRequest, err := queries.HasPendingJoinRequest(groupID, inviteeID)
 	if err == nil && hasPendingRequest {
@@ -155,20 +173,30 @@ func InviteUser(w http.ResponseWriter, r *http.Request) {
 	group, _ := queries.GetGroupByID(groupID)
 	inviter, _ := queries.GetUserByID(inviterID)
 	invitee, _ := queries.GetUserByID(inviteeID)
+	inviterName := strings.TrimSpace(inviter.FirstName + " " + inviter.LastName)
+	if inviterName == "" {
+		inviterName = inviter.Username
+	}
+	inviteeName := strings.TrimSpace(invitee.FirstName + " " + invitee.LastName)
+	if inviteeName == "" {
+		inviteeName = invitee.Username
+	}
 
 	inviterText := activity.GroupInvitationSent(invitee.Username, group.Name)
 	inviteeText := activity.GroupInvitationReceived(inviter.Username, group.Name)
 
-	_ = activity.NotifyRecentActivity(inviterID, &inviteeID, "group_invitation", inviterText, map[string]interface{}{
+	_, _ = activity.StoreRecentActivity(inviterID, &inviteeID, "group_invitation", inviterText, map[string]interface{}{
 		"group_id":         groupID,
 		"group_name":       group.Name,
 		"invitee_id":       inviteeID,
 		"invitee_username": invitee.Username,
+		"invitee_name":     inviteeName,
 	})
 	_ = activity.NotifyRecentActivity(inviteeID, &inviterID, "group_invitation", inviteeText, map[string]interface{}{
 		"group_id":         groupID,
 		"group_name":       group.Name,
 		"inviter_id":       inviterID,
+		"inviter_name":     inviterName,
 		"inviter_username": inviter.Username,
 	})
 

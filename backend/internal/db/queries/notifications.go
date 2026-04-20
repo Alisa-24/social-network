@@ -1,5 +1,11 @@
 package queries
 
+var nonPrunableNotificationTypes = []string{
+	"follow_request",
+	"group_invitation",
+	"group_join_request",
+}
+
 func CreateNotification(userID int, actorID *int, notificationType string, data string) (int64, error) {
 	result, err := DB.Exec(`
 		INSERT INTO notifications (user_id, actor_id, type, data)
@@ -63,7 +69,11 @@ func MarkNotificationRead(userID int, notificationID int) error {
 		SET read = 1
 		WHERE id = ? AND user_id = ?
 	`, notificationID, userID)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return PruneReadNotifications(userID)
 }
 
 func MarkAllNotificationsRead(userID int) error {
@@ -72,7 +82,11 @@ func MarkAllNotificationsRead(userID int) error {
 		SET read = 1
 		WHERE user_id = ?
 	`, userID)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return PruneReadNotifications(userID)
 }
 
 // GetNotificationByID retrieves a single notification by ID
@@ -113,5 +127,30 @@ func DeleteNotification(notificationID int64, userID int) error {
 		DELETE FROM notifications
 		WHERE id = ? AND user_id = ?
 	`, notificationID, userID)
+	return err
+}
+
+// PruneReadNotifications keeps only the 20 most recent read, non-request notifications.
+// Actionable request notifications are excluded from pruning.
+func PruneReadNotifications(userID int) error {
+	_, err := DB.Exec(`
+		DELETE FROM notifications
+		WHERE user_id = ?
+		  AND read = 1
+		  AND type NOT IN (?, ?, ?)
+		  AND id NOT IN (
+		  	SELECT id
+		  	FROM notifications
+		  	WHERE user_id = ?
+		  	  AND read = 1
+		  	  AND type NOT IN (?, ?, ?)
+		  	ORDER BY datetime(created_at) DESC, id DESC
+		  	LIMIT 20
+		  )
+	`, userID,
+		nonPrunableNotificationTypes[0], nonPrunableNotificationTypes[1], nonPrunableNotificationTypes[2],
+		userID,
+		nonPrunableNotificationTypes[0], nonPrunableNotificationTypes[1], nonPrunableNotificationTypes[2],
+	)
 	return err
 }

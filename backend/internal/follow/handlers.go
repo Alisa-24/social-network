@@ -57,7 +57,7 @@ func FollowHandler(w http.ResponseWriter, r *http.Request) {
 		if status == "pending" {
 			senderText = activity.FollowRequestSent(target.Username)
 			receiverText = activity.FollowRequestReceived(follower.Username)
-			_ = activity.NotifyRecentActivity(currentUserID, &target.ID, "follow_request", senderText, map[string]interface{}{
+			_, _ = activity.StoreRecentActivity(currentUserID, &target.ID, "follow_request", senderText, map[string]interface{}{
 				"target_username": target.Username,
 				"status":          status,
 			})
@@ -68,7 +68,7 @@ func FollowHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			senderText = activity.FollowAcceptedForSender(target.Username)
 			receiverText = activity.FollowAcceptedForReceiver(follower.Username)
-			_ = activity.NotifyRecentActivity(currentUserID, &target.ID, "follow_update", senderText, map[string]interface{}{
+			_, _ = activity.StoreRecentActivity(currentUserID, &target.ID, "follow_update", senderText, map[string]interface{}{
 				"target_username": target.Username,
 				"status":          status,
 			})
@@ -262,7 +262,7 @@ func HandleFollowRequestHandler(w http.ResponseWriter, r *http.Request) {
 		})
 
 		if action == "accept" {
-			_ = activity.NotifyRecentActivity(requesterID, &userID, "follow_update", activity.FollowAcceptedForSender(target.Username), map[string]interface{}{
+			_, _ = activity.StoreRecentActivity(requesterID, &userID, "follow_update", activity.FollowAcceptedForSender(target.Username), map[string]interface{}{
 				"target_username": target.Username,
 				"status":          "accepted",
 			})
@@ -275,7 +275,7 @@ func HandleFollowRequestHandler(w http.ResponseWriter, r *http.Request) {
 				Message:  "Your follow request was declined",
 				Subtitle: "Follow Request",
 			}
-			_ = activity.NotifyRecentActivity(requesterID, &userID, "follow_update", declinedText, map[string]interface{}{
+			_, _ = activity.StoreRecentActivity(requesterID, &userID, "follow_update", declinedText, map[string]interface{}{
 				"target_username": target.Username,
 				"status":          "declined",
 			})
