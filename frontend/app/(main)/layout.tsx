@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
+import WebSocketErrorPage from "@/components/layout/WebSocketErrorPage";
 import { logout, getCurrentUser } from "@/lib/auth/auth";
 import { useRouter } from "next/navigation";
 import * as ws from "@/lib/ws/ws";
@@ -12,6 +13,9 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const [showConnectionModal, setShowConnectionModal] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
   useEffect(() => {
     let isActive = true;
@@ -118,6 +122,32 @@ export default function MainLayout({
       window.dispatchEvent(new CustomEvent("follow_update", { detail: d }));
     };
 
+    const handleSocketConnect = () => {
+      setShowConnectionModal(false);
+      setIsReconnecting(false);
+      setReconnectAttempts(0);
+    };
+
+    const handleSocketError = () => {
+      setShowConnectionModal(true);
+      setIsReconnecting(true);
+      setReconnectAttempts((current) =>
+        current > 0 ? current : Math.max(1, ws.getReconnectAttempts()),
+      );
+    };
+
+    const handleReconnectAttempt = (attempt: number) => {
+      setShowConnectionModal(true);
+      setIsReconnecting(true);
+      setReconnectAttempts(attempt);
+    };
+
+    const handleMaxRetries = () => {
+      setShowConnectionModal(true);
+      setIsReconnecting(false);
+      setReconnectAttempts(ws.getMaxReconnectAttempts());
+    };
+
     // Connect WebSocket when app loads if user is authenticated
     getCurrentUser().then((user) => {
       if (!isActive || !user) {
@@ -129,6 +159,10 @@ export default function MainLayout({
       ws.on("join_request_rejected", handleRejected);
       ws.on("group_invitation", handleInvitation);
       ws.on("follow_update", handleFollowUpdate);
+      ws.onConnect(handleSocketConnect);
+      ws.onError(handleSocketError);
+      ws.onReconnectAttempt(handleReconnectAttempt);
+      ws.onMaxRetriesReached(handleMaxRetries);
     });
 
     return () => {
@@ -137,6 +171,10 @@ export default function MainLayout({
       ws.off("join_request_rejected", handleRejected);
       ws.off("group_invitation", handleInvitation);
       ws.off("follow_update", handleFollowUpdate);
+      ws.offConnect(handleSocketConnect);
+      ws.offError(handleSocketError);
+      ws.offReconnectAttempt(handleReconnectAttempt);
+      ws.offMaxRetriesReached(handleMaxRetries);
     };
   }, []);
 
@@ -149,5 +187,18 @@ export default function MainLayout({
     }
   };
 
-  return <Navbar onLogout={handleLogout}>{children}</Navbar>;
+  return (
+    <>
+      <Navbar onLogout={handleLogout}>{children}</Navbar>
+      {showConnectionModal && (
+        <WebSocketErrorPage
+          variant="modal"
+          onRetry={() => window.location.reload()}
+          isReconnecting={isReconnecting}
+          reconnectAttempts={reconnectAttempts}
+          maxAttempts={ws.getMaxReconnectAttempts()}
+        />
+      )}
+    </>
+  );
 }

@@ -1,12 +1,13 @@
 "use client";
 
-import { RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { RefreshCw, WifiOff } from "lucide-react";
 
 interface WebSocketErrorPageProps {
   onRetry: () => void;
   isReconnecting?: boolean;
   reconnectAttempts?: number;
   maxAttempts?: number;
+  variant?: "page" | "modal";
 }
 
 export default function WebSocketErrorPage({
@@ -14,9 +15,15 @@ export default function WebSocketErrorPage({
   isReconnecting = false,
   reconnectAttempts = 0,
   maxAttempts = 5,
+  variant = "page",
 }: WebSocketErrorPageProps) {
+  const wrapperClass =
+    variant === "modal"
+      ? "fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      : "min-h-screen flex items-center justify-center bg-background p-4";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className={wrapperClass}>
       <div className="max-w-md w-full">
         {/* Error Card */}
         <div className="bg-surface border border-border rounded-xl p-8 text-center">
