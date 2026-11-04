@@ -1,6 +1,6 @@
 import { WS_URL } from "@/lib/config";
 
-type MessageHandler = (data: unknown) => void;
+type MessageHandler<T = unknown> = (data: T) => void;
 type MaxRetriesCallback = () => void;
 type ConnectionErrorCallback = (error: Event) => void;
 type ReconnectAttemptCallback = (
@@ -112,18 +112,19 @@ export const disconnect = () => {
   reconnectAttemptCallbacks = [];
 };
 
-export const on = (messageType: string, handler: MessageHandler) => {
+export const on = <T = unknown>(messageType: string, handler: MessageHandler<T>) => {
   if (!messageHandlers.has(messageType)) {
     messageHandlers.set(messageType, []);
   }
-  messageHandlers.get(messageType)!.push(handler);
+  // The shared registry erases payload types; subscribers define each event's shape.
+  messageHandlers.get(messageType)!.push(handler as MessageHandler);
 };
 
-export const off = (messageType: string, handler: MessageHandler) => {
+export const off = <T = unknown>(messageType: string, handler: MessageHandler<T>) => {
   const handlers = messageHandlers.get(messageType);
   if (!handlers) return;
 
-  const index = handlers.indexOf(handler);
+  const index = handlers.indexOf(handler as MessageHandler);
   if (index !== -1) handlers.splice(index, 1);
 };
 
